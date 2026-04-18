@@ -1,0 +1,97 @@
+Voce esta encerrando a sessao atual do projeto **TCC Calculadora** (equipe: Gustavo, João, Yuri). O objetivo e fechar com **handoff** claro, artefatos atualizados e orientacao Git para o proximo commit/push.
+
+---
+
+## Objetivo
+
+- Registrar o que foi feito, sincronizar documentacao de sprint e contexto, e deixar o repositorio pronto para a proxima pessoa ou sessao.
+
+---
+
+## Passo 1 — Resumo da sessao
+
+1. Resuma **objetivamente** o que foi feito (sem floreio).
+2. Liste **arquivos modificados** e o **motivo** de cada alteracao.
+
+---
+
+## Passo 2 — Atualizar `Sprints.md`
+
+Para cada task **realmente concluida** nesta sessao:
+
+- Ajustar a linha **Status:** para `done`.
+- Opcional: uma linha curta com data no bloco da task (ex.: `Concluido em: 2026-04-18`).
+
+Regras:
+
+- **Nao** criar item novo nem mover task entre sprints sem instrucao explicita do usuario.
+- Se a task ficou **parcial**, **nao** marcar `done`; registre o restante em `docs/CONTEXT.md` como pendencia.
+
+---
+
+## Passo 3 — Atualizar `docs/CONTEXT.md`
+
+Preencha ou atualize:
+
+- **Ultima acao** — o que foi fechado agora.
+- **Estado atual** — uma ou duas frases sobre o repositorio/produto.
+- **Pendencias / debitos** — o que ficou aberto.
+- **Riscos / atencoes** — bloqueios, dependencias externas, prazos do cronograma.
+- **Proximo foco sugerido** — proxima task logica segundo `Sprints.md` (cite ID).
+- **Tasks concluidas nesta sessao** — IDs e titulos.
+
+---
+
+## Passo 3b — Registro semanal da equipa (`docs/sessoes/`)
+
+1. Determinar o **numero da semana do plano** (N de 1 a 30): mesma regra do cronograma — semana 1 comeca em **01/03/2026** (domingo); ou usar o indicador "Semana N" em [`Cronograma/cronograma.html`](Cronograma/cronograma.html); ou pedir N ao usuario se houver duvida.
+2. Abrir **`docs/sessoes/semana-NN.md`** com NN em **dois digitos** (ex.: `semana-07.md`). Se o ficheiro nao existir, criar a partir de [`docs/sessoes/_template-semana.md`](docs/sessoes/_template-semana.md) e preencher o titulo com N e o intervalo de datas (consultar `Cronograma/cronograma.md`).
+3. Na secao do **participante** desta sessao (Gustavo, João ou Yuri — o usuario deve dizer quem e, se nao for obvio pelo contexto), **acrescentar** um novo bloco no fim da secao com:
+   - data (AAAA-MM-DD);
+   - **Task / ID** (ex.: T1.2) ou descricao curta;
+   - **Feito:** lista objetiva do que foi desenvolvido ou decidido;
+   - opcional: PR/branch, bloqueios, proximo passo.
+4. **Nao apagar** registos anteriores da mesma semana; **nao** sobrescrever trabalho de outro membro — apenas acrescentar na sua secao.
+5. Incluir este ficheiro no commit quando fizer sentido (junto com `docs/CONTEXT.md`).
+
+Ver convencoes em [`docs/sessoes/README.md`](docs/sessoes/README.md).
+
+---
+
+## Passo 4 — Git (orientar ou executar se autorizado)
+
+1. `git status` — conferir arquivos.
+2. `git diff` — revisar alteracoes.
+3. Agrupar commits logicos; mensagens em **ingles**, imperativo curto (ex.: `docs: update session context`, `feat: ...`).
+
+Se o usuario quiser enviar ao remoto:
+
+4. `git add` (arquivos relevantes) e `git commit -m "..."`.
+5. `git push -u origin <branch-atual>` se for primeiro push da branch; caso contrario `git push`.
+
+Lembrete: integracao em `main` via **Pull Request** quando for politica da equipe (ver `docs/GITHUB_WORKFLOW.md`). **Push + PR + merge** e o que faz o trabalho (codigo e `Sprints.md`) aparecer para o colega quando ele der `git pull` em `main`; sem merge em `main`, o outro clone nao ve suas alteracoes "oficiais".
+
+---
+
+## Passo 5 — Divergencias e proximos passos
+
+1. Se houver divergencia entre **`PRD.md`**, **`Sprints.md`**, **`Cronograma/cronograma.md`** e o codigo/docs implementados, registre no handoff (e em `docs/CONTEXT.md` se for persistente).
+2. Indique o **proximo item logico** com base em `Sprints.md` (sem inventar backlog).
+
+---
+
+## Bloco final obrigatorio
+
+Encerre com uma secao **"Pronto para proxima sessao"** contendo:
+
+- Proximos passos imediatos (1–3 itens acionaveis).
+- Branch atual recomendada para continuar.
+- Qualquer comando Git que a proxima sessao deva repetir (ex.: `git pull origin main` antes de continuar).
+
+---
+
+## Regras de encerramento
+
+- Nao encerrar sem atualizar **`docs/CONTEXT.md`** quando houve trabalho substantive; incluir **`docs/sessoes/semana-NN.md`** no Passo 3b quando alguem da equipa trabalhou na sessao.
+- Nao marcar **`done`** em `Sprints.md` sem conclusao real da task.
+- **`PRD.md`** permanece normativo; mudancas grandes de escopo exigem atualizacao do PRD e alinhamento com o cronograma academico.

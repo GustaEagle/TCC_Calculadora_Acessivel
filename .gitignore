@@ -1,0 +1,32 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# KiCad — histórico local (backup automático); preferir commits do projeto + pasta snapshots/ para marcos
+**/.history/
+*-backups/
+fp-info-cache
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Build / imagem (ajustar quando system/ tiver receitas)
+system/**/build/
+system/**/output/
+system/**/dist/
+*.img
+
+# Logs temporários
+*.log
+
+# Cópia local da partição boot (firmware/binários Raspberry Pi); regenerar a partir da imagem oficial ou de system/
+bootfoverlay/

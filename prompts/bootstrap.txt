@@ -1,0 +1,84 @@
+Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: Gustavo, João, Yuri). O repositorio usa **Git/GitHub**; o objetivo e trazer o estado mais recente do remoto, posicionar a branch correta e carregar o contexto antes de qualquer implementacao.
+
+---
+
+## Objetivo desta etapa
+
+1. Sincronizar o clone local com o GitHub (`fetch` / `pull`).
+2. Garantir que o trabalho esta na branch adequada (`main` atualizada; depois branch de feature ou a branch combinada pela equipe).
+3. Ler os artefatos normativos e operacionais na ordem abaixo.
+4. Resumir situacao tecnica e **parar** ate confirmacao humana para codar.
+
+---
+
+## Passo A — Comandos Git (executar na raiz do repositorio)
+
+Use o caminho real do workspace do usuario. Em Windows (PowerShell), o padrao costuma ser a pasta do projeto clonada.
+
+Execute **nesta ordem** e interprete a saida:
+
+1. `git remote -v` — confirmar que `origin` aponta para o repositorio correto da equipe.
+2. `git fetch origin` — trazer referencias atualizadas sem alterar arquivos ainda.
+3. `git status` — ver branch atual e arquivos modificados.
+4. `git branch -vv` — ver tracking e ultimo commit local.
+
+Atualizar a base **main** (ou a branch principal acordada, ex. `master` — se o remoto usar outro nome, adapte):
+
+5. `git checkout main` (ou a branch principal definida em `docs/GITHUB_WORKFLOW.md`).
+6. `git pull origin main`
+
+Posicionar branch de trabalho:
+
+- Se ja existe branch local da task: `git checkout <nome-da-branch>` e `git pull` se tiver upstream.
+- Se a branch so existe no remoto: `git checkout -b <nome-da-branch> origin/<nome-da-branch>` e `git pull`.
+- Se for **nova** branch a partir de main: `git checkout -b feature/<slug-curto>` (convencao em `docs/GITHUB_WORKFLOW.md`).
+
+**Apos** estar na branch de feature (se nao for `main`): incorporar o que ja foi integrado em `main` por outros (ex.: trabalho do Gustavo antes do Joao continuar):
+
+7. `git fetch origin`
+8. `git merge origin/main`  
+   (resolver conflitos se aparecerem; se a equipe preferir rebase em vez de merge, siga a politica em `docs/GITHUB_WORKFLOW.md`.)
+
+Assim `Sprints.md` e codigo na sua branch ficam alinhados ao ultimo estado compartilhado. Ver detalhes em **`docs/GITHUB_WORKFLOW.md` secao 3**.
+
+Opcional — visao do que entrou em main: `git log --oneline -15`
+
+Se o usuario indicar uma branch especifica no chat, use essa branch em vez de inferir.
+
+---
+
+## Passo B — Leitura obrigatoria (ordem)
+
+1. **`docs/GITHUB_WORKFLOW.md`** — fluxo de comandos, branches e checklist; alinhar com o que foi executado no Passo A.
+2. **`docs/REPO_STRUCTURE.md`** — onde colocar codigo (`software/`), PCB (`hardware/pcb/`), SO (`system/`).
+3. **`PRD.md`** — contrato normativo do produto (escopo, requisitos, arquitetura em alto nivel).
+4. **`Cronograma/cronograma.md`** — entregas e semanas definidas pelo professor; cruzar com a data atual.
+5. **`Cronograma/cronograma.html`** — opcional: marcos, Gantt e atrasos exigem abrir no navegador (GitHub preview nao executa JS).
+6. **`docs/sessoes/semana-NN.md`** — registro da semana do plano (NN = numero da semana); ver `docs/sessoes/README.md`.
+7. **`Sprints.md`** — backlog oficial por sprint; identificar task `doing` / proxima `todo` coerente com o PRD.
+8. **`docs/CONTEXT.md`** — memoria da ultima sessao, pendencias e proximo foco.
+9. **`TCC.txt`** ou trechos relevantes — apenas se a sessao for sobre funcoes matematicas, texto academico ou consistencia com o catalogo.
+10. **Estrutura do repositorio** — pastas `software/`, `hardware/`, `system/`, `docs/`; nao assumir implementacao sem abrir arquivos.
+
+---
+
+## Passo C — Resumo obrigatorio (antes de codar)
+
+Entregue um resumo estruturado contendo:
+
+- **Git:** branch atual; se esta atrasada em relacao a `origin/main`; ha mudancas locais nao commitadas?
+- **Sprint:** qual task e a mais aderente para continuar (cite ID e titulo em `Sprints.md`); nao invente tasks novas.
+- **Cronograma:** semana corrente do plano e marcos proximos ou em atraso (conforme `Cronograma/cronograma.md`).
+- **Impacto tecnico:** arquivos/modulos provaveis; riscos e dependencias.
+- **Divergencias:** entre PRD, Sprints, cronograma e codigo/docs existentes (se houver).
+
+**Pare e aguarde confirmacao explicita** antes de editar codigo, hardware ou de criar commits.
+
+---
+
+## Regras
+
+- **`PRD.md`** = norma de produto. **`Sprints.md`** = norma de execucao do backlog. **`Cronograma/cronograma.md`** = norma academica de prazos. **`docs/sessoes/`** = registro por sessao e por semana do plano.
+- Nao mover tasks entre sprints nem criar itens novos em `Sprints.md` sem pedido explicito do usuario.
+- Nao assumir feature pronta sem verificar arquivos reais.
+- Commits, quando autorizados: mensagens em **ingles** (convencao da equipe).

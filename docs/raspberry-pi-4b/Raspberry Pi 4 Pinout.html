@@ -1,0 +1,3377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' >
+
+  <!-- Meta tags -->
+      <title>
+    Raspberry Pi 4 Pinout
+  </title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Raspberry Pi 4 Pinout",
+        "image": [
+        "https://dnycf48t040dh.cloudfront.net/fit-in/840x473/Raspberry-Pi-4-Pinout.png"
+         ],
+        "datePublished": "2020-12-17 16:56:36 UTC",
+        "author": [{
+            "@type": "Organization",
+            "name": "YoungWonks",
+            "url": "https://www.youngwonks.com"
+          }]
+      }
+    </script>
+  <meta property="og:url" content="https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="A look at the GPIO pins on a Raspberry Pi
+" />
+  <meta property="og:description" content="Here’s taking a look at the Raspberry Pi 4 pin configuration" />
+    <meta name="description" content="A quick reckoner to know the GPIO pinout diagram for Raspberry Pi 4
+" />
+  <meta property="og:image" content="https://dnycf48t040dh.cloudfront.net/Raspberry-Pi-4-Pinout.png" />
+  <style>
+    img {
+      height: auto;
+    }
+
+    span.twitter-typeahead .tt-suggestion:hover {
+      cursor: pointer;
+    }
+
+    span.twitter-typeahead .tt-suggestion {
+      white-space: inherit;
+      background: white;
+      padding: 5px 10px;
+      color: #ff7407;
+      border: none;
+      text-align: left;
+      font-weight: normal;
+    }
+
+    .tt-menu {
+      background: white;
+      border: 1px solid #cedbe7
+    }
+
+    .help-icon-btn {
+      bottom: 90px;
+    }
+
+    .platform-sharing {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      height: 28px;
+    }
+
+    .platform-sharing>* {
+      display: flex;
+      align-items: center;
+      margin-right: 16px;
+    }
+
+    .twitter-wrapper {
+      min-width: 75px;
+    }
+
+    .linkedin-wrapper {
+      min-width: 60px;
+    }
+
+    .share-icon {
+      margin-bottom: 16px;
+    }
+
+    #twitter-widget-0,
+    .twitter-share-button {
+      top: 0;
+    }
+    .blog.detail a {
+      word-break: break-word;
+      color: #0a1d2e;
+      border-bottom: 1px solid #0a1d2e;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .blog-content.detail h2 {
+      font-size: 1.714rem;
+    }
+
+    .blog-content.detail h3 {
+      font-size: 1.5rem;
+    }
+    @media screen and (min-width: 601px) {
+      .d-md-flex{
+          display: flex;
+      }
+    }
+    .sticky-banner{position:-webkit-sticky; position:sticky; top:80px;}
+    .sticky-banner>a{
+      display: block;
+      line-height: 0;
+    }
+
+
+    .grecaptcha-badge{
+      z-index: 998;
+    }
+
+    @media screen and (max-width: 600px) {
+      .floating-free-trial{
+      position: fixed;
+      bottom: 14px;
+      left: 20px;
+      right: 80px;
+      z-index: 998;
+      /* transform: translate(-50%); */
+      box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+    }
+    }
+    html{
+      scroll-behavior: smooth;
+    }
+  </style>
+
+
+  <!-- Links -->
+  <!--Import Google Icon Font-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Rubik:wght@500&display=swap&text=%21%22%23%24%25%26%5C%27%28%29*%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Rubik:wght@500&display=swap&text=%21%22%23%24%25%26%5C%27%28%29*%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~"
+        media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Rubik:wght@500&display=swap&text=%21%22%23%24%25%26%5C%27%28%29*%2B%2C-.%2F0123456789%3A%3B%3C%3D%3E%3F%40ABCDEFGHIJKLMNOPQRSTUVWXYZ%5B%5C%5C%5D%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~"></noscript>
+
+  <!-- Cookie Pro and other third party cookies -->
+  
+    <!-- For testing only -->
+
+    <script src="https://cookie-cdn.cookiepro.com/scripttemplates/otSDKStub.js"  type="text/javascript" charset="UTF-8" data-domain-script="b0cce53c-a33a-429f-b665-a5c596a55dcb"></script>
+
+    <script type="text/javascript">
+      function OptanonWrapper() {
+        try {
+        if (!window.OnetrustActiveGroups) {
+          console.warn("OnetrustActiveGroups is undefined. Check OneTrust initialization.");
+          return;
+        }
+        
+        // Check if consent for the Targeting category is provided
+        if (OnetrustActiveGroups.indexOf('C0004') > -1) {
+          if(window.location.pathname.includes("choose-trial") || window.location.pathname.includes("welcome/contact")) {
+            initializeLeadPixel();
+          }
+          // <!-- Vibe Pixel Code start -->
+          // console.log("Vibe Pixel loading");
+          initializeVibePixel();
+          // <!-- Vibe Pixel Code end -->
+          // console.log("FB Pixel loading");
+          initializeFacebookPixel();
+          
+        } else {
+          handleCookieRemoval(false, "fb");
+          handleCookieRemoval(false, "vb");
+        }
+
+
+        // Check if user consented to the Performance category (C0002 in this example)
+        if (OnetrustActiveGroups.indexOf('C0002') > -1) {
+          loadGTM();   
+          loadGA(); // Google Analytics (GA): Tracks website usage and user behavior.
+        } else {
+          handleCookieRemoval(false, "g");
+        }
+
+        // Reject All Cookies Handling
+        const rejectAll = !['C0002', 'C0003', 'C0004', 'C0005'].some((group) =>
+          window.OnetrustActiveGroups.includes(group)
+        );
+        if (rejectAll) {
+          handleCookieRemoval(true);
+        }
+      } catch (error) {
+        console.error("Error in OptanonWrapper:", error);
+      }
+      }
+    // <!-- CookiePro Cookies Consent Notice end for youngwonks.com -->
+
+      function handleCookieRemoval(clearAllCookies = false, category = "") {
+        // Split the document.cookie string into individual cookies
+        const cookies = document.cookie.split(';');
+        const rootDomain = location.hostname.includes('.') 
+                          ? '.' + location.hostname.split('.').slice(-2).join('.') 
+                          : location.hostname;
+        const exactHostname = location.hostname;
+        
+        // Helper function to delete cookie with multiple domain attempts
+        function deleteCookieWithMultipleDomains(cookieName) {
+          // Try multiple domain variations to ensure deletion
+          const deletionAttempts = [
+            // Try with exact hostname (for HostOnly cookies like www.youngwonks.com)
+            `${cookieName}=; Max-Age=0; path=/; domain=${exactHostname}; Secure; SameSite=None`,
+            // Try without domain (for host-only cookies)
+            `${cookieName}=; Max-Age=0; path=/; Secure; SameSite=None`,
+            // Try with root domain (for cookies set on .youngwonks.com)
+            `${cookieName}=; Max-Age=0; path=/; domain=${rootDomain}; Secure; SameSite=None`,
+            // Try without Secure/SameSite (in case cookie was set differently)
+            `${cookieName}=; Max-Age=0; path=/; domain=${exactHostname}`,
+            `${cookieName}=; Max-Age=0; path=/; domain=${rootDomain}`,
+            `${cookieName}=; Max-Age=0; path=/`
+          ];
+          
+          deletionAttempts.forEach((cookieString) => {
+            document.cookie = cookieString;
+          });
+        }
+        
+        // List of cookies to preserve
+        const cookiesToKeep = [
+          '_edoptim_session',
+          'OptanonConsent',
+          '_GRECAPTCHA'
+        ];
+
+        cookies.forEach((cookie) => {
+          // Trim leading spaces from the cookie
+          const cookieName = cookie.split('=')[0].trim();
+          // console.log("Cookie name: ", cookieName);
+          // Check if we should delete the cookie based on user action
+          if (clearAllCookies) {
+            // If "clearAllCookies" is true, delete any cookie not in the "to keep" list
+            if (!cookiesToKeep.includes(cookieName)) {
+              deleteCookieWithMultipleDomains(cookieName);
+            }
+          } else {
+            // If only "performance" cookies are rejected (for this example, delete '_ga_' cookies)
+            if (cookieName.startsWith("_" + category) && !cookiesToKeep.includes(cookieName)) {
+              // Delete the cookie if it's a GA cookie and not in the "to keep" list
+              // console.log("Deleting cookie: ", cookieName);
+              deleteCookieWithMultipleDomains(cookieName);
+            }   
+          }
+        });
+      }
+
+      function loadGTM() {
+
+        // Dynamically load the GTM script
+        var script = document.createElement('script');
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=UA-56483601-1'; // GTM ID
+        script.async = true;
+
+
+        // Add error handling for GTM script load
+        script.onerror = function() {
+            console.error("GTM script failed to load.");
+        };
+
+        document.head.appendChild(script);
+
+        // Add the GTM configuration
+        script.onload = function() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+            dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            gtag('config', 'UA-56483601-1'); // GTM ID
+        };
+
+        // Fallback for users with JavaScript disabled (noscript)
+        insertNoscriptGTM();
+      }
+
+      function insertNoscriptGTM() {
+        const noscript = document.createElement('noscript');
+        noscript.innerHTML = `
+            <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T3VLLDB" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        `;
+        document.body.insertBefore(noscript, document.body.firstChild);
+      }
+
+      function loadGA() {
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-56483601-1', 'auto');
+            ga('require', 'displayfeatures');
+            ga('require', 'linkid', 'linkid.js');
+            ga('send', 'pageview');
+        }
+
+      function initializeFacebookPixel() {
+        // Add Facebook Pixel Script
+        !function(f,b,e,v,n,t,s) {
+          if (f.fbq) return;
+          n = f.fbq = function() {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+          };
+          if (!f._fbq) f._fbq = n;
+          n.push = n;
+          n.loaded = !0;
+          n.version = '2.0';
+          n.queue = [];
+          t = b.createElement(e);
+          t.async = !0;
+          t.src = v;
+          s = b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t, s);
+        }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+        fbq('init', '428695817638682'); // Facebook Pixel ID
+        fbq('track', 'PageView');
+
+        // Add Facebook Pixel <noscript> fallback
+        const noscript = document.createElement('noscript');
+        noscript.innerHTML = `<img height="1" width="1" style="display:none"
+                                src="https://www.facebook.com/tr?id=428695817638682&ev=PageView&noscript=1" />`; // Facebook Pixel ID
+        document.body.appendChild(noscript);
+
+        // Dynamically add <meta> tag for app ID
+        const meta = document.createElement('meta');
+        meta.setAttribute('property', 'fb:app_id');
+        meta.setAttribute('content', '230999500795318'); // Facebook app ID
+        document.head.appendChild(meta);
+      }
+
+      function initializeVibePixel() {
+        // Add Vibe Pixel Script
+        !function(v,i,b,e,c,o){
+          if(!v[c]){
+            var s=v[c]=function(){
+              s.process?s.process.apply(s,arguments):s.queue.push(arguments)
+            };
+            s.queue=[],s.b=1*new Date;
+            var t=i.createElement(b);
+            t.async=!0,t.src=e;
+            var n=i.getElementsByTagName(b)[0];
+            n.parentNode.insertBefore(t,n)
+          }
+        }(window,document,"script","https://s.vibe.co/vbpx.js","vbpx");
+        vbpx('init','CQKCYK');
+        vbpx('event', 'page_view');
+      }
+      function initializeLeadPixel() {
+        !function(v,i,b,e,c,o){if(!v[c]){var s=v[c]=function(){s.process?s.process.apply(s,arguments):s.queue.push(arguments)};s.queue=[],s.b=1*new Date;var t=i.createElement(b);t.async=!0,t.src=e;var n=i.getElementsByTagName(b)[0];n.parentNode.insertBefore(t,n)}}(window,document,"script","https://s.vibe.co/vbpx.js","vbpx");
+        vbpx('init','CQKCYK');
+        vbpx('event', 'lead');
+      }
+    </script>
+  
+  <!-- Splitting url to create unique canonical tag and og:url for each page -->
+      <link rel="canonical" href='https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout' />
+      <meta property="og:url" content='https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout' />
+
+  <!-- Common meta name tags -->
+  <meta name="author" content="YoungWonks">
+    <meta name="keywords" content="Coding,kids,early age,teaching,language,job,software development">
+
+  <!-- Common meta property tags -->
+  <meta property="og:site_name" content="YoungWonks" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- property is website in case of blogs and website otherwise -->
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/assets/yw-favicon-new-db916e1789e89aa5de164f99abf2e2a352c7606833ec6ba97cfa681a9b4af8b0.png" />
+  <link hreflang="en" rel="alternative" />
+  <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></noscript>
+
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"></noscript>
+  <!--Import jssocials.css-->
+  <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="9JaXAV13oEA8VN0p9nOSrMTomw8QqRMRT7ZOEBihF0mYNN3l0bM_H8izIQXIOD7OcX7rEMRWpneN8Jih2wW7YA" />
+
+  <!-- Marketing Tags -->
+      <!---Twitter Tags--->
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:site" content="@youngwonks" />
+      <meta name="twitter:creator" content="@youngwonks">
+      <meta name="twitter:title" content="YoungWonks Coding Class for Kids and Youth">
+      <meta name="twitter:description" content="Coding Classes for Kids and Teens. Learn engineering and programming year-round with an acclaimed curriculum. Classes in Pleasanton CA and Online.">
+      <meta name="twitter:image" content="https://s3.amazonaws.com/youngwonks/coding-classes-for-kids-online-free-trial-image.png">
+
+      <!---Pinterest Tag--->
+      <!---
+      <meta name="p:domain_verify" content="e98406253bf2440deea2fd34cc18f7e2" />--->
+
+      <!-- Taboola Pixel Code -->
+      <!--
+      <script type='text/javascript'>
+        window._tfa = window._tfa || [];
+        window._tfa.push({ notify: 'event', name: 'page_view', id: 1261968 });
+        !function (t, f, a, x) {
+          if (!document.getElementById(x)) {
+            t.async = 1; t.src = a; t.id = x; f.parentNode.insertBefore(t, f);
+          }
+        }(document.createElement('script'),
+          document.getElementsByTagName('script')[0],
+          '//cdn.taboola.com/libtrc/unip/1261968/tfa.js',
+          'tb_tfa_script');
+      </script>
+      <noscript>
+        <img src='https://trc.taboola.com/1261968/log/3/unip?en=page_view' width='0' height='0' style='display:none' />
+      </noscript> -->
+      <!-- End of Taboola Pixel Code -->
+
+  
+  <!-- MakerVidya Google Tag Manager -->
+
+  <!-- Load Style -->
+  <style type="text/css">
+    html {
+      font-family: sans-serif;
+      -ms-text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    body {
+      margin: 0
+    }
+    article,
+    aside,
+    details,
+    figcaption,
+    figure,
+    footer,
+    header,
+    hgroup,
+    main,
+    menu,
+    nav,
+    section,
+    summary {
+      display: block
+    }
+    .section {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+    audio,
+    canvas,
+    progress,
+    video {
+      display: inline-block;
+      vertical-align: baseline
+    }
+    a {
+      background-color: transparent
+    }
+    b,
+    strong {
+      font-weight: 700
+    }
+    h1 {
+      font-size: 2em;
+      margin: .67em 0
+    }
+    .level-caption h1{font-size:2.5rem}
+    small {
+      font-size: 80%
+    }
+    img {
+      border: 0
+    }
+    svg:not(:root) {
+      overflow: hidden
+    }
+    button,
+    input,
+    optgroup,
+    select,
+    textarea {
+      color: inherit;
+      font: inherit;
+      margin: 0
+    }
+    button {
+      overflow: visible
+    }
+    button,
+    select {
+      text-transform: none
+    }
+    button,
+    html input[type=button],
+    input[type=reset],
+    input[type=submit] {
+      -webkit-appearance: button;
+      cursor: pointer
+    }
+    input {
+      line-height: normal
+    }
+    textarea {
+      overflow: auto
+    }
+    table {
+      border-collapse: collapse;
+      border-spacing: 0
+    }
+    td,
+    th {
+      padding: 0
+    }
+    html {
+      box-sizing: border-box
+    }
+    *,
+    :after,
+    :before {
+      box-sizing: inherit
+    }
+    ul:not(.browser-default) {
+      padding-left: 0;
+      list-style-type: none
+    }
+    ul:not(.browser-default) > li {
+      list-style-type: none
+    }
+    a {
+      color: #ff5107;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+      word-break: break-word;
+    }
+    .edoptim-free-demo, .edoptim-free-demo:hover{
+      background-color: #ff7407  !important;
+      color: white !important;
+      border-radius: 4px !important;
+      font-weight: normal !important;
+    }
+    .c-blue {
+        color: #0a1d2e;
+    }
+    .semi-bold {
+        font-weight: 600;
+    }
+    .clicking-here {
+      color: #0a1d2e;
+      border-bottom: 1px solid #0a1d2e;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .valign-wrapper {
+      display: flex;
+      align-items: center
+    }
+    .clearfix {
+      clear: both
+    }
+    .btn,
+    .btn-floating,
+    .btn-large,
+    .card,
+    .card-panel,
+    .collapsible,
+    .dropdown-content,
+    .side-nav,
+    .toast,
+    .z-depth-1,
+    nav {
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12),0 3px 1px -2px rgba(0,0,0,.2)
+    }
+    .modal,
+    .z-depth-4 {
+      box-shadow: 0 8px 10px 1px rgba(0,0,0,.14),0 3px 14px 2px rgba(0,0,0,.12),0 5px 5px -3px rgba(0,0,0,.3)
+    }
+    i {
+      line-height: inherit
+    }
+    @media only screen and (max-width:992px) {
+      .hide-on-med-and-down {
+        display: none!important
+      }
+    }
+    @media only screen and (min-width:601px) {
+      .hide-on-med-and-up {
+        display: none!important
+      }
+    }
+    @media only screen and (min-width:600px) and (max-width:992px) {
+      .hide-on-med-only {
+        display: none!important
+      }
+    }
+    @media only screen and (min-width:993px) {
+      .hide-on-large-only {
+        display: none!important
+      }
+    }
+    @media only screen and (min-width:993px) {
+      .show-on-large {
+        display: block!important
+      }
+    }
+    @media only screen and (min-width:600px) and (max-width:992px) {
+      .show-on-medium {
+        display: block!important
+      }
+    }
+    @media only screen and (max-width:600px) {
+      .show-on-small {
+        display: block!important
+      }
+    }
+    @media only screen and (min-width:601px) {
+      .show-on-medium-and-up {
+        display: block!important
+      }
+    }
+    @media only screen and (max-width:992px) {
+      .show-on-medium-and-down {
+        display: block!important
+      }
+    }
+    @media only screen and (max-width:600px) {
+      .center-on-small-only {
+        text-align: center
+      }
+    }
+    table,
+    td,
+    th {
+      border: none
+    }
+    table {
+      width: 100%;
+      display: table
+    }
+    td,
+    th {
+      padding: 15px 5px;
+      display: table-cell;
+      text-align: left;
+      vertical-align: middle;
+      border-radius: 2px
+    }
+    @media only screen and (max-width:992px) {
+      table.responsive-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        display: block;
+        position: relative
+      }
+      table.responsive-table td:empty:before {
+        content: '\00a0'
+      }
+      table.responsive-table td,
+      table.responsive-table th {
+        margin: 0;
+        vertical-align: top
+      }
+      table.responsive-table th {
+        text-align: left
+      }
+      table.responsive-table thead {
+        display: block;
+        float: left
+      }
+      table.responsive-table thead tr {
+        display: block;
+        padding: 0 10px 0 0
+      }
+      table.responsive-table thead tr th::before {
+        content: "\00a0"
+      }
+      table.responsive-table tbody {
+        display: block;
+        width: auto;
+        position: relative;
+        overflow-x: auto;
+        white-space: nowrap
+      }
+      table.responsive-table tbody tr {
+        display: inline-block;
+        vertical-align: top
+      }
+      table.responsive-table th {
+        display: block;
+        text-align: right
+      }
+      table.responsive-table td {
+        display: block;
+        min-height: 1.25em;
+        text-align: left
+      }
+      table.responsive-table tr {
+        padding: 0 10px
+      }
+      table.responsive-table thead {
+        border: 0;
+        border-right: 1px solid #d0d0d0
+      }
+      table.responsive-table.bordered th {
+        border-bottom: 0;
+        border-left: 0
+      }
+      table.responsive-table.bordered td {
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0
+      }
+      table.responsive-table.bordered tr {
+        border: 0
+      }
+      table.responsive-table.bordered tbody tr {
+        border-right: 1px solid #d0d0d0
+      }
+    }
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden
+    }
+    .left-align {
+      text-align: left
+    }
+    .center,
+    .center-align {
+      text-align: center
+    }
+    .right {
+      float: right!important
+    }
+    .circle {
+      border-radius: 50%
+    }
+    .material-icons {
+      text-rendering: optimizeLegibility;
+      font-feature-settings: 'liga'
+    }
+    .container {
+      margin: 0 auto;
+      max-width: 1280px;
+      width: 90%
+    }
+    @media only screen and (min-width:601px) {
+      .container {
+        width: 85%
+      }
+    }
+    @media only screen and (min-width:993px) {
+      .container {
+        width: 90%
+      }
+    }
+    .container .row {
+      margin-right: -1.5rem;
+      margin-left: -1.5rem
+    }
+    .row {
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 20px
+    }
+    .row:after {
+      content: "";
+      display: table;
+      clear: both
+    }
+    .row .col {
+      float: left;
+      box-sizing: border-box;
+      padding: 0 1.5rem;
+      min-height: 1px
+    }
+    .row .col.s8 {
+      width: 66.66667%;
+      margin-left: auto;
+      left: auto;
+      right: auto
+    }
+    .row .col.s12 {
+      width: 100%;
+      margin-left: auto;
+      left: auto;
+      right: auto
+    }
+    .row .col.offset-s2 {
+      margin-left: 16.66667%
+    }
+    @media only screen and (min-width:601px) {
+      .row .col.m4 {
+        width: 33.33333%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.m5 {
+        width: 41.66667%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.m6 {
+        width: 50%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.m7 {
+        width: 58.33333%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.m8 {
+        width: 66.66667% !important;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.m12 {
+        width: 100%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.offset-m3 {
+        margin-left: 25%;
+      }
+      .row .col.pull-m4 {
+        right: 33.33333%;
+      }
+      .row .col[class*=pull-], .row .col[class*=push-] {
+        position: relative;
+      }
+      .row .col.push-m8 {
+        left: 66.66667%;
+      }
+    }
+    @media only screen and (min-width:993px) {
+      .row .col.l4 {
+        width: 33.33333%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.l5 {
+        width: 41.66667%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.l6 {
+        width: 50%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.l10 {
+        width: 83.33333%;
+        margin-left: auto;
+        left: auto;
+        right: auto
+      }
+      .row .col.offset-l1 {
+        margin-left: 8.33333%
+      }
+    }
+    nav {
+      color: #fff;
+      background-color: #ff5107;
+      width: 100%;
+      height: 56px;
+      line-height: 56px
+    }
+    nav a {
+      color: #fff
+    }
+    nav [class*=mdi-],
+    nav [class^=mdi-],
+    nav i,
+    nav i.material-icons {
+      display: block;
+      font-size: 24px;
+      height: 56px;
+      line-height: 56px
+    }
+    nav .nav-wrapper {
+      position: relative;
+      height: 100%
+    }
+    /* @media only screen and (min-width:993px) {
+      nav a.button-collapse {
+        display: none
+      }
+    } */
+    nav .button-collapse {
+      float: left;
+      position: relative;
+      z-index: 1;
+      height: 56px;
+      margin: 0 18px
+    }
+    nav .button-collapse i {
+      height: 56px;
+      line-height: 56px
+    }
+    nav .brand-logo {
+      position: absolute;
+      color: #fff;
+      display: inline-block;
+      font-size: 2.1rem;
+      padding: 0
+    }
+    @media only screen and (max-width:992px) {
+      nav .brand-logo {
+        left: 50%;
+        transform: translateX(-50%)
+      }
+      nav .brand-logo.left,
+      nav .brand-logo.right {
+        padding: 0;
+        transform: none
+      }
+      nav .brand-logo.left {
+        left: .5rem
+      }
+      nav .brand-logo.right {
+        right: .5rem;
+        left: auto
+      }
+    }
+    nav ul {
+      margin: 0
+    }
+    nav ul li {
+      transition: background-color .3s;
+      float: left;
+      padding: 0
+    }
+    nav ul a {
+      transition: background-color .3s;
+      font-size: 1rem;
+      color: #fff;
+      display: block;
+      padding: 0 15px;
+      cursor: pointer
+    }
+    nav ul a.btn,
+    nav ul a.btn-flat,
+    nav ul a.btn-floating,
+    nav ul a.btn-large {
+      margin-top: -2px;
+      margin-left: 15px;
+      margin-right: 15px
+    }
+    @media only screen and (min-width:601px) {
+      nav,
+      nav .nav-wrapper i,
+      nav a.button-collapse,
+      nav a.button-collapse i {
+        height: 64px;
+        line-height: 64px
+      }
+    }
+    a {
+      text-decoration: none
+    }
+    html {
+      line-height: 1.5;
+      font-family: 'Arial',sans-serif;
+      font-weight: 400;
+      color: rgba(0,0,0,.87)
+    }
+    @media only screen and (min-width:0) {
+      html {
+        font-size: 14px
+      }
+    }
+    @media only screen and (min-width:992px) {
+      html {
+        font-size: 14.5px
+      }
+    }
+    @media only screen and (min-width:1200px) {
+      html {
+        font-size: 15px
+      }
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-weight: 400;
+      line-height: 1.1
+    }
+    h1 {
+      font-size: 3rem;
+      line-height: 110%;
+      margin: 1.5rem 0 1.2rem 0
+    }
+    h2 {
+      font-size: 2.143rem;
+      line-height: 110%;
+      margin: 1.0715rem 0 .8572rem 0
+    }
+    h3 {
+      font-size: 1.714rem;
+      line-height: 110%;
+      margin: .857rem 0 .6856rem 0
+    }
+    h4 {
+      font-size: 1.429rem;
+      line-height: 110%;
+      margin: .7145rem 0 .5716rem 0
+    }
+    h5 {
+      font-size: 1.286rem;
+      line-height: 110%;
+      margin: .643rem 0 .5144rem 0
+    }
+    small {
+      font-size: 75%
+    }
+    .btn,
+    .btn-flat,
+    .btn-large {
+      border: none;
+      border-radius: 30px;
+      display: inline-block;
+      height: 30px;
+      line-height: 30px;
+      padding: 0 1.5rem;
+      text-transform: uppercase;
+      vertical-align: middle;
+      -webkit-tap-highlight-color: transparent
+    }
+    .btn,
+    .btn-flat,
+    .btn-floating,
+    .btn-large {
+      font-size: 1rem;
+      outline: 0
+    }
+    .btn,
+    .btn-large {
+      text-decoration: none;
+      color: #fff;
+      background-color: #0a1d2e;
+      text-align: center;
+      letter-spacing: .5px;
+      cursor: pointer
+    }
+    .btn:hover,
+    .btn-large:hover{
+      transition: .2s ease-out;
+    }
+    .btn-large {
+      height: 37.5px;
+      line-height: 37.5px
+    }
+    .btn-block {
+      display: block
+    }
+    .waves-effect {
+      position: relative;
+      cursor: pointer;
+      display: inline-block;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      vertical-align: middle;
+      z-index: 1;
+      transition: .3s ease-out
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      background-color: #fafafa;
+      padding: 0;
+      max-height: 70%;
+      width: 55%;
+      margin: auto;
+      overflow-y: auto;
+      border-radius: 2px;
+      will-change: top,opacity
+    }
+    @media only screen and (max-width:992px) {
+      .modal {
+        width: 80%
+      }
+    }
+    .modal h1,
+    .modal h2,
+    .modal h3,
+    .modal h4 {
+      margin-top: 0
+    }
+    .modal .modal-content {
+      padding: 24px;
+    }
+    .modal.bottom-sheet {
+      top: auto;
+      bottom: -100%;
+      margin: 0;
+      width: 100%;
+      max-height: 50%;
+      border-radius: 0;
+      will-change: bottom,opacity;
+    }
+    ::placeholder {
+      color: #6f95b7
+    }
+    input:not([type]),
+    input[type=date]:not(.browser-default),
+    input[type=datetime-local]:not(.browser-default),
+    input[type=datetime]:not(.browser-default),
+    input[type=email]:not(.browser-default),
+    input[type=number]:not(.browser-default),
+    input[type=password]:not(.browser-default),
+    input[type=search]:not(.browser-default),
+    input[type=tel]:not(.browser-default),
+    input[type=text]:not(.browser-default),
+    input[type=time]:not(.browser-default),
+    input[type=url]:not(.browser-default),
+    textarea.materialize-textarea {
+      background-color: transparent;
+      border: none;
+      border-bottom: 1px solid #cedbe7;
+      border-radius: 0;
+      outline: 0;
+      height: 3rem;
+      width: 100%;
+      /* font-size: 1rem; */
+      font-size: 16px;
+      margin: 0 0 20px 0;
+      padding: 0 20px;
+      box-shadow: none;
+      box-sizing: content-box;
+      transition: all .3s
+    }
+    .input-field {
+      position: relative;
+      margin-top: 1rem
+    }
+    textarea {
+      width: 100%;
+      height: 3rem;
+      background-color: transparent
+    }
+    textarea.materialize-textarea {
+      overflow-y: hidden;
+      padding: .8rem 0 1.6rem 0;
+      resize: none;
+      min-height: 3rem
+    }
+    .hiddendiv {
+      display: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      padding-top: 1.2rem;
+      position: absolute;
+      top: 0
+    }
+    .side-nav {
+      position: fixed;
+      width: 300px;
+      left: 0;
+      top: 0;
+      margin: 0;
+      transform: translateX(-100%);
+      height: -moz-calc(100%);
+      height: calc(100% + 60px);
+      padding-bottom: 60px;
+      background-color: #fff;
+      z-index: 999;
+      overflow-y: auto;
+      will-change: transform;
+      backface-visibility: hidden;
+      transform: translateX(-105%);
+      transition: transform linear 0.25s;
+    }
+    .side-nav li {
+      float: none;
+      line-height: 48px
+    }
+    .side-nav li.active {
+      background-color: rgba(0,0,0,.05)
+    }
+    .side-nav li > a {
+      color: rgba(0,0,0,.87);
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      height: 48px;
+      line-height: 48px;
+      padding: 0 32px
+    }
+    .side-nav li > a.btn,
+    .side-nav li > a.btn-flat,
+    .side-nav li > a.btn-floating,
+    .side-nav li > a.btn-large {
+      margin: 10px 15px
+    }
+    .side-nav li > a.btn,
+    .side-nav li > a.btn-floating,
+    .side-nav li > a.btn-large {
+      color: #fff
+    }
+    .drag-target {
+      height: 100%;
+      width: 10px;
+      position: fixed;
+      top: 0;
+      z-index: 998
+    }
+    @media only screen and (max-width:992px) {
+      .side-nav.fixed {
+        transform: translateX(-105%)
+      }
+      .side-nav.fixed.right-aligned {
+        transform: translateX(105%)
+      }
+      .side-nav a {
+        padding: 0 16px
+      }
+      .side-nav .user-view,
+      .side-nav .userView {
+        padding: 16px 16px 0
+      }
+    }
+    input:not([type]),
+    input[type=date]:not(.browser-default),
+    input[type=datetime-local]:not(.browser-default),
+    input[type=datetime]:not(.browser-default),
+    input[type=email]:not(.browser-default),
+    input[type=number]:not(.browser-default),
+    input[type=password]:not(.browser-default),
+    input[type=search]:not(.browser-default),
+    input[type=tel]:not(.browser-default),
+    input[type=text]:not(.browser-default),
+    input[type=time]:not(.browser-default),
+    input[type=url]:not(.browser-default),
+    textarea.materialize-textarea {
+      background-color: transparent;
+      border: 1px solid #cedbe7;
+      border-radius: 4px;
+      margin-bottom: 0;
+      box-sizing: border-box
+    }
+    .input-field {
+      margin-bottom: 15px;
+      position: relative;
+      margin-top: 0
+    }
+    html {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      background-color: #fff;
+      color: #0a1d2e;
+      letter-spacing: 1px
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column
+    }
+    main {
+      flex: 1 0 auto
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      pointer-events: none;
+    }
+    .clearfix:after,
+    .clearfix:before {
+      display: table;
+      content: " "
+    }
+    .clearfix:after {
+      clear: both
+    }
+    p {
+      margin-top: 0
+    }
+    .mr-0 {
+      margin: 0!important
+    }
+    .c-white {
+      color: #fff
+    }
+    @media only screen and (min-width:601px) {
+      .container {
+        width: 90%
+      }
+    }
+    .btn,
+    .btn-flat,
+    .btn-large {
+      text-transform: capitalize;
+      box-shadow: none;
+      border-radius: 30px
+    }
+    .btn-block {
+      width: 100%
+    }
+    .row {
+      margin-bottom: 0
+    }
+    .header-navbar {
+      position: fixed;
+      z-index: 998;
+      height: 60px;
+      line-height: 60px;
+      background-color: #fff;
+      border-bottom: 1px solid #f0f5f7;
+      box-shadow: none
+    }
+    .header-navbar .brand-logo img {
+      width: 180px;
+      vertical-align: middle;
+      height: auto
+    }
+    .edoptim-logo-navbar{
+      width: 108px !important;
+      height: 38px !important;
+    }
+    .header-navbar.active {
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.05),inset 0 -1px 0 rgba(0,0,0,.1)
+    }
+    .header-navbar .button-collapse {
+      color: #0a1d2e;
+      cursor: pointer;
+    }
+    
+    .header-navbar ul li:not(:last-child) a {
+      color: #0a1d2e;
+      font-weight: 600;
+      padding: 0 8px;
+      letter-spacing: .5px;
+      position: relative;
+      transition: all .5s
+    }
+
+    .header-navbar ul li:not(:last-child) a:after {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+      width: 0%;
+      content: '.';
+      color: transparent;
+      background: #0a1d2e;
+      height: 2px
+    }
+    .header-navbar ul li:not(:last-child) a:hover::after {
+      transition: all .5s;
+      background: #ff5107;
+    }
+    .header-navbar ul li a.btn,
+    .header-navbar ul li a.btn-large {
+      margin-left: 10px;
+      margin-right: 10px
+    }
+    .header-navbar ul li:not(:last-child) a.active{color:#0a1d2e;background-color:transparent}
+    .header-navbar ul li:not(:last-child) a:hover{color:#ff5107;background-color:transparent}
+    .header-navbar ul li:not(:last-child) a.active:after,.header-navbar ul li:not(:last-child) a:hover:after{width:50%}
+    .header-navbar ul li:not(:last-child).active a{color:#ff5107}
+    .header-navbar ul li:not(:last-child).active a:after{width:50%}
+    .header-navbar ul li.active{background-color:transparent}
+    @media only screen and (max-width:992px) {
+      .header-navbar ul li:not(:last-child) a {
+        padding: 0 15px
+      }
+      .header-navbar ul li:not(:last-child) a:after {
+        margin: 0
+      }
+    }
+    .page-wrapper {
+      padding-top: 60px
+    }
+    .page-wrapper .section-wrapper {
+      padding: 70px 0
+    }
+    .page-wrapper .section-wrapper.with-bg {
+      background-color: #f0f5f7
+    }
+    .page-wrapper .section-wrapper .section-heading {
+      color: #0a1d2e;
+      text-align: center;
+      position: relative;
+      text-transform: uppercase
+    }
+    .page-wrapper .section-wrapper .section-heading.with-mr {
+      margin-bottom: 50px
+    }
+    .page-wrapper .section-wrapper .section-heading:before {
+      position: absolute;
+      left: 50%;
+      bottom: -.2em;
+      height: 0;
+      width: 30px;
+      content: '';
+      border-top: 3px solid #0a1d2e;
+      margin-left: -15px
+    }
+    .footer {
+      background-color: #222328;
+      padding: 75px 0 40px
+    }
+    .footer .footer-nav {
+      text-align: center;
+      margin: 0;
+      padding: 0
+    }
+    .footer .footer-nav.footer-left {
+      margin-bottom: 20px
+    }
+    .footer .footer-nav.footer-left li {
+      font-size: 16px;
+    }
+    .footer .footer-nav.footer-left li.icon a {
+      color: #8c8f94;
+    }
+    @media screen and (max-width: 400px) {
+      .social-ul li{
+        width: 35%;
+        margin: auto auto 20px auto;
+      }
+    }
+    @media screen and (max-width: 767px) {
+    .footer .footer-nav.footer-left li.icon a {
+        font-size: 36px;
+      }
+    }
+    @media screen and (max-width: 1074px) {
+      .footer-left-wrapper, .footer-right-wrapper{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .footer-left-wrapper .footer-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .social-ul-wrapper{
+        width: 100%;
+        margin-top: 20px;
+      }
+      
+      .footer .footer-nav.footer-right li a{
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+    }
+    
+    .footer .footer-nav.footer-right li {
+      font-size: 16px
+    }
+    .footer .footer-nav li {
+      color: #fff;
+      display: inline-block;
+      padding: 0 15px;
+      position: relative;
+      line-height: 26px
+    }
+    .footer .footer-content {
+      margin-top: 35px;
+      font-size: 13px;
+      text-align: center;
+      color: #fff;
+      line-height: 2
+    }
+    @media only screen and (min-width:1075px) {
+      .footer .footer-nav.footer-left {
+        margin: 0;
+        float: left
+      }
+      .footer .footer-nav.footer-right {
+        float: right
+      }
+    }
+    .help-icon-btn {
+      z-index: 5;
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      width: 60px;
+      height: 60px
+    }
+    #help-modal .modal-content {
+      background-color: #fff
+    }
+    #help-modal .modal-content .help-content {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto
+    }
+    .banner-wrapper {
+      margin: 40px 0 120px
+    }
+    .banner-wrapper .caption-wrapper h1 {
+      color: #0a1d2e
+    }
+    .banner-wrapper .caption-wrapper .description {
+      margin: 15px 0 30px
+    }
+    .banner-wrapper .caption-wrapper h4 {
+      position: relative;
+      color: #0a1d2e!important;
+      border-left: 2px solid #0a1d2e;
+      padding-left: 5px;
+      font-weight: 700
+    }
+    .banner-wrapper .header-video .video-wrapper {
+      position: relative;
+      padding-top: 100%
+    }
+    @keyframes motion {
+      0% {
+        border-radius: 5px
+      }
+      50% {
+        border-radius: 50px
+      }
+      100% {
+        border-radius: 5px
+      }
+    }
+    .banner-wrapper .header-video .video-wrapper .youngwonks-video {
+      animation: motion 8s ease-in-out infinite;
+      background-image: linear-gradient(-34deg,#2f5ef6 15%,#da66d7 80%);
+      border-radius: 5px;
+      overflow: hidden;
+      transform: translate3d(0,0,0);
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      margin: auto;
+      width: 90%;
+      height: 90%
+    }
+    .banner-wrapper .header-video .video-wrapper .youngwonks-video video {
+      width: 100%;
+      left: 0;
+      position: absolute;
+      top: 0
+    }
+    .banner-wrapper .header-video .video-play-btn {
+      background-color: #ff5107;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 80px;
+      padding-top: 80px;
+      z-index: 50;
+      margin: -40px 0 0 -40px;
+      border-radius: 50%
+    }
+    @-webkit-keyframes pulsate {
+      0% {
+        -webkit-transform: scale(1,1);
+        opacity: 1
+      }
+      100% {
+        -webkit-transform: scale(1.2,1.2);
+        opacity: 0
+      }
+    }
+    .banner-wrapper .header-video .video-play-btn:before {
+      content: '';
+      width: 100%;
+      height: 100%;
+      background-color: #ff5107;
+      border-radius: 50%;
+      position: absolute;
+      animation: pulsate infinite 2s;
+      top: 0;
+      left: 0;
+      z-index: -1
+    }
+    .banner-wrapper .header-video .video-play-btn:after {
+      content: url("https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/landing-page/play-shape.png");
+      width: 19px;
+      height: 24px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -12px 0 0 -9px
+    }
+    @media only screen and (min-width:601px) {
+      .valign-container {
+        display: flex;
+        align-items: center
+      }
+    }
+    .summer-banner-land {
+      display: block;
+      border-radius: 8px;
+      background-color: #fff;
+      padding: 30px;
+      margin: 57px 0 50px;
+      text-align: center
+    }
+    .summer-banner-land .summer-content {
+      display: flex;
+      justify-content: center;
+      margin: 0!important;
+      padding: 15px
+    }
+    .summer-banner-land .summer-content .title {
+      font-size: 1.429rem;
+      display: inline;
+      font-weight: 600;
+      margin-top: 10px
+    }
+    .progressbar {
+      margin: 0;
+      padding: 0;
+      position: relative;
+      z-index: 1
+    }
+    .progressbar li {
+      list-style-type: none;
+      width: 16.66%;
+      float: left;
+      font-size: 12px;
+      position: relative;
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #0a1d2e
+    }
+    .progressbar li:after {
+      width: 100%;
+      height: 6px;
+      content: '';
+      position: absolute;
+      background-color: #cfd9e0;
+      top: 20px;
+      left: -50%;
+      z-index: -1
+    }
+    .progressbar li:first-child:after {
+      content: none
+    }
+    .progressbar li:not(:last-child):before {
+      position: absolute;
+      top: 15px;
+      right: 0;
+      content: '';
+      border: solid #cfd9e0;
+      border-width: 0 4px 4px 0;
+      display: inline-block;
+      padding: 6px;
+      -webkit-transform: rotate(-45deg);
+      transform: rotate(-45deg);
+    }
+    .progressbar li i.circle {
+      width: 40px;
+      height: 40px;
+      display: block;
+      margin: 0 auto 10px auto;
+      border-radius: 50%
+    }
+    .level-blocks {
+      margin-top: 20px;
+      display: flex;
+      flex: 3;
+      flex-wrap: wrap
+    }
+    .level-blocks li {
+      display: flex
+    }
+    .level-blocks li .block {
+      background-color: #fff;
+      text-align: center;
+      padding: 25px 25px 70px 25px;
+      margin: 20px 0;
+      border-radius: 2px;
+      position: relative;
+    }
+    .level-blocks li .block img {
+      margin: 0 auto 35px;
+      display: block
+    }
+    .level-blocks li .block .tag {
+      display: inline-block;
+      font-weight: 700;
+      font-size: 20px;
+      padding: 0;
+      color: #263b4d
+    }
+    .level-blocks li .block .block-title {
+      font-weight: 700;
+      display: block;
+      margin: 5px 0 10px
+    }
+    .level-blocks li .block .content {
+      margin: 10px 0 0;
+      font-size: 16px;
+      word-break: break-word;
+    }
+    .level-blocks li .block .level-title {
+      font-size: inherit
+    }
+    
+    .level-blocks li .block p:last-child {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+    }
+    .level-0 {
+      background-color: #eb9ea3
+    }
+    .level-1 {
+      background-color: #ebdd9e
+    }
+    .level-2 {
+      background-color: #fdb095
+    }
+    .level-3 {
+      background-color: #a5dda2
+    }
+    .level-4 {
+      background-color: #a2dedc
+    }
+    .level-5 {
+      background-color: #c6a4e1
+    }
+    .level-0.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #eb9ea3
+    }
+    .level-1.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #ebdd9e
+    }
+    .level-2.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #fdb095
+    }
+    .level-3.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #a5dda2
+    }
+    .level-4.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #a2dedc
+    }
+    .level-5.no-bg {
+      background-color: #fff;
+      border-bottom: 5px solid #c6a4e1
+    }
+    .ap-csp.no-bg {
+      background-color: #fff;
+      /* border-bottom: 5px solid #e8e8e8 */
+    }
+    .ap-csa.no-bg {
+      background-color: #fff;
+      /* border-bottom: 5px solid #e8e8e8 */
+    }
+    .lms-section .lms-img-ctn {
+      background: url("https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/landing-page/apple-iPad-pro-silver.png") 0 0 no-repeat;
+      padding: 3% 6%;
+      background-size: contain
+    }
+    .lms-section .lms-content .lms-blocks li {
+      position: relative;
+      padding-left: 15px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 18px
+    }
+    .lms-section .lms-content .lms-blocks li:before {
+      content: '';
+      border-radius: 50%;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      margin-top: -5px;
+      background-color: #b3c7d9
+    }
+    .teaching-blocks {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0
+    }
+    .teaching-blocks .block {
+      margin: 15px 0;
+      padding: 25px;
+      text-align: center
+    }
+    .teaching-blocks .block .teaching-circle {
+      position: relative;
+      z-index: 1;
+      margin: 0 auto;
+      width: 230px;
+      height: 230px;
+      padding: 20px;
+      background-color: rgba(57,188,237,.03);
+      border-radius: 50%;
+      margin-bottom: 40px
+    }
+    .teaching-blocks .block .teaching-circle .circle-icon {
+      width: 100%;
+      height: 100%;
+      background-color: rgba(57,188,237,.07);
+      border-radius: 50%
+    }
+    .teaching-blocks .block .teaching-circle img {
+      max-height: 100%;
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto
+    }
+    .teaching-blocks .block .block-title {
+      color: #263b4d
+    }
+    .teaching-blocks .block .content {
+      margin: 10px 0 0;
+      font-size: 16px;
+      font-weight: 400
+    }
+    .won-blocks li {
+      font-weight: 600
+    }
+    .won-blocks li .heading {
+      color: #0a1d2e;
+      position: relative;
+      padding-left: 15px;
+      display: inline-block
+    }
+    .won-blocks li .heading:before {
+      content: '';
+      border-radius: 50%;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      margin-top: -5px;
+      background-color: #b3c7d9
+    }
+    .won-blocks li .content {
+      padding-left: 15px
+    }
+    .won-blocks li .content .title {
+      color: #263b4d;
+      margin: 0
+    }
+    .won-blocks li .content .title .place {
+      /* color: #ff5107 */
+    }
+    .won-blocks li .content .btn,
+    .won-blocks li .content .btn-large {
+      font-weight: 400;
+      font-size: 12px;
+      padding: 0 1rem;
+      height: 26px;
+      line-height: 26px
+    }
+    .won-blocks li + li {
+      margin-top: 40px
+    }
+    .track-section .track-content {
+      font-size: 18px;
+      font-weight: 500
+    }
+    .track-section .track-content .download-link {
+      display: inline-block
+    }
+    @media screen and (min-width:792px) {
+      .track-section .track-content .download-link + .download-link {
+        margin-left: 15px
+      }
+    }
+    .track-section img {
+      display: block
+    }
+    .flexslider {
+      width: 308px;
+      height: 626px;
+    }
+    a.no-link-color {
+      color: #0a1d2e
+    }
+    .help-icon-btn {
+      background-color: #0a1d2e;
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      color: #fff;
+      justify-content: center
+    }
+    .help-icon-btn i {
+      font-size: 2.6rem
+    }
+    @-webkit-keyframes tada {
+      0% {
+        -webkit-transform: scale(1);
+        transform: scale(1)
+      }
+      10%,
+      20% {
+        -webkit-transform: scale(.9) rotate(-8deg);
+        transform: scale(.9) rotate(-8deg)
+      }
+      30%,
+      50%,
+      70% {
+        -webkit-transform: scale(1.3) rotate(8deg);
+        transform: scale(1.3) rotate(8deg)
+      }
+      40%,
+      60% {
+        -webkit-transform: scale(1.3) rotate(-8deg);
+        transform: scale(1.3) rotate(-8deg)
+      }
+      80% {
+        -webkit-transform: scale(1) rotate(0);
+        transform: scale(1) rotate(0)
+      }
+    }
+    @keyframes tada {
+      0% {
+        -webkit-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1)
+      }
+      10%,
+      20% {
+        -webkit-transform: scale(.9) rotate(-8deg);
+        -ms-transform: scale(.9) rotate(-8deg);
+        transform: scale(.9) rotate(-8deg)
+      }
+      30%,
+      50%,
+      70% {
+        -webkit-transform: scale(1.3) rotate(8deg);
+        -ms-transform: scale(1.3) rotate(8deg);
+        transform: scale(1.3) rotate(8deg)
+      }
+      40%,
+      60% {
+        -webkit-transform: scale(1.3) rotate(-8deg);
+        -ms-transform: scale(1.3) rotate(-8deg);
+        transform: scale(1.3) rotate(-8deg)
+      }
+      80% {
+        -webkit-transform: scale(1) rotate(0);
+        -ms-transform: scale(1) rotate(0);
+        transform: scale(1) rotate(0)
+      }
+    }
+    .faa-parent.animated-hover:hover > .faa-tada,
+    .faa-tada.animated,
+    .faa-tada.animated-hover:hover {
+      -webkit-animation: tada 2s linear infinite;
+      animation: tada 2s linear infinite
+    }
+    .footer-nav .social-media-icons {
+      display: inline-block
+    }
+    h3.index-h3 {
+      font-size: 1.286rem
+    }
+    .mock-h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0;
+      font-size: 2.143rem
+    }
+    .mock-h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0;
+      font-size: 2.143rem
+    }
+    .block {
+      display: block
+    }
+    h1.smaller-heading {
+      font-size: 2.8rem
+    }
+    .flexslider-images .slides {
+      padding: 77px 21px 0 22px
+    }
+    .help-textarea {
+      padding: 8px 20px!important
+    }
+    .top-margin-30 {
+      margin-top: 30px
+    }
+    .theme-load-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-color: rgba(0,0,0,.5);
+      z-index: 1051;
+      display: none
+    }
+    @-webkit-keyframes load1 {
+      0%,
+      100%,
+      80% {
+        box-shadow: 0 0;
+        height: 3em
+      }
+      40% {
+        box-shadow: 0 -2em;
+        height: 4em
+      }
+    }
+    @keyframes load1 {
+      0%,
+      100%,
+      80% {
+        box-shadow: 0 0;
+        height: 3em
+      }
+      40% {
+        box-shadow: 0 -2em;
+        height: 4em
+      }
+    }
+    .theme-loader,
+    .theme-loader:after,
+    .theme-loader:before {
+      background: #fff;
+      -webkit-animation: load1 1s infinite ease-in-out;
+      animation: load1 1s infinite ease-in-out;
+      width: .8em;
+      height: 3em
+    }
+    .theme-loader {
+      color: #fff;
+      text-indent: -9999em;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -2em 0 0 -.5em;
+      font-size: 11px;
+      -webkit-transform: translateZ(0);
+      -ms-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-animation-delay: -0.16s;
+      animation-delay: -0.16s
+    }
+    a.flex-next,
+    a.flex-prev {
+      display: none!important
+    }
+    .accredition,
+    .professional-faculty {
+      font-weight: 600
+    }
+    .accredition .not-bold,
+    .professional-faculty .not-bold {
+      font-weight: 400
+    }
+    .professional-faculty .not-bold span {
+      font-weight: 600
+    }
+    .accredition .block-title,
+    .professional-faculty .block-title {
+      font-size: 1.375rem
+    }
+    @media only screen and (max-width:601px) {
+      .accredition .wasc-image,
+      .professional-faculty .professional-faculty-img {
+        margin-left: 20%;
+        padding-bottom: 2rem
+      }
+      .nav-wrapper.container.clearfix {
+        text-align: center
+      }
+      .side-nav a {
+        text-align: left
+      }
+    }
+    .testimonial-blocks>li{
+      margin-bottom: 20px;
+    }
+    .testimonial-blocks .name {
+      font-size: 25px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #406280;
+      margin: 35px 0
+    }
+    .testimonial-blocks .years {
+      font-size: 18px;
+      font-weight: 700;
+      color: #406280;
+      margin-bottom: 25px
+    }
+    .testimonial-blocks .details {
+      font-size: 18px;
+      color: #406280;
+      font-weight: 500;
+      margin-bottom: 35px
+    }
+    .testimonial-blocks .desc {
+      font-size: 18px;
+      color: #406280;
+      font-weight: 500;
+      margin-top: 35px;
+      font-style: italic;
+      line-height: 1.56
+    }
+    .testimonial-blocks .by-who {
+      font-size: 15px;
+      margin: 35px 0;
+      font-weight: 700;
+      line-height: 1.47;
+      color: #263b4d
+    }
+    .testimonial-blocks .link .img {
+      width: 22px;
+      height: 100%;
+      margin-right: 10px;
+      margin-top: -15px;
+      vertical-align: middle
+    }
+    @media only screen and (min-width:790px) and (max-width:830px) {
+      .testimonial-blocks .link .img {
+        width: 35px
+      }
+    }
+    .testimonial-blocks .link {
+      font-size: 15px;
+      font-weight: 600;
+      display: inline-block
+    }
+    .testimonial-blocks .link div {
+      display: inline-block
+    }
+    .home-page .banner-wrapper .caption-wrapper h1 {
+      color: #0a1d2e!important;
+      font-weight: 700
+    }
+    @media only screen and (max-width:992px) {
+      .banner-wrapper .caption-wrapper h1 {
+        font-size: 2.143rem
+      }
+    }
+    .home-page.page-wrapper .section-wrapper .section-heading {
+      color: #0a1d2e;
+      font-weight: 700
+    }
+    .home-page .color-dark-blue {
+      color: #0a1d2e!important
+    }
+    .home-page .color-dark-orange {
+      color: #0a1d2e!important
+    }
+    .home-page .bg-dark-blue {
+      background-color: #0a1d2e!important
+    }
+    .home-page .bg-dark-orange {
+      background-color: #0a1d2e!important
+    }
+    .home-page .bg-dark-orange.stay-orange {
+      background-color: #ff5107!important
+    }
+    .home-page .color-white {
+      color: #fff!important
+    }
+    .home-page.page-wrapper .section-wrapper .section-heading:before {
+      border-top: 3px solid #0a1d2e!important
+    }
+    .home-page.page-wrapper .section-wrapper .section-heading.color-white:before {
+      border-top: 3px solid #fff!important
+    }
+    .home-page .track-record-age {
+      margin: 0;
+      font-size: 200px;
+      font-weight: 500;
+      color: #fff;
+      line-height: .7;
+      font-family: Rubik
+    }
+    .blue-bg {
+      background-image: linear-gradient(to right,#2a75ed,#9fc4ff)
+    }
+    .YW-Classes.class-types-font {
+      font-size: 32px;
+      font-weight: 700;
+      text-decoration-color: white;
+      letter-spacing: 1px;
+      color: #fff;
+      text-align: center;
+      padding: 20px
+    }
+    .YW-Classes.visit-more {
+      background-color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: .5px;
+      color: #0a1d2e;
+      margin: 15px
+    }
+    .YW-Classes.class-types-info {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.56;
+      letter-spacing: normal;
+      color: #fff;
+      background-color: #575757;
+      padding: .8%
+    }
+    .tablinks.active {
+      color: #fff;
+      border: solid 3px #fff;
+      background-color: #0a1d2e;
+      padding: 8px 22px;
+      font-size: 15px;
+      font-weight: 700
+    }
+    .tablinks.inactive {
+      font-size: 15px;
+      font-weight: 700;
+      color: #c3d5f2;
+      padding: 8px 22px;
+      background-color: #575757;
+      border: solid 3px #575757
+    }
+    .class-type-button-group{
+      display: inline-block;
+      background-color: #575757;
+      width: auto;
+    }
+    .additional-testimonial-btn {
+      margin-top: 50px
+    }
+    .YW-Classes.visit-more:hover{
+      background-color: #fff
+    }
+    /* login */
+    .auth-wrapper {
+        margin: 0 auto;
+        max-width: 400px;
+        width: 100%;
+    }
+    /* for navbar */
+    @media only screen and (max-width:1200px) {
+      ul.right.hide-on-med-and-down {
+        display: none!important
+      }
+    }
+    @media only screen and (max-width: 1200px){
+      nav .brand-logo {
+          left: 50%;
+          transform: translateX(-50%);
+      }
+    }
+    @media only screen and (min-width: 1200px){
+      nav .button-collapse {
+          display: none;
+      }
+    }
+    /* Below 1200px the horizontal nav is hidden; ensure menu control is visible (incl. tablet ~1033px) */
+    @media only screen and (max-width: 1199px) {
+      nav.header-navbar .button-collapse {
+        display: block !important;
+        visibility: visible !important;
+      }
+    }
+    ul.ul-gray {
+        padding-left: 15px;
+    }
+    ul.ul-gray > li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 5px;
+    }
+    ul.ul-gray > li::before {
+      content: '';
+      border-radius: 50%;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      top: 13px;
+      left: 0;
+      margin-top: -5px;
+      background-color: #b3c7d9;
+    }
+  </style>
+
+  <!-- Loading Theme CSS -->
+    <link rel="preload" href="/assets/theme_min-393b2f347b654bc6c5d19165c81f4e575a10ee1238537755cd9f2ae7296f0897.css" as="style" onload="this.onload=null;this.rel=&#39;stylesheet&#39;" media="screen" />
+    <noscript>
+      <link rel="stylesheet" href="/assets/theme_min-393b2f347b654bc6c5d19165c81f4e575a10ee1238537755cd9f2ae7296f0897.css" media="screen" />
+    </noscript>
+
+</head>
+
+<body>
+  <!--    Header Navigation-->
+  <nav class="header-navbar">
+    <div class="nav-wrapper container clearfix">
+
+
+          <a href="/" class="brand-logo">
+            <picture>
+              <source 
+              type="image/webp"
+              srcset="https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/landing-page/new-yw-logo-navbar.webp"
+               />
+              <img 
+              alt="YoungWonks Coding Classes for Kids" 
+              src="https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/landing-page/new-yw-logo-navbar.png"
+              width="180" 
+              height="30" />
+          </picture>
+          <span class="sr-only">YoungWonks</span>
+          </a>
+          
+          <!-- <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a> -->
+          <span data-activates="mobile-demo" class="button-collapse" style="-webkit-tap-highlight-color: transparent; margin-left: 0;"><i
+            class="material-icons">menu</i></span>
+          <ul class="right hide-on-med-and-down">
+              <li>
+                <a class="" href="/welcome/why">Why</a>
+              </li>
+              <li>
+                <a class="" href="/welcome/admission">Admission</a>
+              </li>
+              <li>
+                <a class="" href="/welcome/tution">Tuition</a>
+              </li>
+              <li>
+                <a class="" href="/welcome/instructors">Instructors</a>
+              </li>
+              <li><a class="active" href="/blogs">Blog</a></li>
+                <li>
+                  <a class="" href="/welcome/events">Events</a>
+                </li>
+              <li><a class="" href="/welcome/videos">Videos</a>
+              </li>
+              <li><a target="_blank" href="https://store.youngwonks.com/">Store</a></li>
+              <li><a class="" href="/login">Login</a>
+              </li>
+
+              <li>
+                <a class="btn waves-effect waves-light bg-dark-orange  " href="/welcome/free-coding-class-trial"><b>Free Trial Class</b></a>
+              </li>
+          </ul>
+          <ul class="side-nav" id="mobile-demo">
+              <li>
+                <a href="/welcome/why">Why</a>
+              </li>
+              <li>
+                <a href="/welcome/admission">Admission</a>
+              </li>
+              <li>
+                <a href="/welcome/tution">Tuition</a>
+              </li>
+              <!-- <li></li> -->
+              <li><a href="/welcome/instructors">Instructors</a></li>
+              <li><a href="/blogs">Blog</a></li>
+                <li><a href="/welcome/events">Events</a></li>
+              <li><a href="/welcome/videos">Videos</a></li>
+              <li><a target="_blank" href="https://store.youngwonks.com/">Store</a></li>
+              <li><a href="/login">Login</a></li>
+              <li>
+                <a class="btn waves-effect waves-light bg-dark-orange  " href="/welcome/free-coding-class-trial"><b>Free Trial Class</b></a>
+              </li>
+          </ul>
+    </div>
+  </nav>
+  <!--    Loader-->
+  <div class="theme-load-container">
+    <div class="theme-loader">Loading...</div>
+  </div>
+
+  <div id="fb-root"></div>
+<!-- <script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.12';
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script> -->
+<!-- 
+<script>window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));</script> -->
+<!-- <script src="//platform.linkedin.com/in.js" type="text/javascript"> lang: en_US</script> -->
+<div class="page-wrapper">
+  <section class="section-wrapper with-bg">
+    <div class="container">
+      <h1 class="section-heading" style="font-size: 2.143rem;">
+        Raspberry Pi 4 Pinout
+      </h1>
+    </div>
+  </section>
+  <!-- YOUNGWONKS FEATURES SECTION -->
+  <section class="section section-pd">
+    <div class="container">
+      <div class="row d-md-flex">
+        <div class="col s12 m8">
+          <div class="blog detail">
+            <h2 class="blog-title">
+              A look at the GPIO pins on a Raspberry Pi
+
+            </h2>
+            <h2 class="blog-subtitle">
+              Here’s taking a look at the Raspberry Pi 4 pin configuration
+            </h2>
+            <div class="blog-thumbnail-single">
+              <img class="img-rounded" alt="Raspberry Pi 4 pinout image showing Raspberry Pi with highlighted GPIO pins." width="840" height="473" src="https://dnycf48t040dh.cloudfront.net/fit-in/840x473/Raspberry-Pi-4-Pinout.png" />
+            </div>
+            <!-- /.blog-thumbnail-single -->
+            <div class="share-plugin platform-sharing">
+              <!-- <div class="linkedin-wrapper">
+                        <script type="IN/Share" data-url="https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout"></script>
+                      </div> -->
+              <!-- <div class="twitter-wrapper">
+                        <a href="https://twitter.com/intent/tweet?text=Check%20Out%20this%20blog%20from%20YoungWonks!" class="twitter-share-button" data-show-count="false" data-size="small">
+                          <span class="sr-only">Share on Twitter</span>
+                        </a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                      </div> -->
+              <!-- <div class="fb-wrapper">
+                        <div class="fb-share-button" 	
+                          data-lazy="true" data-size="small" data-href="https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout" data-layout="button_count" data-mobile-iframe="true"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdevelopers.facebook.com%2Fdocs%2Fplugins%2F&amp;src=sdkpreparse" class="fb-xfbml-parse-ignore">
+                            <span class="sr-only">Share on Facebook</span>
+                          </a></div>
+                      </div> -->
+              <!-- Your share button code -->
+              <!-- <a class="twitter-share-button" href="https://twitter.com/intent/tweet?text=Check%20Out%20this%20blog%20from%20YoungWonks!"
+                      data-size="large">Tweet</a> -->
+            </div>
+            <div class="blog-content-wrapper">
+              <div class="blog-content detail">
+                <p><span>
+                    Dec 17, 2020
+                  </span> &nbsp; &nbsp;By Team YoungWonks
+                  *
+                </p>
+                <p>
+                  <p>Raspberry Pi is a series of small single-board computers developed in the UK by the Raspberry Pi Foundation with the aim of promoting teaching of basic computer science in schools and in developing countries. Today, Raspberry Pi is commonly used in robotics. In this blog, we shall take a look at the pin configuration of a Raspberry Pi 4 board. <br /><br /><img src="https://dnycf48t040dh.cloudfront.net/fit-in/840x473/GPIO-diagram-Raspberry-Pi-4.png" alt="Raspberry Pi 4 pinout diagram showing Raspberry Pi GPIO pins with each pin labeled with its BCM and board mode pin numbers" width="840" height="473" /><br /><br />A Raspberry Pi 4 board has 40 pins on it. Among these pins, we have four power pins on the Raspberry Pi, two of which are 5v pins and another two are 3.3v pins. The 5v power pins are connected directly to the Raspberry Pi's power input and we can use these pins to run low power applications. <br /><br />Then there are the ground pins. There are eight ground pins and all of these are connected to each other; you can use any of these ground pins for your projects. <br /><br />That leaves us with 28 GPIO pins, labeled starting from GPIO 0 and going up to GPIO 27. <br /><br />The GPIO pins, as indicated by their full form, can be programmed to be output pins or input pins. So we can set values of output pins and we can even read values of input pins. The GPIO pins can be digitally programmed so that they can be turned ON or OFF. The output of any GPIO pin is 3.3v and can be used to control output components like an LED or a motor. These ON/OFF conditions can also be interpreted as a Boolean True/False, 1/0 or HIGH/LOW. <br /><br />These are the common types of pins on a Raspberry Pi 4 board. Some of these pins also have a dual function. For example, pin 3 or GPIO 2 also acts like an I2C pin.</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14pt;"><strong>Attend Raspberry Pi GPIO classes</strong></span></p>
+<p>To learn more about the Raspberry Pi GPIO, you may attend the <a href="../../">YoungWonks Coding Classes for Kids</a> or the <a href="https://www.prowonks.com/">ProWonks Coding Classes for Adults</a>. In these programs, students learn to code and build projects using <a href="https://www.python.org/">Python</a> and <a href="https://www.raspberrypi.com/">Raspberry Pi</a>. <a href="../../arduino-raspberry-pi-coding">Students use Raspberry Pi GPIO to build IoT and robotics projects</a>. Students can try these classes for free by scheduling the <a href="../../welcome/free-coding-class-trial">free trial class</a>.</p>
+                </p>
+                  <p>*Contributors: Image by Abhishek Aggarwal
+                  </p>
+              </div>
+              <!-- /.blog-content -->
+            </div>
+            <!-- /.blog-content-wrapper -->
+              <div class="trial-post-ctn" id="trial-post-ctn">
+                <blockquote style="border-color: #0a1d2e;">
+                  <p class="flow-text">This blog is presented to you by YoungWonks. The leading coding program for
+                    kids and teens.</p>
+                  <b>YoungWonks offers instructor led one-on-one online classes and in-person classes with 4:1
+                    student teacher ratio.</p>
+                  <p><span style="font-weight: bold;" class="c-blue flow-text">Sign up for a free trial
+                      class</span> by filling out the form below:</p>
+                </b>
+              </blockquote>
+              <style>
+    .accreditations-and-awards{
+      background-color: #e4e4e4;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .accreditations-and-awards>.left{
+      margin-top: 40px;
+    }
+    .accreditations-and-awards>.right{
+      display: flex;
+      flex-direction: column;
+      margin: 40px;
+    }
+  @media screen and (min-width: 601px) {
+    .accreditations-and-awards>.right{
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin: 20px;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    .accreditations-and-awards{
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+    }
+    .accreditations-and-awards > .left{
+      margin-top: 0;
+    }
+  }
+  .award-wrapper{
+    background-color: white;
+    border-radius: 13px;
+    height: 110px;
+    padding: 0 20px;
+    display: grid;place-items: center;
+    margin-bottom: 10px;
+    margin-top: 10px;
+  }
+</style>
+<!-- Main section -->
+<main class="page-wrapper">
+
+  <!-- Child details -->
+  <div class="page-mr-b">
+
+    <section class="section">
+      <div class="container">
+        <div class="row">
+          <div class="col s12">
+            <form name="trialForm" id="trialForm" action="/welcome/lead" method="post" class="now-load-js">
+              <input hidden="true" name="organization_id" value="1">
+              <input hidden="true" name="type_of_lead" value="Website">
+              <input hidden="true" name="timezone" value="" id="lead-timezone-form">
+              <input hidden="true" name="music_school" value="">
+              <input hidden="true" name="payment_type" value="">
+              <input hidden="true" name="referral_id" value="">
+              <input hidden="true" name="skill_id" value="">
+              <input hidden="true" name="location_id" value="">
+              <input hidden="true" name="class_type" value="">
+              <div class="row">
+                <div class="input-field col s12">
+  
+                    <input type="hidden" id="gclid_field" name="gclid_field" value="">
+
+                    <label class="trial-label" for="name">Parent Name</label>
+                    <input id="parentname" name="name" value="" placeholder="Parent Name" type="text" class="validate" autocomplete="off">
+
+                </div>
+              </div>
+              <div class="row">
+                <div class="input-field col s12">
+                  <label class="trial-label" for="phone">Phone</label>
+                  <input id="phone" name="phone" value="" type="text" placeholder="Phone" class="validate" autocomplete="off">
+                </div>
+              </div>
+              <div class="row">
+                  <div class="input-field col s12">
+                    <label class="trial-label" for="email">Email</label>
+                    <input id="email" name="email" type="email" value="" placeholder="Email" class="validate" autocomplete="off">
+                  </div>
+              </div>
+                <div class="row">
+                  <div class="input-field col s12">
+                    <label class="trial-label">Child age</label>
+                    <div class="age-row">
+                      <div class="input-field">
+                        <input id="child1" name="age" type="text" placeholder="Child 1" class="validate child-group" autocomplete="off">
+                      </div>
+                      <div class="input-field">
+                        <input id="child2" name="age2" type="text" placeholder="Child 2" class="validate child-group" autocomplete="off">
+                      </div>
+                      <div class="input-field">
+                        <input id="child3" name="age3" type="text" placeholder="Child 3" class="validate child-group" autocomplete="off">
+                      </div>
+                    </div>
+                    <div id="child-error">
+                    </div>
+                  </div>
+                </div>
+              <div class="row">
+                <div class="input-field col s12">
+                  <label class="trial-label" for="useremail">Zip or City</label>
+                  <input id="zip" name="city" type="text" placeholder="Zip/City" class="validate" autocomplete="off">
+                </div>
+              </div>
+              <div class="row">
+                <div class="input-field col s12 ">
+                  <label class="trial-label" for="useremail">Country</label>
+                  <div class="select2-wrapper">
+                    <select name="lead[country]" id="lead_country"><option value="US">United States</option>
+<option disabled="disabled" value="---------------">---------------</option>
+<option value="AF">Afghanistan</option>
+<option value="AX">Åland Islands</option>
+<option value="AL">Albania</option>
+<option value="DZ">Algeria</option>
+<option value="AS">American Samoa</option>
+<option value="AD">Andorra</option>
+<option value="AO">Angola</option>
+<option value="AI">Anguilla</option>
+<option value="AQ">Antarctica</option>
+<option value="AG">Antigua and Barbuda</option>
+<option value="AR">Argentina</option>
+<option value="AM">Armenia</option>
+<option value="AW">Aruba</option>
+<option value="AU">Australia</option>
+<option value="AT">Austria</option>
+<option value="AZ">Azerbaijan</option>
+<option value="BS">Bahamas</option>
+<option value="BH">Bahrain</option>
+<option value="BD">Bangladesh</option>
+<option value="BB">Barbados</option>
+<option value="BY">Belarus</option>
+<option value="BE">Belgium</option>
+<option value="BZ">Belize</option>
+<option value="BJ">Benin</option>
+<option value="BM">Bermuda</option>
+<option value="BT">Bhutan</option>
+<option value="BO">Bolivia</option>
+<option value="BQ">Bonaire, Sint Eustatius and Saba</option>
+<option value="BA">Bosnia and Herzegovina</option>
+<option value="BW">Botswana</option>
+<option value="BV">Bouvet Island</option>
+<option value="BR">Brazil</option>
+<option value="IO">British Indian Ocean Territory</option>
+<option value="BN">Brunei Darussalam</option>
+<option value="BG">Bulgaria</option>
+<option value="BF">Burkina Faso</option>
+<option value="BI">Burundi</option>
+<option value="CV">Cabo Verde</option>
+<option value="KH">Cambodia</option>
+<option value="CM">Cameroon</option>
+<option value="CA">Canada</option>
+<option value="KY">Cayman Islands</option>
+<option value="CF">Central African Republic</option>
+<option value="TD">Chad</option>
+<option value="CL">Chile</option>
+<option value="CN">China</option>
+<option value="CX">Christmas Island</option>
+<option value="CC">Cocos (Keeling) Islands</option>
+<option value="CO">Colombia</option>
+<option value="KM">Comoros</option>
+<option value="CG">Congo</option>
+<option value="CD">Congo, The Democratic Republic of the</option>
+<option value="CK">Cook Islands</option>
+<option value="CR">Costa Rica</option>
+<option value="CI">Côte d&#39;Ivoire</option>
+<option value="HR">Croatia</option>
+<option value="CU">Cuba</option>
+<option value="CW">Curaçao</option>
+<option value="CY">Cyprus</option>
+<option value="CZ">Czechia</option>
+<option value="DK">Denmark</option>
+<option value="DJ">Djibouti</option>
+<option value="DM">Dominica</option>
+<option value="DO">Dominican Republic</option>
+<option value="EC">Ecuador</option>
+<option value="EG">Egypt</option>
+<option value="SV">El Salvador</option>
+<option value="GQ">Equatorial Guinea</option>
+<option value="ER">Eritrea</option>
+<option value="EE">Estonia</option>
+<option value="SZ">Eswatini</option>
+<option value="ET">Ethiopia</option>
+<option value="FK">Falkland Islands (Malvinas)</option>
+<option value="FO">Faroe Islands</option>
+<option value="FJ">Fiji</option>
+<option value="FI">Finland</option>
+<option value="FR">France</option>
+<option value="GF">French Guiana</option>
+<option value="PF">French Polynesia</option>
+<option value="TF">French Southern Territories</option>
+<option value="GA">Gabon</option>
+<option value="GM">Gambia</option>
+<option value="GE">Georgia</option>
+<option value="DE">Germany</option>
+<option value="GH">Ghana</option>
+<option value="GI">Gibraltar</option>
+<option value="GR">Greece</option>
+<option value="GL">Greenland</option>
+<option value="GD">Grenada</option>
+<option value="GP">Guadeloupe</option>
+<option value="GU">Guam</option>
+<option value="GT">Guatemala</option>
+<option value="GG">Guernsey</option>
+<option value="GN">Guinea</option>
+<option value="GW">Guinea-Bissau</option>
+<option value="GY">Guyana</option>
+<option value="HT">Haiti</option>
+<option value="HM">Heard Island and McDonald Islands</option>
+<option value="VA">Holy See (Vatican City State)</option>
+<option value="HN">Honduras</option>
+<option value="HK">Hong Kong</option>
+<option value="HU">Hungary</option>
+<option value="IS">Iceland</option>
+<option value="IN">India</option>
+<option value="ID">Indonesia</option>
+<option value="IR">Iran</option>
+<option value="IQ">Iraq</option>
+<option value="IE">Ireland</option>
+<option value="IM">Isle of Man</option>
+<option value="IL">Israel</option>
+<option value="IT">Italy</option>
+<option value="JM">Jamaica</option>
+<option value="JP">Japan</option>
+<option value="JE">Jersey</option>
+<option value="JO">Jordan</option>
+<option value="KZ">Kazakhstan</option>
+<option value="KE">Kenya</option>
+<option value="KI">Kiribati</option>
+<option value="KW">Kuwait</option>
+<option value="KG">Kyrgyzstan</option>
+<option value="LA">Lao People&#39;s Democratic Republic</option>
+<option value="LV">Latvia</option>
+<option value="LB">Lebanon</option>
+<option value="LS">Lesotho</option>
+<option value="LR">Liberia</option>
+<option value="LY">Libya</option>
+<option value="LI">Liechtenstein</option>
+<option value="LT">Lithuania</option>
+<option value="LU">Luxembourg</option>
+<option value="MO">Macao</option>
+<option value="MG">Madagascar</option>
+<option value="MW">Malawi</option>
+<option value="MY">Malaysia</option>
+<option value="MV">Maldives</option>
+<option value="ML">Mali</option>
+<option value="MT">Malta</option>
+<option value="MH">Marshall Islands</option>
+<option value="MQ">Martinique</option>
+<option value="MR">Mauritania</option>
+<option value="MU">Mauritius</option>
+<option value="YT">Mayotte</option>
+<option value="MX">Mexico</option>
+<option value="FM">Micronesia, Federated States of</option>
+<option value="MD">Moldova</option>
+<option value="MC">Monaco</option>
+<option value="MN">Mongolia</option>
+<option value="ME">Montenegro</option>
+<option value="MS">Montserrat</option>
+<option value="MA">Morocco</option>
+<option value="MZ">Mozambique</option>
+<option value="MM">Myanmar</option>
+<option value="NA">Namibia</option>
+<option value="NR">Nauru</option>
+<option value="NP">Nepal</option>
+<option value="NL">Netherlands</option>
+<option value="NC">New Caledonia</option>
+<option value="NZ">New Zealand</option>
+<option value="NI">Nicaragua</option>
+<option value="NE">Niger</option>
+<option value="NG">Nigeria</option>
+<option value="NU">Niue</option>
+<option value="NF">Norfolk Island</option>
+<option value="KP">North Korea</option>
+<option value="MK">North Macedonia</option>
+<option value="MP">Northern Mariana Islands</option>
+<option value="NO">Norway</option>
+<option value="OM">Oman</option>
+<option value="PK">Pakistan</option>
+<option value="PW">Palau</option>
+<option value="PS">Palestine, State of</option>
+<option value="PA">Panama</option>
+<option value="PG">Papua New Guinea</option>
+<option value="PY">Paraguay</option>
+<option value="PE">Peru</option>
+<option value="PH">Philippines</option>
+<option value="PN">Pitcairn</option>
+<option value="PL">Poland</option>
+<option value="PT">Portugal</option>
+<option value="PR">Puerto Rico</option>
+<option value="QA">Qatar</option>
+<option value="RE">Réunion</option>
+<option value="RO">Romania</option>
+<option value="RU">Russian Federation</option>
+<option value="RW">Rwanda</option>
+<option value="BL">Saint Barthélemy</option>
+<option value="SH">Saint Helena, Ascension and Tristan da Cunha</option>
+<option value="KN">Saint Kitts and Nevis</option>
+<option value="LC">Saint Lucia</option>
+<option value="MF">Saint Martin (French part)</option>
+<option value="PM">Saint Pierre and Miquelon</option>
+<option value="VC">Saint Vincent and the Grenadines</option>
+<option value="WS">Samoa</option>
+<option value="SM">San Marino</option>
+<option value="ST">Sao Tome and Principe</option>
+<option value="SA">Saudi Arabia</option>
+<option value="SN">Senegal</option>
+<option value="RS">Serbia</option>
+<option value="SC">Seychelles</option>
+<option value="SL">Sierra Leone</option>
+<option value="SG">Singapore</option>
+<option value="SX">Sint Maarten (Dutch part)</option>
+<option value="SK">Slovakia</option>
+<option value="SI">Slovenia</option>
+<option value="SB">Solomon Islands</option>
+<option value="SO">Somalia</option>
+<option value="ZA">South Africa</option>
+<option value="GS">South Georgia and the South Sandwich Islands</option>
+<option value="KR">South Korea</option>
+<option value="SS">South Sudan</option>
+<option value="ES">Spain</option>
+<option value="LK">Sri Lanka</option>
+<option value="SD">Sudan</option>
+<option value="SR">Suriname</option>
+<option value="SJ">Svalbard and Jan Mayen</option>
+<option value="SE">Sweden</option>
+<option value="CH">Switzerland</option>
+<option value="SY">Syrian Arab Republic</option>
+<option value="TW">Taiwan</option>
+<option value="TJ">Tajikistan</option>
+<option value="TZ">Tanzania</option>
+<option value="TH">Thailand</option>
+<option value="TL">Timor-Leste</option>
+<option value="TG">Togo</option>
+<option value="TK">Tokelau</option>
+<option value="TO">Tonga</option>
+<option value="TT">Trinidad and Tobago</option>
+<option value="TN">Tunisia</option>
+<option value="TR">Türkiye</option>
+<option value="TM">Turkmenistan</option>
+<option value="TC">Turks and Caicos Islands</option>
+<option value="TV">Tuvalu</option>
+<option value="UG">Uganda</option>
+<option value="UA">Ukraine</option>
+<option value="AE">United Arab Emirates</option>
+<option value="GB">United Kingdom</option>
+<option value="US">United States</option>
+<option value="UM">United States Minor Outlying Islands</option>
+<option value="UY">Uruguay</option>
+<option value="UZ">Uzbekistan</option>
+<option value="VU">Vanuatu</option>
+<option value="VE">Venezuela</option>
+<option value="VN">Vietnam</option>
+<option value="VG">Virgin Islands, British</option>
+<option value="VI">Virgin Islands, U.S.</option>
+<option value="WF">Wallis and Futuna</option>
+<option value="EH">Western Sahara</option>
+<option value="YE">Yemen</option>
+<option value="ZM">Zambia</option>
+<option value="ZW">Zimbabwe</option></select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="input-field col s8 offset-s2 m6 offset-m3">
+                  <script type="text/javascript">
+                    var submitInvisibleRecaptchaForm = function (e) {
+                      console.log("Captcha success");
+                      document.getElementById("recaptcha_token").value = e;
+                      document.getElementById("trialForm").submit();
+                    };
+                    var recaptchaErrorCallback = function () {
+                      console.log("Captcha error callback");
+                      setTimeout(function() { alert('Captcha could not be reached. Retrying..'); }, 1);
+
+                      grecaptcha.reset();
+                      grecaptcha.execute();
+                    };
+                  </script>
+                  <input type="hidden" name="g-recaptcha-response" id="recaptcha_token" >
+                  <div data-size="invisible" data-sitekey="6LduRv8ZAAAAAJsAeV-6IAnmLEj-ArxgV1suktQd" data-callback="submitInvisibleRecaptchaForm" data-expired-callback="recaptchaErrorCallback" data-error-callback="recaptchaErrorCallback" class="g-recaptcha "></div>
+
+
+                  <input type="submit" class="btn btn-block btn-large  trial-submit" value="Submit">
+                </div>
+              </div>
+            </form>
+            <br><br>
+            <div class="center">
+              <strong>By clicking the "Submit" button above, you agree to the <a class="c-blue semi-bold" href="/privacy">privacy policy</a></strong><br>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<style media="screen">
+  .help-icon-btn {
+    bottom: 90px;
+  }
+</style>
+
+<script type="text/javascript">
+  // submit_and_google_ads = function() {
+  //   $("#RegForm").submit();
+  //   return CheckRegister();
+  // }
+  /* <![CDATA[ */
+  goog_snippet_vars = function() {
+    var w = window;
+    w.google_conversion_id = 963677611;
+    w.google_conversion_label = "e8ZACMWQpF4Qq5vCywM";
+    w.google_remarketing_only = false;
+  }
+  // DO NOT CHANGE THE CODE BELOW.
+  goog_report_conversion = function(url) {
+    goog_snippet_vars();
+    window.google_conversion_format = "3";
+    window.google_is_call = true;
+    var opt = new Object();
+    opt.onload_callback = function() {
+    if (typeof(url) != 'undefined') {
+      window.location = url;
+    }
+  }
+  var conv_handler = window['google_trackConversion'];
+  if (typeof(conv_handler) == 'function') {
+    conv_handler(opt);
+  }
+
+  $(document).ready(function() {
+
+    var userTimeZone = moment.tz.guess()
+
+
+    if(userTimeZone==null || userTimeZone==undefined){
+      userTimeZone = defaultTimeZone;
+
+    }
+
+    $('#lead-timezone-form').val(getKeyByValue(TIME_ZONE_MAP, userTimeZone));
+  });
+}
+/* ]]> */
+</script>
+<script type="text/javascript"
+  src="//www.googleadservices.com/pagead/conversion_async.js">
+</script>
+
+            </div>
+          <!-- #respond -->
+        </div>
+      </div>
+      <div class="col s12 m4">
+        <aside class="blog-aside">
+            <section>
+              <div class="form-group has-feedback">
+                <div class="js-hide-this-div" style="margin-bottom: 15px;"><span
+                            class="clicking-here load-js-on-click">Search for a blog</span></div>
+                <form class="js-show-this-form" style="display: none;">
+                  <div class="input-field" style="display: inline-block;">
+                    <label for="search" class="semi-bold">Search for a blog</label>
+                    <input id="search" name="search" type="text" class="blog-typeahead validate"
+                              autocomplete="off">
+                  </div>
+                </form>
+              </div>
+            </section>
+          <section>
+            <p class="mock-h4">Latest Posts</p>
+            <div class="latest-blog">
+                <a class="post_image row" href="/blog/humanoid-robotics-news-2026">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/humanoid-robotics-news-2026.png" />
+                      <span class="sr-only">
+                        Humanoid Robotics News 2026
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        Humanoid Robotics News 2026
+                      </div>
+                      <div>
+                        Feb 19
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/stop-motion-animation">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/stop-motion-animation.jpeg" />
+                      <span class="sr-only">
+                        Stop-motion animation
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        Stop-motion animation
+                      </div>
+                      <div>
+                        Mar 10
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/the-science-of-animation">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/the-science-of-animation.jpeg" />
+                      <span class="sr-only">
+                        The Science of Animation
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        The Science of Animation
+                      </div>
+                      <div>
+                        Mar 10
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/history-of-the-internet">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/history-of-the-internet.jpeg" />
+                      <span class="sr-only">
+                        History of the internet
+
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        History of the internet
+
+                      </div>
+                      <div>
+                        Feb 24
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/what-is-digital-photography">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/what-is-digital-photography.jpeg" />
+                      <span class="sr-only">
+                        What is digital photography
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        What is digital photography
+                      </div>
+                      <div>
+                        Feb 18
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/types-of-e-learning">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/types-of-e-learning.jpeg" />
+                      <span class="sr-only">
+                        Types of e-learning
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        Types of e-learning
+                      </div>
+                      <div>
+                        Feb 13
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/history-of-generative-ai">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/history-of-generative-ai.jpeg" />
+                      <span class="sr-only">
+                        History of generative AI
+
+
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        History of generative AI
+
+
+                      </div>
+                      <div>
+                        Feb 03
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/education-technology-companies-in-india">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/education-technology-companies-in-india.jpeg" />
+                      <span class="sr-only">
+                        Education technology companies in India
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        Education technology companies in India
+                      </div>
+                      <div>
+                        Jan 30
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/history-of-video-games-for-kids">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/history-of-video-games-for-kids.jpeg" />
+                      <span class="sr-only">
+                        History of video games for kids
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        History of video games for kids
+                      </div>
+                      <div>
+                        Jan 27
+                      </div>
+                    </div>
+                  </div>
+</a>                <a class="post_image row" href="/blog/tech-tricks-to-boost-productivity">
+                  <div class="single-blog-aside">
+                    <div class="col" style="padding: 0; padding-right: 1.5rem;">
+                      <img width="85" height="48" alt="" loading="lazy" src="https://dnycf48t040dh.cloudfront.net/fit-in/85x48/tech-tricks-to-boost-productivity.jpeg" />
+                      <span class="sr-only">
+                        Tech Tricks to Boost Productivity
+                      </span>
+                    </div>
+                    <div class="media-body col c-blue" style="padding: 0;">
+                      <div class="semi-bold">
+                        Tech Tricks to Boost Productivity
+                      </div>
+                      <div>
+                        Jan 20
+                      </div>
+                    </div>
+                  </div>
+</a>            </div>
+          </section>
+        </aside>
+            <div class="sticky-banner">
+              <a href="/welcome/free-coding-class-trial?gclid=python-banner-on-blogs" target="_blank">
+                <img src="https://dnycf48t040dh.cloudfront.net/website-public-pages/blog-page/python-classes-banner-2024.jpg" alt="Python Classes for Kids and Teens" width="720" height="1080" style="pointer-events: auto;">
+              </a>
+            </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<div id="share" class="share-plugin side-share-plugin">
+  <span class="share-icon"
+            onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent('https://www.youngwonks.com/blog/Raspberry-Pi-4-Pinout'),'facebook-share-dialog','width=626,height=436'); return false;">
+    <img loading="lazy" width="37" height="37"
+              src='https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/blog-page/facebook_img.jpg'
+              alt="Share on Facebook">
+    <span class="sr-only">Share on Facebook</span>
+  </span>
+  <a href="https://twitter.com/intent/tweet?text=Check%20Out%20this%20blog%20from%20YoungWonks!">
+    <img loading="lazy" width="37" height="37"
+              src='https://d2i75dg3z6p64d.cloudfront.net/website-public-pages/blog-page/twitter_img.jpg'
+              alt="Share on Twitter">
+    <span class="sr-only">Share on Twitter</span>
+  </a>
+</div>
+<a href="#trial-post-ctn" class="floating-free-trial btn btn-primary " style="display: none;"><b>Schedule a free trial class</b></a>
+<!-- <script async type="text/javascript" src="//platform.linkedin.com/in.js">
+  api_key:   '86pfog3prqudgx'
+  authorize: true
+</script> -->
+
+
+  
+
+    <span class="help-icon-btn valign-wrapper launch-help-modal" style="cursor: pointer;">
+      <i class="material-icons faa-tada animated">help</i>
+    </span>
+
+  <div id="help-modal" tabindex="-1" class="modal bottom-sheet">
+  <div class="modal-content">
+    <div class="help-content" align='center'>
+      <section class="section-wrapper" style="margin-bottom: 24px;">
+          <div class="section-header" >
+            <p class="mock-h2">CONTACT US</p>
+          </div>
+      </section>
+      <form id="RegForm" name="RegForm" action="/welcome/enquiry" method="post">
+        <input type="hidden" name="organization_id" id="organization_id" value="1" autocomplete="off" />
+        <div class="input-field">
+          <input id="username" name="name" type="text" class="validate" placeholder="Parent/Guardian Name">
+        </div>
+        <div class="input-field ">
+          <input id="userphone" name="email" type="email" class="validate" placeholder="Parent/Guardian Email">
+        </div>
+        <div class="input-field">
+          <textarea class="materialize-textarea help-textarea validate" id="useremail" name="describes" type="text" placeholder="Question"></textarea>
+        </div>
+        <script src="https://www.recaptcha.net/recaptcha/api.js" async defer ></script>
+        <script>
+          var invisibleRecaptchaSubmit = function () {
+            var closestForm = function (ele) {
+              var curEle = ele.parentNode;
+              while (curEle.nodeName !== 'FORM' && curEle.nodeName !== 'BODY'){
+                curEle = curEle.parentNode;
+              }
+              return curEle.nodeName === 'FORM' ? curEle : null
+            };
+
+            var el = document.querySelector(".g-recaptcha")
+            if (!!el) {
+              var form = closestForm(el);
+              if (form) {
+                form.submit();
+              }
+            }
+          };
+        </script>
+<div data-size="invisible" data-sitekey="6LduRv8ZAAAAAJsAeV-6IAnmLEj-ArxgV1suktQd" data-callback="invisibleRecaptchaSubmit" class="g-recaptcha "></div>
+
+
+        <div class="row">
+            <div class="input-field col s8 offset-s2 top-margin-30">
+                <button id="sendMail" type="submit" value="Submit" class="btn btn-block btn-large waves-effect waves-light">Submit</button>
+            </div>
+        </div>
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script type="text/javascript">
+  CheckRegister = function(e) {
+    e.preventDefault();
+    var reg =/<(.|\n)*?>/g;
+    var pattern = /^(http|https|www)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
+    if (reg.test($('#useremail').val()) == true || pattern.test($('#useremail').val()) == true) {
+      alert('HTML Tag are not allowed');
+    } else{
+      $("#RegForm").submit();
+    }
+  }
+</script>
+
+
+  <!--  Footer background-->
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col s12 l6 footer-left-wrapper">
+          <ul class="footer-nav footer-left">
+            <li><a class="c-white" href="/welcome/aboutus">About</a></li>
+            <li><a class="c-white" href="/welcome/careers">Careers</a></li>
+            <!-- <li>Support</li> -->
+            <!-- <div class="social-media-icons"> -->
+              <li class="social-ul-wrapper">
+                <ul class="social-ul">
+                  <li class="icon">
+                    <a target="_blank" href="https://twitter.com/youngwonks?lang=en">
+                      <i class="fa fa-twitter"><span class="sr-only">Twitter</span></i>
+                    </a></li>
+                    <li class="icon">
+                    <a target="_blank" href="https://www.facebook.com/YoungWonks/">
+                      <i class="fa fa-facebook"><span class="sr-only">Facebook</span></i>
+                    </a></li>
+                    <li class="icon">
+                    <!-- <a target="_blank" href="https://plus.google.com/116009265701208103807">
+                      <i class="fa fa-google-plus"><span class="sr-only">Google Plus</span></i>
+                    </a> -->
+                    <a target="_blank" href="https://www.youtube.com/youngwonks">
+                      <i class="fa fa-youtube"><span class="sr-only">YouTube</span></i>
+                    </a>
+                  </li>
+                  <li class="icon">
+                    <a target="_blank" href="https://www.instagram.com/youngwonks">
+                      <i class="fa fa-instagram"><span class="sr-only">Instagram</span></i>
+                    </a></li>
+                  <li class="icon">
+                  <a target="_blank" href="https://wa.me/19254009062">
+                    <i class="fa fa-whatsapp"><span class="sr-only">WhatsApp</span></i>
+                  </a></li>
+                </ul>
+              </li>
+            <!-- </div> -->
+          </ul>
+        </div>
+        <div class="col s12 l6 footer-right-wrapper">
+          <ul class="footer-nav footer-right">
+            <li><a class="c-white" href="/privacy">Privacy Policy</a></li>
+            <li><a class="c-white" href="/terms-of-use">Terms &amp; Conditions</a></li>
+            <!-- <li>Help</li> -->
+            <!-- <li>Contact Us</li> -->
+            <li><a class="c-white" href="/welcome/faq">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-content">
+        <p>
+          YoungWonks, A DIVISION OF WONKSKNOW LLC <br>YoungWonks is 2025 CODiE Winner for Best Coding & Development Solution<br>Coding (Computer Programming) and Engineering Classes for Kids and
+          Teens. Curriculum based on hands on robotics and game development projects.
+          <br> 6920 Koll Center Parkway, Suite 219 Pleasanton CA 94566 USA <span
+            class="c-white clicking-here">+1-855-966-5756</span>
+          <br> COPYRIGHT © 2017, WONKSKNOW LLC. ALL RIGHTS RESERVED</p>
+
+      </div>
+    </div>
+
+  </footer>
+  
+  <!-- Loading JS -->
+    <script>
+      // lazy javascripts need to be stored through rails
+      var jsSrcs = `\n/assets/theme-105d6d3a51ce8a098b20988707ccfa10a61488ae648f00a90273c76be0cf5b09.js `.split("\n");
+    </script>
+    <script src="/assets/yw_blogs-a0e75c06b1a9cd0706b11d594fea8d129f1199b632f6d41faeab88325e6cf2ad.js"></script>
+  
+  
+
+  <!-- Google Click Ads -->
+    <script>
+      // GCLID code has been moved to the consolidated cookie code section above
+      // All cookie creation code is now commented out and grouped together
+    </script>
+
+</body>
+
+</html>

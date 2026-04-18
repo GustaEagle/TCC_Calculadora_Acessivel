@@ -1,0 +1,838 @@
+Quarta-feira, 01 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Agendar reunião
+Qua, 18/03/2026 a Qua, 01/04/2026
+Quinta-feira, 02 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Revisão documentação
+Qui, 02/04/2026 (O dia inteiro)
+Sexta-feira, 03 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Sábado, 04 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Domingo, 05 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Segunda-feira, 06 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Terça-feira, 07 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Fabricação PCB
+Ter, 07/04/2026 (O dia inteiro)
+Quarta-feira, 08 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Quinta-feira, 09 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Sexta-feira, 10 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Revisão documentação
+Sex, 10/04/2026 (O dia inteiro)
+Sábado, 11 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Domingo, 12 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Segunda-feira, 13 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Terça-feira, 14 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Teste de PCB
+Ter, 14/04/2026 (O dia inteiro)
+Quarta-feira, 15 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Teste no monitor
+Dom, 01/03/2026 a Qua, 15/04/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Partes visuais
+Qua, 15/04/2026 (O dia inteiro)
+Quinta-feira, 16 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Sexta-feira, 17 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Sábado, 18 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Domingo, 19 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Segunda-feira, 20 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Revisão documentação
+Seg, 20/04/2026 (O dia inteiro)
+Terça-feira, 21 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Materiais e métodos
+Qui, 02/04/2026 a Ter, 21/04/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Quarta-feira, 22 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Quinta-feira, 23 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Sexta-feira, 24 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Refabricação e ajustes
+Sex, 24/04/2026 (O dia inteiro)
+Sábado, 25 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Aquisição da bateria
+Sáb, 25/04/2026 (O dia inteiro)
+Encapsulamento finalizado
+Sáb, 25/04/2026 (O dia inteiro)
+Domingo, 26 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Segunda-feira, 27 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Terça-feira, 28 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Quarta-feira, 29 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Quinta-feira, 30 de Abril de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Testes Trigonométricos
+Qui, 30/04/2026 (O dia inteiro)
+Revisão documentação
+Qui, 30/04/2026 (O dia inteiro)
+Sexta-feira, 01 de Mai de 2026
+Fabricação do teclado
+Dom, 01/03/2026 a Sex, 01/05/2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Testes PCB 02
+Sex, 01/05/2026 (O dia inteiro)
+Sábado, 02 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Domingo, 03 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Introdução
+Seg, 13/04/2026 a Dom, 03/05/2026
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Segunda-feira, 04 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Testes Aritméticos
+Dom, 01/03/2026 a Seg, 04/05/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Revisão
+Seg, 04/05/2026 (O dia inteiro)
+Terça-feira, 05 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Quarta-feira, 06 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Quinta-feira, 07 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Sexta-feira, 08 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Sábado, 09 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Domingo, 10 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Revisão documentação
+Dom, 10/05/2026 (O dia inteiro)
+Segunda-feira, 11 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Terça-feira, 12 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Quarta-feira, 13 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Desenvolvimento
+Qui, 23/04/2026 a Qua, 13/05/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Quinta-feira, 14 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Revisão
+Qui, 14/05/2026 (O dia inteiro)
+Sexta-feira, 15 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Testes Logarítmicos
+Sex, 15/05/2026 (O dia inteiro)
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 16 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 17 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 18 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados e discussões
+Sex, 10/04/2026 a Seg, 18/05/2026
+Testes feitos na placa teste
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Revisão documentação
+Seg, 18/05/2026 (O dia inteiro)
+Terça-feira, 19 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 20 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quinta-feira, 21 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 22 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Resultados
+Ter, 05/05/2026 a Sex, 22/05/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Outros Funções
+Sex, 22/05/2026 (O dia inteiro)
+Sábado, 23 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Revisão
+Sáb, 23/05/2026 (O dia inteiro)
+Domingo, 24 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 25 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 26 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 27 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quinta-feira, 28 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 29 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 30 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Conclusão
+Sex, 15/05/2026 a Sáb, 30/05/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 31 de Mai de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 01 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 02 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 03 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quinta-feira, 04 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 05 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 06 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 07 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 08 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 09 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 10 de Junho de 2026
+Encapsulamento
+Dom, 01/03/2026 a Qua, 10/06/2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Encapsulamento finalizado
+Qua, 10/06/2026 (O dia inteiro)
+Quinta-feira, 11 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 12 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 13 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 14 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 15 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 16 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 17 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quinta-feira, 18 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 19 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 20 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 21 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 22 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 23 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quarta-feira, 24 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Quinta-feira, 25 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sexta-feira, 26 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Sábado, 27 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Domingo, 28 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Segunda-feira, 29 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
+Terça-feira, 30 de Junho de 2026
+Criação Banner
+Sex, 15/05/2026 a Sex, 25/09/2026
