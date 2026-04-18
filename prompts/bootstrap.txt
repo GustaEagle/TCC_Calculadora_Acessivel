@@ -4,10 +4,7 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ## Objetivo desta etapa
 
-1. Sincronizar o clone local com o GitHub (`fetch` / `pull`).
-2. Garantir que o trabalho esta na branch adequada (`main` atualizada; depois branch de feature ou a branch combinada pela equipe).
-3. Ler os artefatos normativos e operacionais na ordem abaixo.
-4. Resumir situacao tecnica e **parar** ate confirmacao humana para codar.
+1. Criar um arquvio de Materiais e metodos listando componentes entregues na prompt na pasta correta.
 
 ---
 

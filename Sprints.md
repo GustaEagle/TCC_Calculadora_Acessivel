@@ -33,6 +33,11 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 - **Responsável:** todos
 - **Status:** todo
 
+### T1.4 — Criar arquivo de Materiais e métodos listando componentes
+
+- **Responsável:** todos
+- **Status:** done
+
 ---
 
 ## Sprint 2 — (a preencher)
