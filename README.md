@@ -13,6 +13,7 @@ Calculadora científica com foco em **acessibilidade** (feedback por voz e opera
 | Documento | Descrição |
 | --------- | --------- |
 | [PRD.md](PRD.md) | Requisitos de produto, escopo e arquitetura em alto nível |
+| [Calculadora rev04.docx](Calculadora%20rev04.docx) | Parte escrita do TCC (revisão 04, Microsoft Word) |
 | [Sprints.md](Sprints.md) | Backlog por sprint e estado das tasks |
 | [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md) | Fluxo Git/GitHub da equipe |
 | [docs/REPO_STRUCTURE.md](docs/REPO_STRUCTURE.md) | Mapa de pastas (software, hardware, system) |
