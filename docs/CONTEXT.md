@@ -18,19 +18,15 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 
 - Combinar convenção de branches e revisão de PR (T1.3 em `Sprints.md`).
 - Manter `Sprints.md` e este `CONTEXT.md` atualizados por sessão (T1.2).
-- Realizar **commit** do novo arquivo `materiais_e_metodos_tcc.md` no repositório.
 
 ## Riscos / atenções
 
 - Existe um repositório Git em **`C:\Users\gusta`** (pasta do utilizador). Fora da pasta do projeto, comandos `git` podem afetar ficheiros errados. Trabalhar sempre com `cd` para `Desktop\TCC Calculadora` ou remover/renomear o `.git` da home se foi criado por engano.
-- Há ficheiros alterados localmente pendentes de commit (ex: `materiais_e_metodos_tcc.md`).
 
 ## Próximo foco sugerido
 
-- Realizar o stage (`git add`) e o commit do novo arquivo de Materiais e Métodos.
-- Fechar as outras tarefas da Sprint 1 (T1.2, T1.3) seguindo o fluxo de branches acordado pela equipe.
+- Fechar Sprint 1 (T1.2, T1.3) e iniciar entregáveis de software/hardware alinhados ao PRD e ao cronograma.
 
 ## Tasks concluídas na última sessão
 
-- Extração e documentação de componentes do prompt para `materiais_e_metodos_tcc.md` (Task T1.4).
 - Primeiro commit e push para GitHub; repositório Git correto na pasta do projeto.
