@@ -31,6 +31,17 @@ Calculadora científica com foco em **acessibilidade** (feedback por voz e opera
 - **`docs/`** — Datasheets, CAD, layout de teclado, notas Waveshare / Pi 4
 - **`cronograma/`** — Cronograma em Markdown, HTML interativo e export bruto
 - **`prompts/`** — Prompts de sessão (bootstrap, fecho, agentes)
+
+---
+
+## Contribuir
+
+1. Clonar o repositório e entrar na pasta do projeto  
+2. Ler [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md) e, no início de cada sessão, seguir [prompts/bootstrap.txt](prompts/bootstrap.txt)  
+3. Trabalhar em branch a partir de `main` atualizada; mensagens de commit em **inglês** (ver [.github/COMMIT_GUIDELINES.md](.github/COMMIT_GUIDELINES.md) se existir)
+
+---
+
 ## Estado do projeto
 
 O código de aplicação ainda está em estruturação; o PRD e a documentação de apoio são a referência normativa. Consulte [Sprints.md](Sprints.md) para a sprint corrente e próximos entregáveis.
