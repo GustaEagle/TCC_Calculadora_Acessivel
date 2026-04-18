@@ -6,26 +6,27 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 
 ## Última ação
 
-- Padronização do fluxo Git/GitHub (`docs/GITHUB_WORKFLOW.md`), prompts `Prompts/bootstrap.txt` e `Prompts/close-session.txt`, criação de `Sprints.md` e deste `CONTEXT.md`; registro em `HistoricoPrompts/2026-04-18-bootstrap-github-workflow-equipe.md`.
+- `git init` na raiz do projeto (pasta **TCC Calculadora**), `origin` → `https://github.com/GustaEagle/TCC_Calculadora_Acessivel`, primeiro push em `main` (merge com o `README.md` criado no GitHub). Pasta local `bootfoverlay/` excluída do Git via `.gitignore` (cópia de firmware/boot, ~73 MB).
 
 ## Estado atual
 
-- Repositório: TCC Calculadora (Raspberry Pi, calculadora acessível).
-- Documentação normativa: `PRD.md`; tempo: `Cronograma/cronograma.md` / `Cronograma/cronograma.html`; registo da equipa: `docs/sessoes/`.
+- Repositório remoto ativo: **main** em GitHub com PRD, cronograma, docs, esqueleto `software/` / `system/`, KiCad em `hardware/pcb/`.
+- Documentação normativa: `PRD.md`; tempo: `cronograma/cronograma.md` e `cronograma/cronograma.html`; registo da equipa: `docs/sessoes/`.
 - Backlog: `Sprints.md`.
 
 ## Pendências / débitos
 
-- _Nenhuma listada._
+- Combinar convenção de branches e revisão de PR (T1.3 em `Sprints.md`).
+- Manter `Sprints.md` e este `CONTEXT.md` atualizados por sessão (T1.2).
 
 ## Riscos / atenções
 
-- _Nenhum listado._
+- Existe um repositório Git em **`C:\Users\gusta`** (pasta do utilizador). Fora da pasta do projeto, comandos `git` podem afetar ficheiros errados. Trabalhar sempre com `cd` para `Desktop\TCC Calculadora` ou remover/renomear o `.git` da home se foi criado por engano.
 
 ## Próximo foco sugerido
 
-- Seguir Sprint 1 em `Sprints.md` e alinhar com marcos da semana no cronograma.
+- Fechar Sprint 1 (T1.2, T1.3) e iniciar entregáveis de software/hardware alinhados ao PRD e ao cronograma.
 
 ## Tasks concluídas na última sessão
 
-- _Nenhuma._
+- Primeiro commit e push para GitHub; repositório Git correto na pasta do projeto.
