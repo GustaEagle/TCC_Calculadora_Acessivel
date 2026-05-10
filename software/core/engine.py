@@ -90,6 +90,11 @@ class CalculationEngine:
             text = re.sub(r"\bAns\b", str(ans), text, flags=re.IGNORECASE)
 
         text = self._replace_factorials(text)
+        
+        # 4. Remove leading zeros from integers to prevent SyntaxError
+        # e.g. '09' -> '9', but '0.9' remains '0.9'
+        text = re.sub(r"\b0+(\d+)", r"\1", text)
+        
         return text
 
     def _replace_factorials(self, text: str) -> str:

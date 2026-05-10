@@ -36,6 +36,20 @@ RIGHT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
 ]
 
 
+ERROR_MESSAGES = {
+    "ERR-001": "Divisão por zero. Limpe ou altere a expressão.",
+    "ERR-002": "Argumento inválido para esta função. Verifique o sinal e o domínio.",
+    "ERR-003": "Valor fora do domínio da função.",
+    "ERR-004": "Parâmetros inválidos para combinação ou permutação.",
+    "ERR-005": "Fatorial não definido para este valor.",
+    "ERR-006": "Resultado muito grande ou não representável.",
+    "ERR-007": "Expressão inválida. Verifique parênteses e operadores.",
+    "ERR-008": "Expressão incompleta.",
+    "ERR-009": "Dados insuficientes ou inválidos para a conversão.",
+    "WRN-010": "Não há resposta anterior.",
+}
+
+
 class CalculatorApp:
     """Main visual shell sized for the 4.3 inch 800x480 LCD."""
 
@@ -138,12 +152,12 @@ class CalculatorApp:
                         command=lambda p=primary, s=secondary: self._handle_token(p, s)
                     )
                     
-                    # Special spans
+                    # Special spans - Use primary token for stability
                     cspan = 1
                     if is_left:
-                        if (r == 3 and label == "x⁻¹") or (r == 5 and label == "Ctrl"): cspan = 2
+                        if (r == 3 and primary == "inv(") or (r == 5 and primary == "Ctrl"): cspan = 2
                     else:
-                        if (r == 4 and label == "0"): cspan = 2
+                        if (r == 4 and primary == "0"): cspan = 2
                         
                     button.grid(row=r, column=curr_col, sticky="nsew", padx=3, pady=3, columnspan=cspan)
                     self.buttons[btn_id] = button
@@ -193,6 +207,8 @@ class CalculatorApp:
         char = getattr(event, "char", "")
         token = self.keyboard.map_key(char)
         if token:
+            with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
+                logs.write(f"EVENTO TECLADO: char='{char}' -> token='{token}'\n")
             self._handle_token(token, None)
 
     def _handle_token(self, primary: str, secondary: str | None) -> None:
@@ -206,9 +222,28 @@ class CalculatorApp:
         # Select token based on Ctrl state
         token = secondary if (self.ctrl_active and secondary) else primary
         
-        # Ignore '=' if expression is empty
+        # Input robustness guards
         if token == "=" and not self.state.expression:
             return
+
+        # NEW: Clear expression if a result was just shown and we are starting a new number/function
+        # But KEEP it if we are chaining with an operator
+        is_digit_or_func = token.isdigit() or token == "Ans" or "(" in token or token in {"π", "e"}
+        if self.state.last_result and self.state.last_result.ok and is_digit_or_func:
+            with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
+                logs.write("UI: Limpando resultado anterior para nova entrada\n")
+            self.state.press("AC")
+
+        # Prevent double binary operators (excluding unary minus)
+        operators = {"+", "*", "/", "^"}
+        if token in operators and self.state.expression:
+            last_char = self.state.expression[-1]
+            if last_char in operators:
+                self.speech.say("Substituindo") # Shortened for speed
+                self.state.press("DEL")
+
+        with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
+            logs.write(f"UI: Processando token='{token}'\n")
 
         result = self.state.press(token)
         
@@ -233,7 +268,9 @@ class CalculatorApp:
         if result.ok:
             self.speech.interrupt_and_say(f"Resultado {result.display}")
         else:
-            self.speech.interrupt_and_say(f"{result.code}. {result.message}")
+            # Inform explicitly using PRD friendly messages
+            friendly_msg = ERROR_MESSAGES.get(result.code, result.message)
+            self.speech.interrupt_and_say(f"Erro {result.code.split('-')[-1]}. {friendly_msg}")
 
     def _update_ui_for_ctrl(self) -> None:
         """Refresh all button labels based on current Ctrl state."""
