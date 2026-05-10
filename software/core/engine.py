@@ -42,16 +42,40 @@ class CalculationEngine:
             return CalculationResult.error(original, "ERR-001", "Divisao por zero")
         except CalculationDomainError as exc:
             return CalculationResult.error(original, exc.code, exc.message, exc.priority)
-        except (SyntaxError, ValueError, TypeError, KeyError):
-            return CalculationResult.error(original, "ERR-007", "Expressao invalida")
         except OverflowError:
             return CalculationResult.error(original, "ERR-006", "Resultado muito grande")
+        except (SyntaxError, ValueError, TypeError, KeyError) as exc:
+            # Distinguish between system/logic errors and true syntax/input errors
+            msg = str(exc) if str(exc) else "Expressao invalida"
+            return CalculationResult.error(original, "ERR-007", msg)
 
     def _normalize(self, expression: str, ans: float | None) -> str:
         text = expression
+        # 0. Handle scientific tokens that contain characters used in basic arithmetic
+        text = text.replace("x^-1", "inv")
+        
         text = text.replace("×", "*").replace("x", "*").replace("÷", "/")
-        text = text.replace("^", "**").replace("√", "sqrt")
+        text = text.replace("^", "**")
+        # 1. Handle √ followed by parentheses: √(64) -> sqrt(64)
+        text = text.replace("√(", "sqrt(")
+        # 2. Handle √ followed by number or constant: √64 -> sqrt(64)
+        text = re.sub(r"√(\d+(?:\.\d+)?|pi|e)", r"sqrt(\1)", text)
+        # 3. Fallback for any remaining √
+        text = text.replace("√", "sqrt")
+        
         text = text.replace("π", "pi")
+        # Ensure 'inv' is a function call
+        text = re.sub(r"\binv\s*\(", "inv(", text, flags=re.IGNORECASE)
+        # Handle 'inv' as a property or trailing token: '2inv' -> 'inv(2)'
+        text = re.sub(r"(\d+(?:\.\d+)?|pi|e|\))\s*inv\b", r"inv(\1)", text, flags=re.IGNORECASE)
+        # Handle 'inv' followed by a number: 'inv2' -> 'inv(2)'
+        text = re.sub(r"\binv(\d+(?:\.\d+)?|pi|e)", r"inv(\1)", text, flags=re.IGNORECASE)
+        # If 'inv' stands alone, treat as 'inv(Ans)'
+        if text.strip().lower() == "inv":
+            if ans is None:
+                raise CalculationDomainError("WRN-010", "Sem resposta anterior", "P2")
+            text = f"inv({ans})"
+
         text = re.sub(r"\bsen\s*\(", "sin(", text, flags=re.IGNORECASE)
         text = re.sub(r"\bsen-1\s*\(", "asin(", text, flags=re.IGNORECASE)
         text = re.sub(r"\bcos-1\s*\(", "acos(", text, flags=re.IGNORECASE)

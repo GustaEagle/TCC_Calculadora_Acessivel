@@ -4,7 +4,12 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ## Objetivo desta etapa
 
-1. Criar um arquvio de Materiais e metodos listando componentes entregues na prompt na pasta correta.
+
+- Implementar feedback sonoro para todas as teclas da calculadora, incluindo confirmação auditiva do resultado das operações executadas.
+
+- Ajustar a interface do aplicativo para utilizar tamanhos de fonte maiores, priorizando legibilidade e acessibilidade.
+
+- Validar se todas as funções matemáticas implementadas estão em conformidade com os requisitos definidos em `PRD.md`.
 
 ---
 

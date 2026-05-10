@@ -50,25 +50,88 @@ O arquivo [TCC.txt](TCC.txt) acompanha o trabalho acadêmico (incluindo **materi
 
 Conforme a seção **2.5 — Recursos disponíveis** de [TCC.txt](TCC.txt), o produto deve suportar pelo menos:
 
-- Seno / arco-seno (sen / sen⁻¹)
-- Cosseno / arco-cosseno (cos / cos⁻¹)
-- Tangente / arco-tangente (tan / tan⁻¹)
-- Logaritmo decimal (log) e logaritmo natural (ln)
-- Constante de Euler (e) e constante pi (π)
-- Exponenciação (xʸ / ^) e raiz quadrada (√)
-- Parênteses de agrupamento: ( )
-- Vírgula (,) e ponto decimal (.)
-- Combinação (nCr) e permutação (nPr)
-- Operador deletar (DEL) e limpar / retornar ao valor anterior (AC)
-- Inversão de valor (x⁻¹)
-- Fatorial (x!)
-- Resposta anterior (Ans)
-- Conversão coordenada polar → retangular
-- Conversão coordenada retangular → polar
-- Operações aritméticas básicas (+, −, ×, ÷)
+### Funções trigonométricas
+
+- **Seno** (`sen`)
+  - **Arco-seno** (`sen⁻¹`)
+
+- **Cosseno** (`cos`)
+  - **Arco-cosseno** (`cos⁻¹`)
+
+- **Tangente** (`tan`)
+  - **Arco-tangente** (`tan⁻¹`)
+
+---
+
+### Funções logarítmicas
+
+- **Logaritmo decimal** (`log`)
+  - **Logaritmo natural** (`ln`)
+
+---
+
+### Constantes matemáticas
+
+- Constante de Euler (`e`)
+- Constante pi (`π`)
+
+---
+
+### Operações algébricas
+
+- Exponenciação (`xʸ` ou `^`)
+- Raiz quadrada (`√`)
+- Inversão de valor (`x⁻¹`)
+- Fatorial (`x!`)
+
+---
+
+### Operações combinatórias
+
+- **Combinação** (`nCr`)
+  - **Permutação** (`nPr`)
+
+---
+
+### Conversões de coordenadas
+
+- Conversão coordenada **polar → retangular**
+  - Conversão coordenada **retangular → polar**
+
+---
+
+### Controle e manipulação de entrada
+
+- Operador deletar (`DEL`)
+- Limpar / retornar ao valor anterior (`AC`)
+- Resposta anterior (`Ans`)
+
+---
+
+### Estrutura de expressão
+
+- Parênteses de agrupamento:
+  - `(`
+  - `)`
+
+- Separadores numéricos:
+  - Vírgula (`,`)
+  - Ponto decimal (`.`)
+
+---
+
+### Operações aritméticas básicas
+
+- Soma (`+`)
+- Subtração (`−`)
+- Multiplicação (`×`)
+- Divisão (`÷`)
+
+---
 
 **Requisito:** a **lógica de cálculo** do sistema deve produzir resultados **consistentes** com esse catálogo; regras de precedência, formato numérico e tratamento de erros seguem a **seção 13** (códigos e feedback). Definições formais de cada função (domínio no plano real, convenções de ângulo graus/radianos se aplicável) permanecem **alinhadas ao texto acadêmico** em [TCC.txt](TCC.txt) §2.5 — não é necessário repetir no PRD uma especificação matemática longa, desde que o comportamento implementado seja o mesmo.
 
+Funções descritas em níveis aninhados representam operações alternativas associadas ao mesmo botão físico/lógico, sendo executadas quando o estado `Ctrl` estiver definido como `true`.
 ### 5.1 Quanto detalhar a seção 5 (sem fugir do escopo)
 
 | Abordagem | Quando usar |
