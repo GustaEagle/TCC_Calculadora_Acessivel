@@ -17,13 +17,22 @@ from software.platform.keyboard import KeyboardAdapter
 from software.platform.ups import UpsMonitor
 
 
-BUTTONS: list[list[tuple[str, str, str | None]]] = [
-    [("AC", "AC", None), ("DEL", "DEL", None), ("(", "(", None), (")", ")", None), ("Ans", "Ans", None), ("Ctrl", "Ctrl", None)],
-    [("sen", "sen(", "asin("), ("cos", "cos(", "acos("), ("tan", "tan(", "atan("), ("log", "log(", "ln("), ("x!", "!", None), ("sqrt", "sqrt(", None)],
-    [("nCr", "nCr(", "nPr("), ("Pol", "polar(", "rect("), ("π", "π", "e"), ("7", "7", None), ("8", "8", None), ("9", "9", None)],
-    [("÷", "/", None), ("x^y", "^", None), (",", ",", None), ("4", "4", None), ("5", "5", None), ("6", "6", None)],
-    [("×", "*", None), ("x⁻¹", "inv(", None), ("1", "1", None), ("2", "2", None), ("3", "3", None), ("-", "-", None)],
-    [("0", "0", None), ("00", "00", None), (".", ".", None), ("+", "+", None), ("=", "=", None), ("", "", None)],
+LEFT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
+    [("Pol", "polar(", "rect("), ("x!", "!", None), ("Pi", "π", "e")],
+    [("sen", "sen(", "asin("), ("cos", "cos(", "acos("), ("", "", None)],
+    [("tan", "tan(", "atan("), ("log", "log(", "ln("), ("", "", None)],
+    [("x⁻¹", "inv(", None), ("^", "^", None)], # R3: x^-1 will span 2
+    [("?", "", None), ("nCr", "nCr(", "nPr("), ("√", "sqrt(", None)],
+    [("Ctrl", "Ctrl", None), ("exp", "exp(", None), ("Shift", "Shift", None)], # R5: Ctrl will span 2
+]
+
+RIGHT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
+    [("(", "(", None), (")", ")", None), ("%", "%", None), ("e", "e", None)],
+    [("7", "7", None), ("8", "8", None), ("9", "9", None), ("/", "/", None)],
+    [("4", "4", None), ("5", "5", None), ("6", "6", None), ("*", "*", None)],
+    [("1", "1", None), ("2", "2", None), ("3", "3", None), ("-", "-", None)],
+    [("0", "0", None), (",", ",", None), ("+", "+", None)], # R4: 0 will span 2
+    [("Ans", "Ans", None), ("=", "=", None), ("AC", "AC", None), ("DEL", "DEL", None)],
 ]
 
 
@@ -48,12 +57,12 @@ class CalculatorApp:
         self.style.configure("Display.TLabel", font=("Segoe UI", 28), padding=10)
         self.style.configure("Result.TLabel", font=("Segoe UI", 40, "bold"), padding=10)
         
-        # Globally configure TButton for the keypad to ensure consistent font and size
-        self.style.configure("TButton", font=("Segoe UI", 14, "bold"), width=8)
+        # Globally configure TButton for the keypad to ensure consistent font
+        self.style.configure("TButton", font=("Segoe UI", 14, "bold"))
         
         # Ensure outline versions also have the correct font just in case
         for color in ["primary", "secondary", "success", "info", "warning", "danger"]:
-            self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 14, "bold"), width=8)
+            self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 14, "bold"))
 
         self.ctrl_active = False
         self.buttons: dict[str, ttk.Button] = {}
@@ -98,34 +107,50 @@ class CalculatorApp:
 
         keypad = ttk.Frame(root_frame)
         keypad.grid(row=1, column=0, sticky="nsew")
-        for row_index in range(len(BUTTONS)):
-            keypad.rowconfigure(row_index, weight=1)
-        for column_index in range(6):
-            keypad.columnconfigure(column_index, weight=1)
+        keypad.columnconfigure(0, weight=3) # Left section
+        keypad.columnconfigure(1, weight=1) # Spacer
+        keypad.columnconfigure(2, weight=4) # Right section
+        keypad.rowconfigure(0, weight=1)
 
-        for row_index, row in enumerate(BUTTONS):
-            for column_index, (label, primary, secondary) in enumerate(row):
-                if not label:
-                    continue
-                
-                # Combine primary and secondary to create a unique ID for the button widget
-                btn_id = f"{primary}_{secondary}"
-                style = self._button_style(primary)
-                
-                button = ttk.Button(
-                    keypad,
-                    text=label,
-                    bootstyle=style,
-                    command=lambda p=primary, s=secondary: self._handle_token(p, s),
-                )
-                button.grid(
-                    row=row_index,
-                    column=column_index,
-                    sticky="nsew",
-                    padx=3,
-                    pady=3,
-                )
-                self.buttons[btn_id] = button
+        left_frame = ttk.Frame(keypad)
+        left_frame.grid(row=0, column=0, sticky="nsew")
+        for i in range(6): left_frame.rowconfigure(i, weight=1)
+        for i in range(3): left_frame.columnconfigure(i, weight=1)
+
+        right_frame = ttk.Frame(keypad)
+        right_frame.grid(row=0, column=2, sticky="nsew")
+        for i in range(6): right_frame.rowconfigure(i, weight=1)
+        for i in range(4): right_frame.columnconfigure(i, weight=1)
+
+        # Helper to build buttons
+        def build_buttons(container, buttons_list, is_left):
+            for r, row in enumerate(buttons_list):
+                curr_col = 0
+                for label, primary, secondary in row:
+                    if not label: 
+                        curr_col += 1
+                        continue
+                    btn_id = f"{primary}_{secondary}"
+                    style = self._button_style(primary)
+                    
+                    button = ttk.Button(
+                        container, text=label, bootstyle=style,
+                        command=lambda p=primary, s=secondary: self._handle_token(p, s)
+                    )
+                    
+                    # Special spans
+                    cspan = 1
+                    if is_left:
+                        if (r == 3 and label == "x⁻¹") or (r == 5 and label == "Ctrl"): cspan = 2
+                    else:
+                        if (r == 4 and label == "0"): cspan = 2
+                        
+                    button.grid(row=r, column=curr_col, sticky="nsew", padx=3, pady=3, columnspan=cspan)
+                    self.buttons[btn_id] = button
+                    curr_col += cspan
+
+        build_buttons(left_frame, LEFT_BUTTONS, True)
+        build_buttons(right_frame, RIGHT_BUTTONS, False)
 
         footer = ttk.Frame(root_frame, padding=(0, 5))
         footer.grid(row=2, column=0, sticky=EW)
@@ -181,9 +206,10 @@ class CalculatorApp:
         # Select token based on Ctrl state
         token = secondary if (self.ctrl_active and secondary) else primary
         
-        with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
-            logs.write(f"UI: Pressionado botão '{token}' (Ctrl={self.ctrl_active})\n")
-        
+        # Ignore '=' if expression is empty
+        if token == "=" and not self.state.expression:
+            return
+
         result = self.state.press(token)
         
         # Reset Ctrl after use if it was a scientific function
@@ -211,7 +237,7 @@ class CalculatorApp:
 
     def _update_ui_for_ctrl(self) -> None:
         """Refresh all button labels based on current Ctrl state."""
-        for row in BUTTONS:
+        for row in LEFT_BUTTONS + RIGHT_BUTTONS:
             for label, primary, secondary in row:
                 if not label or not secondary:
                     continue
