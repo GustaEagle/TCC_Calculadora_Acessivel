@@ -5103,6 +5103,30 @@
 			)
 		)
 	)
+	(global_label "Col0"
+		(shape input)
+		(at 78.74 143.51 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "6920b17e-bde8-46ed-b34b-12110f168d09")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 86.0189 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
 	(global_label "Row0"
 		(shape input)
 		(at 111.76 147.32 0)
@@ -5724,30 +5748,6 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
-			)
-		)
-	)
-	(global_label "Col0"
-		(shape input)
-		(at 64.77 143.51 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "f392a05f-a6b7-408b-b5c4-b85be40aa6f5")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 57.4911 143.51 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
 			)
 		)
 	)
@@ -6935,7 +6935,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_2x05_P2.00mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical"
 			(at 105.41 157.48 0)
 			(hide yes)
 			(show_name no)
@@ -9431,7 +9431,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_2x05_P2.00mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x05_P2.54mm_Vertical"
 			(at 135.89 156.21 0)
 			(hide yes)
 			(show_name no)
