@@ -184,7 +184,7 @@
 		)
 		(path "/d05bd4e2-c98c-4451-81c0-6525c4935399")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -611,28 +611,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "78ec2e80-10c6-49d1-96cf-aac43c310674")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "ab4bd729-c781-4917-9dcc-adb94d9403fb")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "94e90e1b-fe5a-42f0-b895-115171b3b63d")
 		)
 		(pad "1" smd rect
@@ -746,7 +743,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/f0548bf0-9704-4e77-805f-8200d9dce6b8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -970,7 +967,7 @@
 		(property "Reference" "SW23"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "e596a946-7b47-46f2-bff3-d665f69d5919")
+			(uuid "b73480f9-7803-4d7a-b30a-fcbb97796b77")
 			(effects
 				(font
 					(size 1 1)
@@ -982,7 +979,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "55e3f1dd-b760-4e69-a7aa-c2db89e8a776")
+			(uuid "a2c01049-2158-4755-90ae-b4cf9f10abb1")
 			(effects
 				(font
 					(size 1 1)
@@ -994,7 +991,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "25be0ba5-6cb8-4473-8a34-97b2f716be6c")
+			(uuid "92b005e4-6f7c-41fa-a543-dee0a9a27c81")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1005,7 +1002,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d3f4e3d1-25a0-4132-88d2-310aed976e4a")
+			(uuid "9f2ef1d5-fe2a-407f-a63d-7d87430b8efd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1014,7 +1011,7 @@
 		)
 		(path "/9954aacc-0ebb-485d-b41e-7943bb5db083")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -1441,28 +1438,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "3a71844d-d6fc-427c-85fb-03ff14519b78")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "88cbf479-e4cd-489c-8e4a-a1bb6d49271b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "99eb23a1-267a-43a1-938a-3e96d45ee049")
 		)
 		(pad "1" smd rect
@@ -1494,7 +1488,7 @@
 		(property "Reference" "SW15"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "61d7be7b-b25e-4716-a06e-e145728eb960")
+			(uuid "2955e15a-6fcb-4f9d-8774-04e67c713287")
 			(effects
 				(font
 					(size 1 1)
@@ -1506,7 +1500,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "919ffb76-8979-43f2-b24c-77eacbb36ef5")
+			(uuid "c88552d0-878f-448d-92c2-eb1a11c858b3")
 			(effects
 				(font
 					(size 1 1)
@@ -1518,7 +1512,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "2114d550-4653-4f00-a10b-eaef2edaa0e5")
+			(uuid "a4123604-d3f4-4755-9278-c9b260491a38")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1529,7 +1523,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8d541fce-be29-42fb-8fbf-907954a48e1e")
+			(uuid "7d17607d-250a-494e-a4d7-54977be0194e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1538,7 +1532,7 @@
 		)
 		(path "/645ea8ae-250b-4c7a-9384-73c47ebaaf5c")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -1965,28 +1959,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "20dadedd-d36c-47f5-89a7-11084f2ae4ce")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "d8a39f02-7609-49d2-9e11-a09ab575f1d5")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "648473fd-583f-40ff-8a02-fa00a152c2cd")
 		)
 		(pad "1" smd rect
@@ -2018,7 +2009,7 @@
 		(property "Reference" "SW18"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "76f8152f-cfa9-446d-bfad-a51a3078523a")
+			(uuid "dbc218cc-52e4-4497-b2a5-dd8ac5c1a194")
 			(effects
 				(font
 					(size 1 1)
@@ -2030,7 +2021,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "7b9ea378-3267-4a05-bf15-3423bd3d4d45")
+			(uuid "63eefbc8-3989-4777-86ba-7d037bc56203")
 			(effects
 				(font
 					(size 1 1)
@@ -2042,7 +2033,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "eb726a16-69d9-40b9-9e53-7b8f35007d0e")
+			(uuid "bba0c4bf-5547-4dcb-86c9-1127056ba07d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2053,7 +2044,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "213a4f6d-990e-4fff-b6c3-17deee3c6bb2")
+			(uuid "18351d8b-1b5c-4924-af55-6ecf0fcd162e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2062,7 +2053,7 @@
 		)
 		(path "/cbb1e38c-f27b-41ad-9665-08e96a39bf69")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -2489,28 +2480,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "4389c643-4545-4663-9c58-351c0ffedb71")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c3ed2ae2-8902-4b18-8bfe-ac6ab8967242")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "366d047a-ff36-4b46-82e1-d9026e985916")
 		)
 		(pad "1" smd rect
@@ -2624,7 +2612,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/8ea2ee23-10ef-42d5-a47f-a802fe718486")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -2848,7 +2836,7 @@
 		(property "Reference" "SW14"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "30cdf513-488a-48b9-a444-fd73cd7196b2")
+			(uuid "d66436b1-42cd-4e08-9c10-c6d5eb1a922c")
 			(effects
 				(font
 					(size 1 1)
@@ -2860,7 +2848,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "cb6cc398-5b47-40fe-93f0-6696e18ff5d8")
+			(uuid "8a51d485-e7a0-4c92-bf1e-093d68fd38ec")
 			(effects
 				(font
 					(size 1 1)
@@ -2872,7 +2860,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "7cab393d-be4a-45a4-a583-e5a061867921")
+			(uuid "bda891c8-00cd-4427-8344-fd2fde31a1a3")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2883,7 +2871,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0f895652-5ba1-4cc3-9ac8-80a45c1a877e")
+			(uuid "2bc84d9f-a772-4bfc-89be-eea66d4b8628")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2892,7 +2880,7 @@
 		)
 		(path "/9e29675c-791b-425a-a8fe-4f1e2b21330d")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -3319,28 +3307,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "0f8876e7-b760-474b-ac2f-758467264564")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "1569cd65-af92-4b39-953c-00edbb3386ab")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "85f5bf44-60e8-4b4e-91a8-6988725a635d")
 		)
 		(pad "1" smd rect
@@ -3372,7 +3357,7 @@
 		(property "Reference" "SW5"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "39fd0e1b-06df-41f1-a56e-0f33654262bb")
+			(uuid "8b60d468-e000-4483-abde-23bfe9c79cde")
 			(effects
 				(font
 					(size 1 1)
@@ -3384,7 +3369,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "91fd81b2-1c83-4bd6-8943-02fbe39bf733")
+			(uuid "4954f7ff-afe5-45e2-a2da-1e05a93b2246")
 			(effects
 				(font
 					(size 1 1)
@@ -3396,7 +3381,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f6876290-1df5-4c36-8441-dcb6b6ca6628")
+			(uuid "afa5c8b3-a972-4cc1-8237-db283701eb25")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3407,7 +3392,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3b8080ef-fe9b-497b-bc1e-fea69c5f2c23")
+			(uuid "ec6386b1-ee66-46c8-90ad-85850a02c905")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3416,7 +3401,7 @@
 		)
 		(path "/938f6b78-8c8c-4fd5-ae3b-dd592556b65e")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -3843,28 +3828,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c4f3c068-750f-43ac-9714-126bc7dd11d0")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c71a7903-4de9-4e95-a572-51b28ccb88e6")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e28ef716-5600-47f1-a293-519e41c4040d")
 		)
 		(pad "1" smd rect
@@ -3978,7 +3960,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/f94e9e31-325d-459a-bc95-3e1b0ea5a7cd")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -4202,7 +4184,7 @@
 		(property "Reference" "SW20"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "476aa7ee-f057-4619-b570-e1825b42811f")
+			(uuid "8a229b79-57d2-4320-a2f7-800f29636afe")
 			(effects
 				(font
 					(size 1 1)
@@ -4214,7 +4196,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "2f74180b-4a29-4cd5-8379-751385fac234")
+			(uuid "9f08d5b7-f02e-457a-bf16-8f6af3caedee")
 			(effects
 				(font
 					(size 1 1)
@@ -4226,7 +4208,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a91e8361-8c02-40f9-97a6-79f33ccd895a")
+			(uuid "a98d5c4f-3727-497a-8b5a-988778255866")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4237,7 +4219,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f2b500ff-fd34-4421-be5f-6bfdfb2cb61d")
+			(uuid "9cca530c-1096-4d57-96dd-51b18ab05267")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4246,7 +4228,7 @@
 		)
 		(path "/36f902ef-69d9-4081-aa17-16b7af88eac0")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -4673,28 +4655,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "5f92a81a-4041-4639-b9d0-bf397c69b05d")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "acf99083-c758-49c1-ba6d-95fae3372b86")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "b168b4d0-b8c3-48ab-96ee-02f8b5e4672e")
 		)
 		(pad "1" smd rect
@@ -4808,7 +4787,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/0947c9fc-f0ec-4097-97f4-73e2761b9a13")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -5114,7 +5093,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/eca6c191-4a97-423c-a5ac-a8d6e1ae3786")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -5420,7 +5399,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/a51be008-d755-45a5-aaa9-e22aaea37fe1")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -5722,7 +5701,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/c818ab08-ad52-4d08-a40d-c172ec25df17")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -5946,7 +5925,7 @@
 		(property "Reference" "SW36"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "027c3edb-95b8-43bd-94c0-f83715298e19")
+			(uuid "ce207add-84ff-458f-866f-927cfc5497a2")
 			(effects
 				(font
 					(size 1 1)
@@ -5958,7 +5937,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "d9a5dd71-2e0d-4ac8-b6a6-d77e6c85a459")
+			(uuid "93389f13-c571-4cda-b614-1e7a12a3b5df")
 			(effects
 				(font
 					(size 1 1)
@@ -5970,7 +5949,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c7beaf00-7c4f-4f21-b687-c37e009ebc46")
+			(uuid "fab96dc4-ebca-46c8-9ede-502b8425547d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5981,7 +5960,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "09701ed9-a0be-468b-b480-2f0e784ad76f")
+			(uuid "93079e8e-d863-420c-9936-b33f6e1a34db")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5990,7 +5969,7 @@
 		)
 		(path "/7a8b917c-ec6c-4d0f-bb9d-744a2e62ac19")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -6417,28 +6396,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "89a28f9b-01fe-454a-ad70-529da55ac86b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "2280dfaa-c824-4e52-b2ee-84a43bcf9a3f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c460da37-ac5f-4592-8aef-39090fae0ee8")
 		)
 		(pad "1" smd rect
@@ -6470,7 +6446,7 @@
 		(property "Reference" "SW34"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "e6f3735c-c5de-4e41-8364-44dbd486a06e")
+			(uuid "09bdf2e2-1825-44c2-8076-e219c88446b2")
 			(effects
 				(font
 					(size 1 1)
@@ -6482,7 +6458,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "9ebb5669-a36a-4345-a4ac-0ae78ea65c29")
+			(uuid "69265125-1b2a-4e95-b894-6da4d6a4bcfb")
 			(effects
 				(font
 					(size 1 1)
@@ -6494,7 +6470,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "22c8c40e-8b0b-4b06-b69a-bcfeb4a0c0f1")
+			(uuid "3df4657c-6191-4eec-8d3a-fb1c8774a92c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6505,7 +6481,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "050a4ef0-522b-48d9-9cf3-4c5431b0d9c2")
+			(uuid "a801a9f2-5bf9-47c4-8b7a-93c33c041fe4")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6514,7 +6490,7 @@
 		)
 		(path "/74565fb4-d91e-4478-8fbf-4d8928e15d73")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -6941,28 +6917,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e589e0a7-00c9-4521-8647-c071f1c5b265")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e2bb82e6-2807-4457-9a0f-442d5eace730")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "294434ca-3076-4b6d-a7dc-835602a5c914")
 		)
 		(pad "1" smd rect
@@ -7076,7 +7049,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/d46502eb-9116-4512-a814-11b20b108160")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -7382,7 +7355,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/29849400-0b85-448f-adaf-b54db9144ae5")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -7606,7 +7579,7 @@
 		(property "Reference" "SW7"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "9492864d-53c6-4fb7-b9f4-de0d9ce4f23a")
+			(uuid "96a4bd87-96c2-4e15-8dfc-6d4392dc8e9f")
 			(effects
 				(font
 					(size 1 1)
@@ -7618,7 +7591,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "0313914e-4346-4514-9ac0-a623a52b4552")
+			(uuid "7f188ef2-da5d-4b65-9891-4955005d15b4")
 			(effects
 				(font
 					(size 1 1)
@@ -7630,7 +7603,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "68057a4c-5803-4d5d-9543-b35a8fb6744e")
+			(uuid "859f7923-5981-4fa3-9f21-89f3a818d47c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7641,7 +7614,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "417df21c-79d3-4683-9151-91380a241e37")
+			(uuid "59b02c97-0f90-4e1d-9f1b-8e41395bde03")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7650,7 +7623,7 @@
 		)
 		(path "/8b27eb04-cb74-4692-8f39-6cd9d73ad3ee")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -8077,28 +8050,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "59798e95-bf71-4801-8998-8ff760a2279e")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c375ee99-71b4-4450-88f6-a37774cfde9f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c31e8b07-9f56-4fe4-8392-1dbaea833704")
 		)
 		(pad "1" smd rect
@@ -8130,7 +8100,7 @@
 		(property "Reference" "SW9"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "861aa891-e08b-4471-810b-10ead2dbf1f9")
+			(uuid "930b09b5-3786-473a-b970-5a346a593c11")
 			(effects
 				(font
 					(size 1 1)
@@ -8142,7 +8112,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "e3439755-b619-43b8-9233-88ede5b94047")
+			(uuid "4ec71a57-7a20-456a-9be0-926ae621513e")
 			(effects
 				(font
 					(size 1 1)
@@ -8154,7 +8124,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5cfba502-3362-4362-a47b-bebcd147c23a")
+			(uuid "d30c02e2-9a87-42ce-b4cd-bf645f6c4dee")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8165,7 +8135,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "4f734865-4ad6-49d0-9c62-efdc6cd4bcf3")
+			(uuid "82d5a89f-4b69-4c66-a652-454596b77a17")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8174,7 +8144,7 @@
 		)
 		(path "/cb2415e3-5a29-4b47-a15f-753c94f50718")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -8601,28 +8571,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "b3700ed4-f637-4d97-9689-10c066d05d59")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c56fb7bb-5656-47fe-a593-60f504128f53")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "99595248-4913-495e-9d61-f15c35e3d783")
 		)
 		(pad "1" smd rect
@@ -8736,7 +8703,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/7695e531-b7b0-45dd-8795-dfdf8cc511a8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -9042,7 +9009,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/7821f555-a972-4a72-8dff-1c31dc6e0cf6")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -9348,7 +9315,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/8d369e8f-5106-4676-b428-b6beb6877551")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -9572,7 +9539,7 @@
 		(property "Reference" "SW17"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "2a011ae7-e0b5-4c99-91a2-29bc22cfe3a1")
+			(uuid "b5a23bf2-4362-40f1-94d6-8bb832d6c0c8")
 			(effects
 				(font
 					(size 1 1)
@@ -9584,7 +9551,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "2a15657e-3d2d-4618-8946-70fdef9d02e9")
+			(uuid "c83e6533-80e8-4e1d-8b3e-95ac50f093af")
 			(effects
 				(font
 					(size 1 1)
@@ -9596,7 +9563,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "65d8a838-27c1-4fe1-a6a4-e0e57a2a6180")
+			(uuid "5ea643d6-97df-4bad-bded-b9dc9e5a458a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9607,7 +9574,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "b78d7f74-8722-447b-936c-0294a1c9eddf")
+			(uuid "b352b02a-99d2-4e27-b8ed-3ec9ac883aee")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9616,7 +9583,7 @@
 		)
 		(path "/cc9d39ba-399e-43c7-808b-72fd797ccc7e")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -10043,28 +10010,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "ab0d508a-b643-4a45-ac95-2f0f925ede4b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "7dc2cfa3-d15d-4b2f-8e78-d0069c858c59")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "b5003d99-1f56-4a4a-a29c-c3aadac9c0e6")
 		)
 		(pad "1" smd rect
@@ -10178,7 +10142,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/0e5d354c-d8f5-4594-b3b9-0ea75afccf0d")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -10484,7 +10448,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/dffae3ab-e94c-4f4e-a2fd-3fe04f749761")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -10708,7 +10672,7 @@
 		(property "Reference" "SW11"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "6750996b-3b9f-4dba-885c-53f9c246278b")
+			(uuid "6ac87cb2-e970-431f-adf4-7d5b80b259d1")
 			(effects
 				(font
 					(size 1 1)
@@ -10720,7 +10684,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "7120b250-b639-413a-ae6c-1086e476e360")
+			(uuid "2eff7a3a-48f0-4099-ba1f-389fdb37c4b2")
 			(effects
 				(font
 					(size 1 1)
@@ -10732,7 +10696,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ed8cbfe8-7b4c-4d28-8ace-d1f0777559fc")
+			(uuid "64420c77-9bff-4b84-bb25-ff14cca0c461")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10743,7 +10707,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ef2ca3dd-66d8-4dac-b2ba-84d733921f0d")
+			(uuid "bc9e4e66-9678-40d0-aaff-6e53d01db70e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10752,7 +10716,7 @@
 		)
 		(path "/491951bd-b38e-4033-9a0a-0d8d1c4a953f")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -11179,28 +11143,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "72dcdc57-2a5c-4bda-b902-caf4d10bda4f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "f6cf76a6-7dbf-4873-b15c-6375e89b0f04")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "9578e5b8-97ce-46fe-b886-e239961c7725")
 		)
 		(pad "1" smd rect
@@ -11232,7 +11193,7 @@
 		(property "Reference" "SW35"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "5f2d2660-a623-4b8a-a50a-9d4187904032")
+			(uuid "85e92870-89f5-4660-923f-130c408a4616")
 			(effects
 				(font
 					(size 1 1)
@@ -11244,7 +11205,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "784b48e5-9266-4a0d-bfb6-2bc1bd67da3a")
+			(uuid "60cc0c92-eecd-4382-8665-79b6351e4056")
 			(effects
 				(font
 					(size 1 1)
@@ -11256,7 +11217,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3bd96975-c82b-4b98-b5ca-cb473c131c76")
+			(uuid "5cbdc1fc-b8b9-4129-8912-b3b14d924df5")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11267,7 +11228,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8b532f05-3344-457b-81be-47054c3a3506")
+			(uuid "bc25f90c-913e-49b7-8e58-0aa9a3384d0e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11276,7 +11237,7 @@
 		)
 		(path "/9be03b91-4c83-41c9-a557-1839d8835493")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -11703,28 +11664,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "434ceb0f-7935-4b8e-b689-6f49574de243")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "97e71b39-2cc0-4baa-a4ab-b155b2018d14")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "57ff5da4-43bc-4236-8139-dcf58df1c8b1")
 		)
 		(pad "1" smd rect
@@ -11838,7 +11796,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/3bc69947-c715-4756-b89b-595b966eccbd")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -12062,7 +12020,7 @@
 		(property "Reference" "SW37"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "2edce58b-1a77-42f6-899c-4a1095de671a")
+			(uuid "3cb75c62-3e08-4ee2-9b1d-a39f5684afde")
 			(effects
 				(font
 					(size 1 1)
@@ -12074,7 +12032,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "4b60f1c4-ae7e-43fd-91e0-03b3fe0d64ca")
+			(uuid "a191ca67-800f-4b46-96dc-2978591c36f0")
 			(effects
 				(font
 					(size 1 1)
@@ -12086,7 +12044,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "915b4a6a-5071-48ff-8a15-4f56eade7e85")
+			(uuid "f3ccd6ca-e20c-4429-acb6-90c71a75dae0")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12097,7 +12055,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0f88d94f-2641-4ab9-88f6-d8f7a6ddbf36")
+			(uuid "81d0c474-9b01-451f-95aa-e7a9e9558fc8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12106,7 +12064,7 @@
 		)
 		(path "/074214ff-1a47-4bd4-92c4-3e8883da4f4f")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -12533,28 +12491,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "68188908-6e80-4e8f-9dd6-01b88eb5200c")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "4ee97889-0c26-4b91-9a89-aa5748f8b2c7")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "544079fe-e4a1-4d0c-8939-aaf6549e5b6e")
 		)
 		(pad "1" smd rect
@@ -12668,7 +12623,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/dd822552-62c5-444c-a66f-ca1c348fb8de")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -12892,7 +12847,7 @@
 		(property "Reference" "SW12"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "0c225dc9-a0d2-4050-ac96-9aceb461e69e")
+			(uuid "c24772c0-d4dc-485f-a580-f959a20bd433")
 			(effects
 				(font
 					(size 1 1)
@@ -12904,7 +12859,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "5bef6fca-91c1-4f30-bd37-8850e867f745")
+			(uuid "bbec6af4-8889-4efa-a14c-81aa3381a655")
 			(effects
 				(font
 					(size 1 1)
@@ -12916,7 +12871,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "22b66a1e-bc66-42f6-9a40-a740b9a60d94")
+			(uuid "8e2017da-f64c-44f4-bdad-5c2d6df2b6c5")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12927,7 +12882,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "020d3075-5516-48e8-9640-d021717a69f5")
+			(uuid "361d545c-3014-4067-b37c-f745a72fd13d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12936,7 +12891,7 @@
 		)
 		(path "/795e68c1-fd68-49e1-9638-67b506829725")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -13363,28 +13318,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "ca6f76a0-5a99-4c2a-b177-2fb7d9f6d449")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "1405b378-ee07-42de-95c8-582e0039752b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "04c21f7c-5d24-450f-bf64-5ae9c35afcbc")
 		)
 		(pad "1" smd rect
@@ -13498,7 +13450,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/0befc898-d319-431d-b776-b49d61a5a876")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -13804,7 +13756,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/9dcb4e42-f90a-4a36-a79d-48bab27304fe")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -14028,7 +13980,7 @@
 		(property "Reference" "SW24"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "231848bf-b0a9-4399-9827-87f4a5291ce5")
+			(uuid "cacc1a37-81e0-49f6-a547-9b9a3d7dc4a9")
 			(effects
 				(font
 					(size 1 1)
@@ -14040,7 +13992,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "21216225-c26d-4746-8d1a-3d200b717004")
+			(uuid "433ab09d-23cf-45a9-a469-992f4d5dc80a")
 			(effects
 				(font
 					(size 1 1)
@@ -14052,7 +14004,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5e5a9ac0-9b57-4204-b33b-6a2de3af9924")
+			(uuid "07c3f4d6-4d9e-47a3-ab9d-d866e4cf5b2c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14063,7 +14015,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "4e9a8c80-e3a9-463d-9e9b-b98e99872077")
+			(uuid "787a8db2-4e3a-4432-a2f3-e4b9e9e00d1c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14072,7 +14024,7 @@
 		)
 		(path "/e024480c-2821-4f4e-858b-cc592c4aaecd")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -14499,28 +14451,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "9ad52fda-5dbd-4167-949f-94755cc8b51e")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "da93ebfc-a66a-43f1-b209-ca83c5349cd1")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "19541731-3014-49ae-870d-0b8ec865a8d9")
 		)
 		(pad "1" smd rect
@@ -14634,7 +14583,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/66e925a1-c282-44c8-b322-bf78adc3fdd8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -14858,7 +14807,7 @@
 		(property "Reference" "SW6"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "aea4a4aa-47ab-4ece-9324-a0389cddbee6")
+			(uuid "9e84b1fe-4131-4d5c-8905-fefcefcebb2e")
 			(effects
 				(font
 					(size 1 1)
@@ -14870,7 +14819,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "f775e3c4-88ac-46e8-a32c-eed1eb8d121d")
+			(uuid "c7ecc4f6-4fce-4d6b-87f1-8634b53dc570")
 			(effects
 				(font
 					(size 1 1)
@@ -14882,7 +14831,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "b5e1e011-0965-4ab9-94e2-860d44fae812")
+			(uuid "df142d33-d136-4e3c-b898-bd66e028a77f")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14893,7 +14842,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d0ed95da-a655-450e-a1aa-3c6b76421935")
+			(uuid "35b6ad72-7942-4de6-b4d5-cc3c1da947dd")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14902,7 +14851,7 @@
 		)
 		(path "/af1f7c96-7375-4456-bd41-bfb829667bd2")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -15329,28 +15278,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "92ae5be3-5175-4f73-b16d-e612a5d872b2")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "7ab0c03f-6013-407f-acfe-4b847c0eb9a1")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "0659aae0-543e-4272-a5bb-cbbd2ba59256")
 		)
 		(pad "1" smd rect
@@ -15382,7 +15328,7 @@
 		(property "Reference" "SW21"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "f6574aaa-591c-49c5-ab77-7ee498f964c2")
+			(uuid "48dfc723-3da3-4abc-a3ba-6fa70c598497")
 			(effects
 				(font
 					(size 1 1)
@@ -15394,7 +15340,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "e24f1fd9-e5ba-4b8d-9ce5-c7789d7740a9")
+			(uuid "7cada41e-ec2e-405a-b73b-6495398dd5a5")
 			(effects
 				(font
 					(size 1 1)
@@ -15406,7 +15352,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8a0dbd0a-39a3-41aa-ba62-b411a596d9c2")
+			(uuid "bde5fc22-1ea9-4e0d-8242-f18d555b23a3")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15417,7 +15363,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "00990b42-c5d9-4f00-b931-2c1cc013d2fd")
+			(uuid "2a2adb78-213f-4e8d-8e94-9c9c548dfa9f")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15426,7 +15372,7 @@
 		)
 		(path "/1b250476-53bc-415e-8838-0d29bb881546")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -15853,28 +15799,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "fba99a4a-e71a-4aeb-84f4-a87ca103a7ed")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "d9e60dbb-f7fd-429d-8976-050c70972e7a")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "a23fbb1b-3e73-41eb-850c-c5f40f954a2b")
 		)
 		(pad "1" smd rect
@@ -15906,7 +15849,7 @@
 		(property "Reference" "SW29"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "1c0ce7e1-2e9d-4c04-8b52-7de1443a303d")
+			(uuid "eb74e590-ab18-442e-a156-ab6bdc2530a0")
 			(effects
 				(font
 					(size 1 1)
@@ -15918,7 +15861,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "9cf6ccea-8364-4f58-aebb-9c5a9fd1f052")
+			(uuid "f628f0f4-28e6-4903-9879-99d7e87aa447")
 			(effects
 				(font
 					(size 1 1)
@@ -15930,7 +15873,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "21618b66-3702-49d8-8e90-c98b87eb6d79")
+			(uuid "9fe9275f-2f17-4504-9250-5ab13119b30d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15941,7 +15884,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "29fca297-a9cf-409f-a873-389f3a7bc82c")
+			(uuid "5f2a2fb0-37c5-4d25-9206-c1c0a8120e81")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15950,7 +15893,7 @@
 		)
 		(path "/2020f7ce-5925-4c9e-ab2c-c120233f8cd5")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -16377,28 +16320,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "56dce7c9-855e-476a-b13e-dd53a145443d")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "40089205-a5c2-4b75-813f-fcc0bdf11c4f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "0cae48f5-31ef-4ca0-934e-6197bec5979d")
 		)
 		(pad "1" smd rect
@@ -16430,7 +16370,7 @@
 		(property "Reference" "SW33"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "2cf18f07-6828-4b3d-9962-26e6d08873d4")
+			(uuid "2d3fdde0-30de-4039-8667-ad9d2e99ddb1")
 			(effects
 				(font
 					(size 1 1)
@@ -16442,7 +16382,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "e8a0937f-d7db-472c-99cf-6e78fa27b987")
+			(uuid "c46a3474-cc8e-4d33-965d-b320033c15e9")
 			(effects
 				(font
 					(size 1 1)
@@ -16454,7 +16394,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "5615b5d3-eb36-479e-afef-9295c0e1423f")
+			(uuid "b752834b-a5a9-4a0f-ac47-a1643819e352")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16465,7 +16405,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "452cf103-e720-40b9-b8ac-5fa5f1d84f76")
+			(uuid "9d06bce3-96e3-4a8b-ac9c-f344449fbec2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16474,7 +16414,7 @@
 		)
 		(path "/f65674d7-27b0-48f8-8fae-b44827fe223e")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -16901,28 +16841,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "88af7f10-2172-4717-b859-5a92f25ff4ed")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "53cb1137-3733-4210-bbab-cead778fc232")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "45025ede-184f-4856-8e76-2601788ef6cc")
 		)
 		(pad "1" smd rect
@@ -16954,7 +16891,7 @@
 		(property "Reference" "SW16"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "c10138df-b8e4-4045-b6e1-1a1d7909570d")
+			(uuid "55d05466-1e93-4a6d-b486-2c3f396e7eb0")
 			(effects
 				(font
 					(size 1 1)
@@ -16966,7 +16903,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "50b14876-7d80-41f1-98da-ff982b7477e0")
+			(uuid "80556772-d6db-446c-9832-c08fb1fff2e2")
 			(effects
 				(font
 					(size 1 1)
@@ -16978,7 +16915,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "6944da38-8de9-498b-9d18-0bd9b38c3ef0")
+			(uuid "8e6506f1-19bf-4813-9f9c-8b1ed2d56b81")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16989,7 +16926,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "f43a7b9a-2c82-4f83-8eb0-2482917d2b0f")
+			(uuid "968ba6de-163d-4499-b619-04e1dd94bacc")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16998,7 +16935,7 @@
 		)
 		(path "/6482bde8-e2dd-4f41-812b-f08ecccca043")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -17425,28 +17362,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "9a2b8a8c-d91d-4f4e-a209-9e8348d7ad69")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "f9a48bb1-4094-4a3e-8631-8979c32a69ce")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "b2d315ea-5c73-4eec-8f47-ce947fdcc6eb")
 		)
 		(pad "1" smd rect
@@ -17560,7 +17494,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/b350f3a6-b8d7-4e0f-9b66-4b16fe04a51e")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -17866,7 +17800,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/d68a6ba4-ac11-4b40-b00f-7575f6aaf764")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -18090,7 +18024,7 @@
 		(property "Reference" "SW4"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "e83b07cc-6393-485c-a64a-59f1297aad32")
+			(uuid "cd2112d2-7971-4cbd-9ff6-755e7680d53c")
 			(effects
 				(font
 					(size 1 1)
@@ -18102,7 +18036,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "e69e2b52-8a88-4ced-99f3-2a3d598ec09f")
+			(uuid "9464b5a4-7118-4c54-af3b-a65d3961e456")
 			(effects
 				(font
 					(size 1 1)
@@ -18114,7 +18048,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9897f5a4-4313-41fb-a6ac-d1a428b93063")
+			(uuid "902b5823-caf6-4438-bc2d-7f7ed48ebe24")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18125,7 +18059,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "7887afa4-00e6-4dd7-845a-45b3924b9e95")
+			(uuid "9a7fa4bf-1c8a-405e-9290-e6a5d88bb559")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18134,7 +18068,7 @@
 		)
 		(path "/57d97a21-6a8c-47b1-a1da-fe63711cca23")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -18561,28 +18495,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "000e8bc3-3fee-4142-abbe-3c39a39a82af")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "c90ad65d-a106-4055-a203-cc9f703190e9")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "88c27e06-c612-4647-86b8-09a0727cd086")
 		)
 		(pad "1" smd rect
@@ -18614,7 +18545,7 @@
 		(property "Reference" "SW22"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "811fb54f-1bcc-433e-a2d5-c1fb4b5aba09")
+			(uuid "1e608de3-5f7f-4fb8-974f-8ecb0cc19caf")
 			(effects
 				(font
 					(size 1 1)
@@ -18626,7 +18557,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "311d3927-a4de-44fd-84e0-d10af75d73fc")
+			(uuid "ec79b4d6-7234-4af0-8648-ff3d347d1a1d")
 			(effects
 				(font
 					(size 1 1)
@@ -18638,7 +18569,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "63e766fc-f38e-4378-8000-f92bb2e69e06")
+			(uuid "92cc21c9-7a8d-4961-8a16-f13d1954f3cf")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18649,7 +18580,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "057b2115-6705-4e89-8ee4-ada6c37c6fde")
+			(uuid "79948122-e6b5-4427-a9b7-cb2159ee8368")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18658,7 +18589,7 @@
 		)
 		(path "/1b0a0c82-4588-4c4e-9901-1a84188a1db1")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -19085,28 +19016,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "2fb257fa-1524-4b36-9782-e4af887d65a6")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "423f06b7-b467-4f6b-ab74-bf18fbc9cbbe")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "638f2690-9f85-4263-b2e4-5ec1aa9ea497")
 		)
 		(pad "1" smd rect
@@ -19220,7 +19148,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/3974a082-c549-45fc-aa7f-3ad01e61b9e9")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -19526,7 +19454,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/6a187da7-1383-4bd4-b38f-ee5365e3efc7")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -19832,7 +19760,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/6d252f1b-6a99-41cb-9eb0-f8d3e84b1d30")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -20138,7 +20066,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/282cc449-dca9-429a-8835-779e4d286752")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -20444,7 +20372,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/d94871eb-780d-4f08-be26-bda850a1a7e7")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -20750,7 +20678,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/621523b6-9111-46ea-b9c9-22637c40e7c1")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -20974,7 +20902,7 @@
 		(property "Reference" "SW19"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "5a5aaf95-cbc5-4b99-b389-6e52e6a2f377")
+			(uuid "99306442-78c6-4582-9e8c-d95edf7d16fd")
 			(effects
 				(font
 					(size 1 1)
@@ -20986,7 +20914,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "b9d121c8-e14d-48fa-9197-7ed3017c27f5")
+			(uuid "431f9118-3a72-49cf-a62f-6dd7bfa0543d")
 			(effects
 				(font
 					(size 1 1)
@@ -20998,7 +20926,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "62817547-c1ba-49c6-890a-0bff08425c2d")
+			(uuid "ac1e9d11-65db-4f1f-829b-18dfdb8396f0")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21009,7 +20937,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "84ca6e23-42fd-45e2-b07d-3c3440f1005b")
+			(uuid "0b2ceb53-1604-41eb-8666-4d344541f4e8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21018,7 +20946,7 @@
 		)
 		(path "/649590e8-7638-42c4-8de1-fede1c6cfe22")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -21445,28 +21373,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "fc4c15e6-e3af-42d2-8b57-86a359c4e7c0")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e48c9bc2-2eb9-48be-af26-5f4bfc9bd8db")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "122f0bd0-e793-4804-8460-1981b9def984")
 		)
 		(pad "1" smd rect
@@ -21580,7 +21505,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/58858404-8aed-46c5-b687-6167c6e2fc5f")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -21804,7 +21729,7 @@
 		(property "Reference" "SW13"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "c984e3c1-d3f9-47cb-9a99-2da0d94a0e4e")
+			(uuid "eb5b7725-16fa-49c0-9fa6-66dedf00b459")
 			(effects
 				(font
 					(size 1 1)
@@ -21816,7 +21741,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "6ef47eda-6c3f-4caf-912c-1a829fae50e0")
+			(uuid "b97f02f8-6ae4-4826-a5ea-83aa41214cfe")
 			(effects
 				(font
 					(size 1 1)
@@ -21828,7 +21753,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "fd444aac-ff4d-49f7-8c12-829fad2ac9d9")
+			(uuid "14f51f13-bfc8-4366-bdfa-63c0c6188d07")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21839,7 +21764,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "640c4d3e-9204-4432-b097-68242269a5b9")
+			(uuid "dcade39a-85ca-44b9-a5f9-3c6719d6a4aa")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21848,7 +21773,7 @@
 		)
 		(path "/b641d208-6a5b-404b-b934-28000377634b")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -22275,28 +22200,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "a7333d7e-4053-45fc-bb04-7d28c7d2ccb6")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "bc364a2e-e0a0-4446-b494-2a80261c0d33")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "87923132-3616-4e40-a8dc-bcc758e56c33")
 		)
 		(pad "1" smd rect
@@ -22328,7 +22250,7 @@
 		(property "Reference" "SW10"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "14159055-4d10-4413-8eb4-fbaedd29d298")
+			(uuid "1cfc82a2-fccd-43f1-8e47-d8b059aeb45d")
 			(effects
 				(font
 					(size 1 1)
@@ -22340,7 +22262,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "0c34f141-150d-4c03-86f8-f282219caa59")
+			(uuid "b87d6707-5812-4134-baa9-a0ca4acbf571")
 			(effects
 				(font
 					(size 1 1)
@@ -22352,7 +22274,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "16c41bbb-0362-4b4e-8d9d-1d2f14dd859b")
+			(uuid "da97d4c5-c25f-4526-9d8a-af8080a4719f")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22363,7 +22285,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "160a6e5c-10d3-4f6f-a04d-2faf6ff8c402")
+			(uuid "fa48fd2c-6a8a-4c3c-9f20-92274a63ed75")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22372,7 +22294,7 @@
 		)
 		(path "/e9fa7a7d-45fd-45a9-a81f-90e5a7873bf5")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -22799,28 +22721,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "7bd04a84-13a3-4d48-8b67-1c768a95fb42")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e6432353-ae14-4e86-acd7-e93fcf460e17")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "39a82f24-5e4d-448b-b183-f1da0179d233")
 		)
 		(pad "1" smd rect
@@ -22908,7 +22827,7 @@
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/86bfd4f2-ffa7-42b7-8e54-ae2e55740d3e")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -23221,7 +23140,7 @@
 		(property "Reference" "SW26"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "a5d9ff94-694f-4755-b3dc-89884da7e221")
+			(uuid "6b058977-d93f-414c-9573-0d775277c33c")
 			(effects
 				(font
 					(size 1 1)
@@ -23233,7 +23152,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "e2943bc6-a69d-4f2a-851c-49121c7d5721")
+			(uuid "8210b850-88ad-4531-948b-fea5513d4f5c")
 			(effects
 				(font
 					(size 1 1)
@@ -23245,7 +23164,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "275dcab8-af82-412f-bd7c-beb85c6042ed")
+			(uuid "4ddc7142-ed84-45f4-81b7-0cd2251fc58f")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23256,7 +23175,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "083dded1-209e-46af-8093-4e939c6304b5")
+			(uuid "308e1346-4a9a-452f-811a-629f6dd2cd36")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23265,7 +23184,7 @@
 		)
 		(path "/770b2c1a-7268-40b7-a117-a4fa9c0128a8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -23692,28 +23611,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "f2f7ee2e-8251-46eb-807f-b35210d31d63")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "4b75d6fe-640a-40bb-8eb7-8490404784fd")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "4fe1435b-6498-417c-93b4-51ef8e8be9da")
 		)
 		(pad "1" smd rect
@@ -23745,7 +23661,7 @@
 		(property "Reference" "SW30"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "61cf24fd-622f-4896-9a27-729247e0061c")
+			(uuid "965a0d10-adad-4797-8549-afb5e2e332ea")
 			(effects
 				(font
 					(size 1 1)
@@ -23757,7 +23673,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "8f7caf54-dc40-4dbc-bab9-c79c71eccbba")
+			(uuid "cf5a1b9a-a537-4d46-8916-80a077c2bceb")
 			(effects
 				(font
 					(size 1 1)
@@ -23769,7 +23685,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "9834a11f-8afc-4e9b-aa43-cd3c792a15b4")
+			(uuid "a1664a75-5ef5-46fa-a36f-d7803dfc8797")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23780,7 +23696,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "be7a490b-cb9f-4e8b-b234-767420e5c41e")
+			(uuid "0b705fa3-a5bd-4eb3-a43a-8b3464d8812a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23789,7 +23705,7 @@
 		)
 		(path "/e8d772d1-3d8a-40b0-b466-030ba28c0a51")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -24216,28 +24132,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "8cbb2b8e-dab7-4049-b9f1-947ec4e6700f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "400113f2-bc90-4501-9417-7dc1e5b6df96")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "754bb02e-953b-43ef-b90e-a33f89861e82")
 		)
 		(pad "1" smd rect
@@ -24351,7 +24264,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/8b632a05-437f-4bcc-94b0-6813edade0aa")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -24657,7 +24570,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/ba336c64-8e28-4027-998a-c17a0412060b")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -24963,7 +24876,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/6563ef48-c253-4429-9f5b-5d145c813043")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -25187,7 +25100,7 @@
 		(property "Reference" "SW28"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "d70373ac-0a5b-4bec-a400-2cce4d40c8e7")
+			(uuid "b655af7e-a4a6-47ee-ba2f-c9264fb96533")
 			(effects
 				(font
 					(size 1 1)
@@ -25199,7 +25112,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "1ba9f347-e8d6-4ee4-8295-c0dae3a4c79a")
+			(uuid "2d702ff7-14e9-4f23-b5ef-d1893f93a1f8")
 			(effects
 				(font
 					(size 1 1)
@@ -25211,7 +25124,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "42c48041-1392-4d18-a64d-1d03621283ef")
+			(uuid "d2e0b8d5-892d-40e7-81ef-41ee406bb9d7")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25222,7 +25135,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "c53e9976-29e4-4f4d-8d81-cfe6bb7945f4")
+			(uuid "2d9c0edc-c1cf-4d5d-876d-278aebe9d5a0")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25231,7 +25144,7 @@
 		)
 		(path "/625fcad0-369a-423e-8d99-c5df078e7149")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -25658,28 +25571,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "560174d0-3a54-47b8-8969-2b0215d3feb7")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "a19ca0a3-06af-4fc4-9edd-855ee05d55b7")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "2b22c7aa-acf0-40ba-8675-082c4c4ba71b")
 		)
 		(pad "1" smd rect
@@ -25711,7 +25621,7 @@
 		(property "Reference" "SW27"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "4398272e-6259-47e1-91eb-e8c13e853f6e")
+			(uuid "80c804fe-7519-4a46-81ec-d446439328bc")
 			(effects
 				(font
 					(size 1 1)
@@ -25723,7 +25633,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "a81e6daa-5fb7-41a9-b0e9-6790bdb84012")
+			(uuid "cf41a5f5-dedf-4f49-be10-3f0649437aeb")
 			(effects
 				(font
 					(size 1 1)
@@ -25735,7 +25645,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "3019cef1-c3d0-4b72-839b-e695b2ca4d3a")
+			(uuid "e5020b4b-6286-4b66-b4ad-be13e96b2f25")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25746,7 +25656,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "e2df289a-e4d7-4a76-9c76-4c322dac232f")
+			(uuid "f39e0a7a-3bd3-42f5-81ce-4bcc56b15318")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -25755,7 +25665,7 @@
 		)
 		(path "/6e6b7445-46f4-46ad-bc5b-747879ce4787")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -26182,28 +26092,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "23d6a92a-5382-468e-826e-3810a460813b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "83a3da9f-b05f-42ab-9b92-9a652366a7f3")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "42b0c359-756a-432d-bc58-4bdb086f7927")
 		)
 		(pad "1" smd rect
@@ -26235,7 +26142,7 @@
 		(property "Reference" "SW38"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "9fdb068a-1f03-4f90-b250-e78ea2a7e594")
+			(uuid "48ea59dc-b668-4666-8ce6-52428d212d11")
 			(effects
 				(font
 					(size 1 1)
@@ -26247,7 +26154,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "55976d3a-f771-4ac7-a397-96a6a03e3ef1")
+			(uuid "ab8bc18e-61ed-4540-920f-3debd96eb18b")
 			(effects
 				(font
 					(size 1 1)
@@ -26259,7 +26166,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "64e6258f-3eb6-4ae9-9c41-ed598630157a")
+			(uuid "4413c81c-c40e-49cf-89c0-a46b461659e1")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26270,7 +26177,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ec37488e-c634-4fb7-80b9-0198b79dde38")
+			(uuid "ebad2938-7a03-4f46-8598-2ed27310e935")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -26279,7 +26186,7 @@
 		)
 		(path "/d026e80d-78b3-4402-a5bd-bcfdc9a30dd7")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -26706,28 +26613,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "77d47781-72fd-4a7f-8791-f45cca4b43cf")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "aef4c714-6e0f-416f-add8-c9f9e282f452")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "bfa21639-d97a-4190-96a4-ebc6cc93f671")
 		)
 		(pad "1" smd rect
@@ -26803,7 +26707,7 @@
 		)
 		(path "/318d817a-731a-435b-8c69-42e1fdc61463")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -27230,28 +27134,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "84cf48ad-322e-46db-81b2-98e64dc28a09")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "8cc1bf77-3a0d-4a7e-9282-4e17a141dab8")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e925c0e1-edc0-453b-bf92-405873369fab")
 		)
 		(pad "1" smd rect
@@ -27365,7 +27266,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/1beea41b-4b43-4e23-b6f5-8c30dd7af032")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -27589,7 +27490,7 @@
 		(property "Reference" "SW25"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "f1a5e033-42e4-4385-af36-aadc01c092ca")
+			(uuid "07a80294-d3cc-47d1-98a4-bb8a153419b5")
 			(effects
 				(font
 					(size 1 1)
@@ -27601,7 +27502,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "6c157752-9b65-4008-939b-0c81138b6e81")
+			(uuid "4ec60d1f-ce9b-4402-b05b-a20a84615ded")
 			(effects
 				(font
 					(size 1 1)
@@ -27613,7 +27514,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "0fb93e0b-9ab0-4387-8e84-c77769e119a5")
+			(uuid "8b978167-920e-429b-afed-56628b46f550")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27624,7 +27525,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d87f59ac-2539-4771-9b3d-db73d5a926a9")
+			(uuid "6c9a003e-02cc-4f84-aec6-ce02a6722838")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -27633,7 +27534,7 @@
 		)
 		(path "/4ff84714-8357-47b6-97e1-493f11badbc8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -28060,28 +27961,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "4655cb39-03c9-49a4-a8aa-2dc0238c8c0b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "b77b143f-0445-4c09-a94c-59f4c3657a9e")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "e7f37b41-9c2f-40b6-b7f2-a92a206d30cd")
 		)
 		(pad "1" smd rect
@@ -28195,7 +28093,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/bbba1f68-a277-49ac-b126-7405f1273cdd")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -28501,7 +28399,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/57510db6-da0b-448b-b0c5-be90286827d7")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -28807,7 +28705,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/9847c2d6-1c4a-4117-8ab3-5ed89bbd06bc")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -29087,7 +28985,7 @@
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/3572cd87-d2b2-425b-9946-119afb0da4e8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -29482,7 +29380,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/8a235cf5-2fd5-4c1b-9850-8f7233482bf8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -29706,7 +29604,7 @@
 		(property "Reference" "SW31"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "0f4d39ea-ea5c-4148-9359-49af6ebae596")
+			(uuid "3dd71ce9-4c0e-4ef9-8b6d-d0ad018c691c")
 			(effects
 				(font
 					(size 1 1)
@@ -29718,7 +29616,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "d595065e-33e7-43cf-82ab-abcd112df3fc")
+			(uuid "9f188ef8-5963-4c3d-b8ce-0daaf9724290")
 			(effects
 				(font
 					(size 1 1)
@@ -29730,7 +29628,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "54bc6eac-2ec0-4a90-b5f3-8e40c2630b4c")
+			(uuid "8d2c9462-5b9f-4b0d-9265-b15d545f930e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -29741,7 +29639,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "d4a11ce2-691e-4b4c-8b8e-8848f016a840")
+			(uuid "91bccd52-1a19-42bc-b663-cededcf397b8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -29750,7 +29648,7 @@
 		)
 		(path "/9d925760-580b-4009-9fa4-da1b2b5f6793")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -30177,28 +30075,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "53cbf179-d13c-4a8c-bd85-5fc125f2a26a")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "7f1a1fe0-03c4-44ab-a8d9-7b07699a91e5")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "ed04b87c-b833-4cc5-a751-08f1d26d701f")
 		)
 		(pad "1" smd rect
@@ -30312,7 +30207,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/443e5e09-fe8c-4df5-b545-1dee4952225c")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -30580,7 +30475,7 @@
 		)
 		(path "/8ca14103-b7eb-42bf-9a2a-9bfa0d0b899d")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -31007,28 +30902,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "2b9e21ea-761b-4aa5-b7cc-3e6e0d740b4d")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "bf92b29e-bb8a-41f9-afc0-2285b172e6f5")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "fa4e52ad-42c3-42c2-8c75-c8fd45d99125")
 		)
 		(pad "1" smd rect
@@ -31060,7 +30952,7 @@
 		(property "Reference" "SW32"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "9fcd925e-28fc-4f43-bba2-6851a671f658")
+			(uuid "f9d23509-9c3a-4bb7-808e-b6f1727cf16c")
 			(effects
 				(font
 					(size 1 1)
@@ -31072,7 +30964,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "a39c2eb9-729a-402b-93d6-0c309c8d0973")
+			(uuid "0ee54006-acbe-4817-8549-e2b05aad6abb")
 			(effects
 				(font
 					(size 1 1)
@@ -31084,7 +30976,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "886ccfcf-b3ab-4996-9386-5209a300e7f3")
+			(uuid "ac0edfb5-de70-472d-9c8c-ab76fdddf8ec")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -31095,7 +30987,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "8809c474-3a02-49b9-9b78-e69363024d68")
+			(uuid "b66f67c2-8829-4d62-a650-711bad86f06a")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -31104,7 +30996,7 @@
 		)
 		(path "/b634b85b-0613-4d3f-a0b5-f9fe126753d8")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -31531,28 +31423,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "8cf45811-b3c6-41b5-ba46-231881676b4b")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "d558df7d-c155-46db-a49c-c74731722f8f")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "74198843-0dad-40af-842a-ca99f041011b")
 		)
 		(pad "1" smd rect
@@ -31584,7 +31473,7 @@
 		(property "Reference" "SW8"
 			(at 0 -8.255 0)
 			(layer "B.SilkS")
-			(uuid "f968558a-de22-4888-a469-8e0d0074b2cb")
+			(uuid "c60eeb38-209d-4f39-b2a8-28ce5a4dc87b")
 			(effects
 				(font
 					(size 1 1)
@@ -31596,7 +31485,7 @@
 		(property "Value" "SW_Push"
 			(at 0 8.255 0)
 			(layer "F.Fab")
-			(uuid "7c1fc232-462a-4bbe-9500-f8e9f884ef30")
+			(uuid "f72fd735-7efe-41c1-b3df-0efb19848ad9")
 			(effects
 				(font
 					(size 1 1)
@@ -31608,7 +31497,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "45f45bce-ed4b-4fab-aa56-0aae30dff600")
+			(uuid "99b27dce-b8d7-4dc2-80cd-a582e99ec404")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -31619,7 +31508,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ce73a135-acd3-4a48-8fe3-e4aff76cffad")
+			(uuid "6cc06667-51f4-4ac3-92f5-9a7ab3fcd136")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -31628,7 +31517,7 @@
 		)
 		(path "/135de2f2-792c-40a1-a570-3b90b7efe6d6")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -32055,28 +31944,25 @@
 				(justify mirror)
 			)
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at -3.81 -2.54)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "0e751066-ea90-4640-9368-49af64b05299")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 0 0)
 			(size 3.9878 3.9878)
 			(drill 3.9878)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "75af98a3-f3b6-4e13-b225-d5a32a29e1fd")
 		)
-		(pad "" thru_hole circle
+		(pad "" np_thru_hole circle
 			(at 2.54 -5.08)
 			(size 3 3)
 			(drill 3)
 			(layers "*.Cu" "*.Mask")
-			(remove_unused_layers no)
 			(uuid "637528c4-a090-4fa6-b9bb-6980b9176683")
 		)
 		(pad "1" smd rect
@@ -32190,7 +32076,7 @@
 		(property ki_fp_filters "D*DO?35*")
 		(path "/5b516d63-d3ad-474a-9d4a-29f77fa739ac")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -32475,7 +32361,7 @@
 		(property ki_fp_filters "Connector*:*_2x??_*")
 		(path "/bfb7d48e-506d-4e6a-a2db-1a7791debec4")
 		(sheetname "/")
-		(sheetfile "tcc-16-04-2026-1322.kicad_sch")
+		(sheetfile "Placa.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -37799,10 +37685,7 @@
 		(filled_polygon
 			(layer "F.Cu")
 			(pts
-				(xy 210.398636 130.807279) (xy 210.401846 130.813311) (xy 210.693687 132.308977) (xy 210.691908 132.317754)
-				(xy 210.684445 132.322701) (xy 210.683365 132.32286) (xy 209.901161 132.400884) (xy 209.898839 132.400884)
-				(xy 209.116634 132.32286) (xy 209.108742 132.318629) (xy 209.106153 132.310057) (xy 209.106312 132.308977)
-				(xy 209.398154 130.813311) (xy 209.403101 130.805848) (xy 209.409637 130.803852) (xy 210.390363 130.803852)
+				(xy 210.4 130.803852) (xy 209.4 130.803852) (xy 209.103852 132.321586) (xy 209.9 132.401) (xy 210.696148 132.321586)
 			)
 		)
 	)
@@ -37831,11 +37714,7 @@
 		(filled_polygon
 			(layer "B.Cu")
 			(pts
-				(xy 210.6161 132.470429) (xy 210.683365 132.477139) (xy 210.691257 132.48137) (xy 210.693846 132.489942)
-				(xy 210.693687 132.491022) (xy 210.401846 133.986689) (xy 210.396899 133.994152) (xy 210.390363 133.996148)
-				(xy 209.409637 133.996148) (xy 209.401364 133.992721) (xy 209.398154 133.986689) (xy 209.106312 132.491022)
-				(xy 209.108091 132.482245) (xy 209.115554 132.477298) (xy 209.116634 132.477139) (xy 209.898847 132.399115)
-				(xy 209.901153 132.399115)
+				(xy 209.4 133.996148) (xy 210.4 133.996148) (xy 210.696148 132.478414) (xy 209.9 132.399) (xy 209.103852 132.478414)
 			)
 		)
 	)

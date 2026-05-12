@@ -493,7 +493,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "tcc-16-04-2026-1322.kicad_pro",
+    "filename": "Placa.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -647,8 +647,8 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "tcc-16-04-2026-1322.kicad_sch",
-        "name": "tcc-16-04-2026-1322",
+        "filename": "Placa.kicad_sch",
+        "name": "Placa",
         "uuid": "cbd19bc1-a197-4aa6-9939-6eef31ed93b7"
       }
     ],
