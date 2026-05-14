@@ -152,7 +152,7 @@ Funções descritas em níveis aninhados representam operações alternativas as
 | Waveshare UPS HAT | Continuidade elétrica; leitura de carga por **I2C** (ver [docs/waveshare/UPS_HAT.md](docs/waveshare/UPS_HAT.md)); **avisos** (ex.: **TTS** com bateria baixa) quando implementado; **sem** exigência de persistência de sessão após encerramento. |
 | LCD Waveshare **4,3" HDMI (B)** | Painel local; **modelo, cablagem e `config.txt`** em [docs/waveshare/4.3inch_HDMI_LCD_B.md](docs/waveshare/4.3inch_HDMI_LCD_B.md). **Interruptor físico** no encapsulamento (com **Braille** no exterior) desliga a **saída HDMI** para o LCD; o painel entra em **standby** conforme o circuito. |
 | Monitor HDMI externo | Segunda saída HDMI; quando em uso, torna-se a saída visual principal com **front dedicado**. |
-| Teclado físico | **Cherry MX Red** em **hotswap**; trilhas na **fenolite**; **barra de pinos** + **cabo flat** até aos **GPIO** do Pi para matriz **7×7**. **Lista de GPIOs e funções** por documento de hardware (a acrescentar). |
+| Teclado físico | **Cherry MX Red** em **hotswap**; trilhas na **fenolite**; **barra de pinos** + **cabo flat** até aos **GPIO** do Pi para matriz **6×7**. **Lista de GPIOs e funções** por documento de hardware (a acrescentar). |
 | Identificação **Braille** | Peças em **PLA** (impressão **Bambu Lab A1**); notação **Braille português (BR)** segundo **normas oficiais** (rótulos no interruptor / teclas conforme desenho). |
 | PCI | **Fenolite**, **dupla face**, **15×15 cm**; esquemático e layout no **KiCad**; produção por corrosão com **percloreto de ferro**. |
 
@@ -265,7 +265,10 @@ flowchart TD
 - **SO e arranque:** decidir entre **Raspberry Pi OS Lite** (e variantes) e/ou **imagem Buildroot**; **boot rápido** no início da sessão é **requisito de produto** a quantificar por medição e a cruzar com a stack de UI escolhida.
 - **Stack dos front-ends** (LCD e monitor HDMI): ainda por definir (ex.: Qt, GTK, Electron, web local em kiosk, etc.), compatível com o SO escolhido.
 - **Compositor / sessão gráfica** (se Pi OS): **Wayland** vs **X11** — impacto em detecção HDMI, rendimento e arranque.
-- **Mapeamento GPIO** do cabo flat do teclado: **lista de pinos e funções** (linhas/colunas da matriz 7×7) a publicar no documento de hardware quando o esquemático estiver fechado.
+- **Mapeamento GPIO do teclado (matriz 6×7):**
+    - **Rows (Linhas):** Row0: GPIO26, Row1: GPIO32, Row2: GPIO26, Row3: GPIO18, Row4: GPIO24, Row5: GPIO33.
+    - **Cols (Colunas):** Col0: GPIO12, Col1: GPIO16, Col2: GPIO15, Col3: GPIO19, Col4: GPIO23, Col5: GPIO29, Col6: GPIO31.
+- **UPS HAT:** Utiliza barramento **I2C** (SDA/SCL padrão do Raspberry Pi).
 - **Limiares** de software: percentagem ou tensão mínima para **“bateria baixa”** (TTS) e tempos de **debounce** do teclado — calibrar com hardware real.
 
 **Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **motor de cálculo em Python**; **TTS em português (Brasil)**; UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.

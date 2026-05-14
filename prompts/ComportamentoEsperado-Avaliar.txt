@@ -1,0 +1,271 @@
+consegue me entregar uma lista de comportamentos esperados de uma caculadora cientifica, não suas operações matematicas, mas sim seu comportamento de uso
+
+Perfeito! Você quer focar no comportamento do usuário e da interface, não nas fórmulas ou operações. Aqui está uma lista detalhada de comportamentos esperados de uma calculadora científica, organizados por categorias:
+
+1. Interação geral
+Aceitar entradas de teclado e/ou clique do mouse em botões da interface.
+Responder imediatamente ao pressionamento de botões, sem atrasos perceptíveis.
+Permitir edição do valor atual (como apagar dígitos ou limpar toda a entrada).
+Fornecer feedback visual claro sobre a tecla pressionada (ex.: destaque, efeito de clique).
+Exibir claramente o resultado das operações no visor, de forma legível e consistente.
+2. Entrada e exibição
+Exibir números e resultados em notação decimal padrão ou científica, conforme o tamanho do valor.
+Permitir a entrada de múltiplos dígitos, sinais positivos/negativos e ponto decimal.
+Indicar erros de entrada (ex.: dividir por zero, sintaxe inválida) com mensagens claras.
+Suportar histórico ou visualização das últimas operações (opcional, mas comum em científicas).
+Mostrar indicadores de funções ativas, como RAD/DEG (radianos/graus) ou Shift/2nd.
+3. Funções especiais
+Ligar e desligar corretamente, se houver botão de energia.
+Alternar modos matemáticos (ex.: grau/radiano, fixas/flutuante, notação científica).
+Permitir alternância entre funções primárias e secundárias (Shift ou 2nd) com feedback visual.
+Garantir consistência ao usar parênteses, funções trigonométricas e logaritmos: abrir e fechar parênteses corretamente, alertar sobre erros de sintaxe.
+4. Erros e exceções
+Detectar e sinalizar operações inválidas (divisão por zero, logaritmo de número negativo, etc.).
+Impedir que entradas inválidas corrompam a calculadora ou travem a interface.
+Permitir correção do erro sem precisar reiniciar a calculadora.
+5. Usabilidade
+Permitir limpar apenas o último dígito ou toda a entrada (teclas C e AC).
+Suportar uso de memória (M+, M-, MR, MC) de forma previsível e consistente.
+Garantir que a interface seja intuitiva e fácil de navegar, mesmo para funções complexas.
+Respeitar padrões de teclado para atalhos, se aplicável (ex.: Enter = igual, Backspace = apagar).
+6. Persistência e histórico (opcional)
+Em calculadoras avançadas de software, manter histórico de cálculos durante a sessão.
+Permitir copiar/colar resultados para outros aplicativos.
+Manter último resultado disponível para reutilização (Ans).
+
+Se você quiser, posso montar uma versão resumida em checklist pronta para testes, que você poderia usar para validar o comportamento de qualquer calculadora científica, sem envolver as fórmulas. Isso seria muito útil para QA ou documentação de software.
+
+Quer que eu faça isso?
+
+
+Comportamentos esperados de funcionamento de uma calculadora científica
+1. Continuidade de operações após resultado
+
+Após obter um resultado, iniciar uma nova operação deve reutilizar automaticamente o resultado anterior.
+
+Exemplo esperado
+2 + 2 = 4
+* 2 = 8
+
+A calculadora entende:
+
+4 * 2
+2. Digitar número após resultado inicia nova expressão
+
+Após um resultado, se o usuário digitar diretamente um número, a expressão anterior deve ser substituída.
+
+Exemplo
+2 + 2 = 4
+5
+
+Resultado esperado:
+
+5
+
+e não:
+
+45
+3. Operador substitui operador anterior
+
+Se o usuário pressionar dois operadores seguidos, o último deve substituir o anterior.
+
+Exemplo
+5 + * 2
+
+Deve virar:
+
+5 * 2
+4. Igual repetido reutiliza última operação
+
+Ao pressionar = repetidamente, a última operação deve ser repetida.
+
+Exemplo
+5 + 2 = 7
+= 9
+= 11
+5. Uso implícito do resultado anterior
+
+Funções podem usar automaticamente o último resultado.
+
+Exemplo
+2 + 2 = 4
+sqrt
+
+Resultado:
+
+2
+
+pois:
+
+√4
+6. Prioridade operacional correta
+
+A calculadora deve respeitar precedência matemática.
+
+Exemplo
+2 + 3 * 4
+
+Resultado esperado:
+
+14
+
+e não:
+
+20
+7. Parênteses controlam prioridade
+
+Parênteses devem alterar a ordem de execução.
+
+Exemplo
+(2 + 3) * 4
+
+Resultado:
+
+20
+8. Entrada contínua sem confirmação imediata
+
+A calculadora deve permitir montar toda a expressão antes de executar.
+
+Exemplo
+2 + 5 * 3 - 1
+
+Só calcular ao pressionar =.
+
+9. Limpeza parcial e total
+
+Deve existir diferença entre:
+
+C
+
+Limpa apenas entrada atual.
+
+AC
+
+Reinicia toda a operação e memória temporária.
+
+10. Backspace remove último caractere
+
+Ao apagar:
+
+Exemplo
+123
+
+pressionando apagar:
+
+12
+11. Não permitir expressões inválidas
+
+A calculadora deve impedir:
+
+múltiplos pontos decimais no mesmo número;
+operadores inválidos consecutivos;
+fechamento de parêntese sem abertura.
+12. Tratamento de divisão por zero
+
+Ao dividir por zero:
+
+exibir erro;
+impedir travamento;
+permitir continuar usando normalmente depois.
+13. Resultado negativo automático
+
+Operações que geram negativo devem ser exibidas corretamente.
+
+Exemplo
+2 - 5 = -3
+14. Memória operacional
+
+Funções de memória devem persistir entre operações:
+
+M+
+M-
+MR
+MC
+15. Alternância entre graus e radianos
+
+Funções trigonométricas devem mudar comportamento conforme o modo ativo:
+
+DEG
+RAD
+
+com indicador visual.
+
+16. Resultado muito grande deve usar notação científica
+Exemplo
+999999999999 * 999999999999
+
+Exibir:
+
+9.99E+23
+17. Tecla igual finaliza expressão atual
+
+Após =, a expressão deve ser considerada concluída até nova entrada.
+
+18. Operação iniciada sem número usa último resultado
+Exemplo
+10 + 5 = 15
++ 2 = 17
+19. Funções imediatas executam instantaneamente
+
+Funções como:
+
+√
+%
+±
+
+devem atuar imediatamente sobre o valor atual.
+
+20. Estado visual consistente
+
+O visor deve sempre representar:
+
+expressão atual;
+resultado atual;
+modo ativo;
+erros;
+memória ativa.
+21. Travamento de entrada durante erro crítico
+
+Alguns erros devem bloquear apenas a operação atual até limpeza.
+
+Exemplo
+Math Error
+
+até pressionar C ou AC.
+
+22. Precisão consistente
+
+Resultados devem manter precisão adequada sem cortes inesperados.
+
+23. Reutilização inteligente de contexto
+
+Após:
+
+sin(30) = 0.5
+
+pressionar:
+
++ 1
+
+deve produzir:
+
+1.5
+24. Feedback sonoro ou visual (acessibilidade)
+
+Ao pressionar teclas:
+
+destacar botão;
+narrar valor;
+vibrar (mobile);
+emitir som opcional.
+25. Navegação totalmente funcional por teclado
+
+A calculadora deve operar sem mouse:
+
+números;
+operadores;
+Enter;
+Backspace;
+Escape.
+
+Isso tudo forma praticamente uma especificação comportamental de uma calculadora científica moderna.

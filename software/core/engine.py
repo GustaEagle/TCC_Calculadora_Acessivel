@@ -245,6 +245,11 @@ class CalculationEngine:
     def _format_value(self, value: float | tuple[float, float]) -> str:
         if isinstance(value, tuple):
             return f"({value[0]:.10g}, {value[1]:.10g})"
+        
+        # Clean up floating point noise for zero
+        if abs(value) < 1e-12:
+            value = 0.0
+            
         if math.isfinite(value) and float(value).is_integer():
             return str(int(value))
         return f"{value:.10g}"

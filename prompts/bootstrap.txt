@@ -4,12 +4,9 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ## Objetivo desta etapa
 
+-NÃO Executar o passo A, vá direto para o passo B.
+-Ajustar falta de áudio na calculadora
 
-- Implementar feedback sonoro para todas as teclas da calculadora, incluindo confirmação auditiva do resultado das operações executadas.
-
-- Ajustar a interface do aplicativo para utilizar tamanhos de fonte maiores, priorizando legibilidade e acessibilidade.
-
-- Validar se todas as funções matemáticas implementadas estão em conformidade com os requisitos definidos em `PRD.md`.
 
 ---
 

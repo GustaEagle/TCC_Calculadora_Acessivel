@@ -16,6 +16,8 @@ class CalculatorState:
     expression: str = ""
     ans: float | None = None
     last_result: CalculationResult | None = None
+    history: list[CalculationResult] = field(default_factory=list)
+    angle_mode: str = "deg" # 'deg' or 'rad'
 
     def press(self, token: str) -> CalculationResult | None:
         if token == "AC":
@@ -30,6 +32,10 @@ class CalculatorState:
         if token == "x^-1":
             self.expression = f"inv({self.expression})" if self.expression else "inv("
             return None
+        if token == "RAD/DEG":
+            self.angle_mode = "rad" if self.angle_mode == "deg" else "deg"
+            self.engine.angle_mode = self.angle_mode
+            return None
 
         self.expression += token
         return None
@@ -37,6 +43,10 @@ class CalculatorState:
     def evaluate(self) -> CalculationResult:
         result = self.engine.evaluate(self.expression, self.ans)
         self.last_result = result
+        self.history.append(result)
+        if len(self.history) > 10: # Keep last 10
+            self.history.pop(0)
+            
         if result.ok and isinstance(result.value, float):
             self.ans = result.value
             self.expression = result.display

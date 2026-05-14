@@ -12,9 +12,9 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
-from software.platform.display import DisplayMode, DisplaySelector
-from software.platform.keyboard import KeyboardAdapter
-from software.platform.ups import UpsMonitor
+from software.hw_platform.display import DisplayMode, DisplaySelector
+from software.hw_platform.keyboard import KeyboardAdapter
+from software.hw_platform.ups import UpsMonitor
 
 
 LEFT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
@@ -79,11 +79,17 @@ class CalculatorApp:
             self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 14, "bold"))
 
         self.ctrl_active = False
+        self.shift_active = False # Added shift tracking
         self.buttons: dict[str, ttk.Button] = {}
 
         self.expression_var = ttk.StringVar(value="")
         self.result_var = ttk.StringVar(value="Pronto")
         self.status_var = ttk.StringVar(value=self._status_text())
+        
+        # Indicators for special states
+        self.mode_var = ttk.StringVar(value="DEG")
+        self.ctrl_var = ttk.StringVar(value="")
+        self.shift_var = ttk.StringVar(value="")
 
         self._build_layout()
         self._bind_keyboard()
@@ -99,9 +105,17 @@ class CalculatorApp:
         root_frame.columnconfigure(0, weight=1)
         root_frame.rowconfigure(1, weight=1)
 
-        # Glassmorphism effect simulation with contrasting colors and heavy padding
+        # Top bar with indicators
+        top_bar = ttk.Frame(root_frame)
+        top_bar.grid(row=0, column=0, sticky=EW, pady=(0, 5))
+        
+        ttk.Label(top_bar, textvariable=self.mode_var, bootstyle="info", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
+        ttk.Label(top_bar, textvariable=self.ctrl_var, bootstyle="warning", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
+        ttk.Label(top_bar, textvariable=self.shift_var, bootstyle="success", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
+
+        # Glassmorphism effect simulation
         display = ttk.Frame(root_frame, bootstyle="secondary", padding=15)
-        display.grid(row=0, column=0, sticky=EW, pady=(0, 10))
+        display.grid(row=1, column=0, sticky=EW, pady=(0, 10))
         display.columnconfigure(0, weight=1)
 
         ttk.Label(
@@ -120,21 +134,26 @@ class CalculatorApp:
         ).grid(row=1, column=0, sticky=EW)
 
         keypad = ttk.Frame(root_frame)
-        keypad.grid(row=1, column=0, sticky="nsew")
-        keypad.columnconfigure(0, weight=3) # Left section
-        keypad.columnconfigure(1, weight=1) # Spacer
-        keypad.columnconfigure(2, weight=4) # Right section
+        keypad.grid(row=2, column=0, sticky="nsew")
+        keypad.columnconfigure(0, weight=3, uniform="kp") # Left section
+        keypad.columnconfigure(1, weight=1, uniform="kp") # Spacer
+        keypad.columnconfigure(2, weight=4, uniform="kp") # Right section
         keypad.rowconfigure(0, weight=1)
 
         left_frame = ttk.Frame(keypad)
         left_frame.grid(row=0, column=0, sticky="nsew")
-        for i in range(6): left_frame.rowconfigure(i, weight=1)
-        for i in range(3): left_frame.columnconfigure(i, weight=1)
+        for i in range(6): left_frame.rowconfigure(i, weight=1, uniform="row")
+        for i in range(3): left_frame.columnconfigure(i, weight=1, uniform="col_left")
 
         right_frame = ttk.Frame(keypad)
         right_frame.grid(row=0, column=2, sticky="nsew")
-        for i in range(6): right_frame.rowconfigure(i, weight=1)
-        for i in range(4): right_frame.columnconfigure(i, weight=1)
+        for i in range(6): right_frame.rowconfigure(i, weight=1, uniform="row")
+        for i in range(4): right_frame.columnconfigure(i, weight=1, uniform="col_right")
+
+        # Update LEFT_BUTTONS to include RAD/DEG
+        updated_left = [row[:] for row in LEFT_BUTTONS]
+        # Replace the empty button in row 1, col 2 with RAD/DEG
+        updated_left[1][2] = ("R/D", "RAD/DEG", None)
 
         # Helper to build buttons
         def build_buttons(container, buttons_list, is_left):
@@ -152,7 +171,7 @@ class CalculatorApp:
                         command=lambda p=primary, s=secondary: self._handle_token(p, s)
                     )
                     
-                    # Special spans - Use primary token for stability
+                    # Special spans
                     cspan = 1
                     if is_left:
                         if (r == 3 and primary == "inv(") or (r == 5 and primary == "Ctrl"): cspan = 2
@@ -163,12 +182,14 @@ class CalculatorApp:
                     self.buttons[btn_id] = button
                     curr_col += cspan
 
-        build_buttons(left_frame, LEFT_BUTTONS, True)
+        build_buttons(left_frame, updated_left, True)
         build_buttons(right_frame, RIGHT_BUTTONS, False)
 
         footer = ttk.Frame(root_frame, padding=(0, 5))
-        footer.grid(row=2, column=0, sticky=EW)
-        ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 11)).pack(side=LEFT, fill=X, expand=True)
+        footer.grid(row=3, column=0, sticky=EW)
+        
+        ttk.Button(footer, text="Histórico", bootstyle="link", command=self._show_history).pack(side=LEFT)
+        ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 11)).pack(side=LEFT, fill=X, expand=True, padx=10)
         ttk.Label(footer, text="Modo local", anchor=E, bootstyle="info", font=("Segoe UI", 11, "italic")).pack(side=RIGHT)
 
     def _button_style(self, token: str) -> str:
@@ -176,20 +197,20 @@ class CalculatorApp:
             return "danger"
         if token == "DEL":
             return "warning"
-        if token == "=":
+        if token in {"=", "RAD/DEG"}:
             return "success"
-        if token == "Ctrl":
+        if token in {"Ctrl", "Shift"}:
             return "warning"
         
         # Operators and other symbols
         if token in {"+", "-", "*", "/", "^", "nCr(", "polar(", "π", ",", "."}:
             return "warning"
             
-        # Scientific functions (green per request)
+        # Scientific functions
         if any(f in token for f in ["sin", "cos", "tan", "log", "sqrt", "!", "asin", "acos", "atan", "inv", "ln", "nPr", "rect"]):
             return "success"
             
-        # Numeric keys (light blue per request)
+        # Numeric keys
         if token.isdigit() or token == "Ans":
             return "info"
             
@@ -202,65 +223,71 @@ class CalculatorApp:
         self.root.bind("<Escape>", lambda _event: self._handle_token("AC", None))
         self.root.bind("<Control_L>", lambda _event: self._handle_token("Ctrl", None))
         self.root.bind("<Control_R>", lambda _event: self._handle_token("Ctrl", None))
+        self.root.bind("<Shift_L>", lambda _event: self._handle_token("Shift", None))
+        self.root.bind("<Shift_R>", lambda _event: self._handle_token("Shift", None))
 
     def _on_key(self, event: object) -> None:
         char = getattr(event, "char", "")
         token = self.keyboard.map_key(char)
         if token:
-            with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
+            with open("speech_debug.log", "a", encoding="utf-8") as logs:
                 logs.write(f"EVENTO TECLADO: char='{char}' -> token='{token}'\n")
             self._handle_token(token, None)
 
     def _handle_token(self, primary: str, secondary: str | None) -> None:
-        # Toggle Ctrl state
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
+            self.ctrl_var.set("CTRL" if self.ctrl_active else "")
             self._update_ui_for_ctrl()
             self.speech.say("Controle ativo" if self.ctrl_active else "Controle desativado")
             return
 
-        # Select token based on Ctrl state
+        if primary == "Shift":
+            self.shift_active = not self.shift_active
+            self.shift_var.set("SHIFT" if self.shift_active else "")
+            self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
+            return
+
+        if primary == "RAD/DEG":
+            self.state.press("RAD/DEG")
+            self.mode_var.set(self.state.angle_mode.upper())
+            self.speech.say(f"Modo {self.state.angle_mode}")
+            return
+
         token = secondary if (self.ctrl_active and secondary) else primary
         
-        # Input robustness guards
         if token == "=" and not self.state.expression:
             return
 
-        # NEW: Clear expression if a result was just shown and we are starting a new number/function
-        # But KEEP it if we are chaining with an operator
         is_digit_or_func = token.isdigit() or token == "Ans" or "(" in token or token in {"π", "e"}
         if self.state.last_result and self.state.last_result.ok and is_digit_or_func:
-            with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
-                logs.write("UI: Limpando resultado anterior para nova entrada\n")
             self.state.press("AC")
 
-        # Prevent double binary operators (excluding unary minus)
-        operators = {"+", "*", "/", "^"}
+        operators = {"+", "-", "*", "/", "^"}
+        
+        # CHAINING LOGIC: If a result was just shown and user presses an operator, 
+        # auto-insert 'Ans' to chain the calculation.
+        if self.state.last_result and self.state.last_result.ok and token in operators:
+             self.state.expression = "Ans"
+             self.state.last_result = None
+             
         if token in operators and self.state.expression:
             last_char = self.state.expression[-1]
             if last_char in operators:
-                self.speech.say("Substituindo") # Shortened for speed
+                self.speech.say("Substituindo")
                 self.state.press("DEL")
-
-        with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
-            logs.write(f"UI: Processando token='{token}'\n")
 
         result = self.state.press(token)
         
-        # Reset Ctrl after use if it was a scientific function
         if self.ctrl_active and secondary:
             self.ctrl_active = False
+            self.ctrl_var.set("")
             self._update_ui_for_ctrl()
 
         self.expression_var.set(self.state.expression)
 
         if result is None:
-            if token in {"AC", "DEL"}:
-                self.result_var.set("Pronto" if token == "AC" else self.result_var.get())
-            
             spoken = self._spoken_token(token)
-            with open("C:/Users/Administrator/TCC_Calculadora_Acessivel/speech_debug.log", "a", encoding="utf-8") as logs:
-                logs.write(f"UI: Falando token '{spoken}'\n")
             self.speech.say(spoken)
             return
 
@@ -268,73 +295,50 @@ class CalculatorApp:
         if result.ok:
             self.speech.interrupt_and_say(f"Resultado {result.display}")
         else:
-            # Inform explicitly using PRD friendly messages
             friendly_msg = ERROR_MESSAGES.get(result.code, result.message)
             self.speech.interrupt_and_say(f"Erro {result.code.split('-')[-1]}. {friendly_msg}")
 
     def _update_ui_for_ctrl(self) -> None:
-        """Refresh all button labels based on current Ctrl state."""
         for row in LEFT_BUTTONS + RIGHT_BUTTONS:
             for label, primary, secondary in row:
-                if not label or not secondary:
-                    continue
-                
+                if not label or not secondary: continue
                 btn_id = f"{primary}_{secondary}"
                 if btn_id in self.buttons:
-                    # Update label to show primary or secondary
-                    new_text = secondary.rstrip("(") if self.ctrl_active else label
-                    # Mapping secondary names to readable short labels
-                    display_map = {
-                        "asin(": "sen⁻¹",
-                        "acos(": "cos⁻¹",
-                        "atan(": "tan⁻¹",
-                        "ln(": "ln",
-                        "nPr(": "nPr",
-                        "rect(": "Rec",
-                        "e": "e"
-                    }
-                    if self.ctrl_active:
-                        new_text = display_map.get(secondary, secondary.rstrip("("))
-                    else:
-                        new_text = label
-                        
+                    display_map = {"asin(": "sen⁻¹", "acos(": "cos⁻¹", "atan(": "tan⁻¹", "ln(": "ln", "nPr(": "nPr", "rect(": "Rec", "e": "e"}
+                    new_text = display_map.get(secondary, secondary.rstrip("(")) if self.ctrl_active else label
                     self.buttons[btn_id].configure(text=new_text)
-                    # Change style to highlight active secondary function
                     new_style = "info" if self.ctrl_active else self._button_style(primary)
                     self.buttons[btn_id].configure(bootstyle=new_style)
 
+    def _show_history(self) -> None:
+        top = ttk.Toplevel(title="Histórico de Operações")
+        top.geometry("400x500")
+        
+        frame = ttk.Frame(top, padding=10)
+        frame.pack(fill=BOTH, expand=True)
+        
+        ttk.Label(frame, text="Últimas 10 operações", font=("Segoe UI", 12, "bold")).pack(pady=(0, 10))
+        
+        list_frame = ttk.Frame(frame)
+        list_frame.pack(fill=BOTH, expand=True)
+        
+        if not self.state.history:
+            ttk.Label(list_frame, text="Nenhuma operação realizada.", font=("Segoe UI", 10, "italic")).pack()
+        else:
+            for res in reversed(self.state.history):
+                item = ttk.Frame(list_frame, padding=5, bootstyle="secondary")
+                item.pack(fill=X, pady=2)
+                ttk.Label(item, text=res.expression, font=("Segoe UI", 10)).pack(side=LEFT)
+                ttk.Label(item, text=f"= {res.display}", font=("Segoe UI", 10, "bold")).pack(side=RIGHT)
+
     def _spoken_token(self, token: str) -> str:
         names = {
-            "AC": "limpar tudo",
-            "DEL": "apagar",
-            "/": "dividido por",
-            "*": "vezes",
-            "-": "menos",
-            "+": "mais",
-            "^": "elevado a",
-            "π": "pi",
-            "e": "é",
-            "(": "abre parênteses",
-            ")": "fecha parênteses",
-            "Ans": "resposta anterior",
-            "sen(": "seno",
-            "cos(": "cosseno",
-            "tan(": "tangente",
-            "log(": "logaritmo decimal",
-            "ln(": "logaritmo natural",
-            "sqrt(": "raiz quadrada",
-            "asin(": "arco seno",
-            "acos(": "arco cosseno",
-            "atan(": "arco tangente",
-            "!": "fatorial",
-            "nCr(": "combinação",
-            "nPr(": "permutação",
-            "polar(": "polar para retangular",
-            "rect(": "retangular para polar",
-            "x^-1": "inverso",
-            "Ctrl": "controle",
-            ",": "vírgula",
-            ".": "ponto",
+            "AC": "limpar tudo", "DEL": "apagar", "/": "dividido por", "*": "vezes", "-": "menos", "+": "mais", "^": "elevado a",
+            "π": "pi", "e": "é", "(": "abre parênteses", ")": "fecha parênteses", "Ans": "resposta anterior",
+            "sen(": "seno", "cos(": "cosseno", "tan(": "tangente", "log(": "logaritmo decimal", "ln(": "logaritmo natural",
+            "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
+            "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
+            "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternar radianos e graus"
         }
         return names.get(token, token)
 
@@ -343,6 +347,10 @@ class CalculatorApp:
         ups_status = self.ups.read_status()
         visual = "LCD" if display_mode == DisplayMode.LCD else "monitor"
         return f"Saida visual: {visual} | Energia: {ups_status.label}"
+
+
+def main() -> None:
+    CalculatorApp().run()
 
 
 def main() -> None:
