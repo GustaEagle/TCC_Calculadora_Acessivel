@@ -17,22 +17,22 @@ from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
 
 
-LEFT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
-    [("Pol", "polar(", "rect("), ("x!", "!", None), ("Pi", "π", "e")],
-    [("sen", "sen(", "asin("), ("cos", "cos(", "acos("), ("", "", None)],
-    [("tan", "tan(", "atan("), ("log", "log(", "ln("), ("", "", None)],
-    [("x⁻¹", "inv(", None), ("^", "^", None)], # R3: x^-1 will span 2
-    [("?", "", None), ("nCr", "nCr(", "nPr("), ("√", "sqrt(", None)],
-    [("Ctrl", "Ctrl", None), ("exp", "exp(", None), ("Shift", "Shift", None)], # R5: Ctrl will span 2
+LEFT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
+    [("Pol", "polar(", "rect(", None), ("x!", "!", None, None), ("Pi", "π", "e", None)],
+    [("sen", "sen(", "asin(", None), ("cos", "cos(", "acos(", None), ("", "", None, None)],
+    [("tan", "tan(", "atan(", None), ("log", "log(", "ln(", "logbase("), ("", "", None, None)],
+    [("x⁻¹", "inv(", None, None), ("^", "^", None, None)], # R3: x^-1 will span 2
+    [("?", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
+    [("Ctrl", "Ctrl", None, None), ("exp", "exp(", None, None), ("Shift", "Shift", None, None)], # R5: Ctrl will span 2
 ]
 
-RIGHT_BUTTONS: list[list[tuple[str, str, str | None]]] = [
-    [("(", "(", None), (")", ")", None), ("%", "%", None), ("e", "e", None)],
-    [("7", "7", None), ("8", "8", None), ("9", "9", None), ("/", "/", None)],
-    [("4", "4", None), ("5", "5", None), ("6", "6", None), ("*", "*", None)],
-    [("1", "1", None), ("2", "2", None), ("3", "3", None), ("-", "-", None)],
-    [("0", "0", None), (",", ",", None), ("+", "+", None)], # R4: 0 will span 2
-    [("Ans", "Ans", None), ("=", "=", None), ("AC", "AC", None), ("DEL", "DEL", None)],
+RIGHT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
+    [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", None, None)],
+    [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, None)],
+    [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
+    [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
+    [("0", "0", None, None), (",", ",", None, None), ("+", "+", None, None)], # R4: 0 will span 2
+    [("Ans", "Ans", None, None), ("=", "=", None, None), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
 ]
 
 
@@ -153,13 +153,15 @@ class CalculatorApp:
         # Update LEFT_BUTTONS to include RAD/DEG
         updated_left = [row[:] for row in LEFT_BUTTONS]
         # Replace the empty button in row 1, col 2 with RAD/DEG
-        updated_left[1][2] = ("R/D", "RAD/DEG", None)
+        updated_left[1][2] = ("R/D", "RAD/DEG", None, None)
 
         # Helper to build buttons
         def build_buttons(container, buttons_list, is_left):
             for r, row in enumerate(buttons_list):
                 curr_col = 0
-                for label, primary, secondary in row:
+                for item in row:
+                    label, primary, secondary = item[0], item[1], item[2]
+                    shifted = item[3] if len(item) > 3 else None
                     if not label: 
                         curr_col += 1
                         continue
@@ -168,7 +170,7 @@ class CalculatorApp:
                     
                     button = ttk.Button(
                         container, text=label, bootstyle=style,
-                        command=lambda p=primary, s=secondary: self._handle_token(p, s)
+                        command=lambda p=primary, s=secondary, sh=shifted: self._handle_token(p, s, sh)
                     )
                     
                     # Special spans
@@ -218,13 +220,13 @@ class CalculatorApp:
 
     def _bind_keyboard(self) -> None:
         self.root.bind("<Key>", self._on_key)
-        self.root.bind("<Return>", lambda _event: self._handle_token("=", None))
-        self.root.bind("<BackSpace>", lambda _event: self._handle_token("DEL", None))
-        self.root.bind("<Escape>", lambda _event: self._handle_token("AC", None))
-        self.root.bind("<Control_L>", lambda _event: self._handle_token("Ctrl", None))
-        self.root.bind("<Control_R>", lambda _event: self._handle_token("Ctrl", None))
-        self.root.bind("<Shift_L>", lambda _event: self._handle_token("Shift", None))
-        self.root.bind("<Shift_R>", lambda _event: self._handle_token("Shift", None))
+        self.root.bind("<Return>", lambda _event: self._handle_token("=", None, None))
+        self.root.bind("<BackSpace>", lambda _event: self._handle_token("DEL", None, None))
+        self.root.bind("<Escape>", lambda _event: self._handle_token("AC", None, None))
+        self.root.bind("<Control_L>", lambda _event: self._handle_token("Ctrl", None, None))
+        self.root.bind("<Control_R>", lambda _event: self._handle_token("Ctrl", None, None))
+        self.root.bind("<Shift_L>", lambda _event: self._handle_token("Shift", None, None))
+        self.root.bind("<Shift_R>", lambda _event: self._handle_token("Shift", None, None))
 
     def _on_key(self, event: object) -> None:
         char = getattr(event, "char", "")
@@ -232,9 +234,9 @@ class CalculatorApp:
         if token:
             with open("speech_debug.log", "a", encoding="utf-8") as logs:
                 logs.write(f"EVENTO TECLADO: char='{char}' -> token='{token}'\n")
-            self._handle_token(token, None)
+            self._handle_token(token, None, None)
 
-    def _handle_token(self, primary: str, secondary: str | None) -> None:
+    def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
@@ -254,7 +256,16 @@ class CalculatorApp:
             self.speech.say(f"Modo {self.state.angle_mode}")
             return
 
-        token = secondary if (self.ctrl_active and secondary) else primary
+        token = primary
+        if self.shift_active and shifted:
+            token = shifted
+            self.shift_active = False
+            self.shift_var.set("")
+        elif self.ctrl_active and secondary:
+            token = secondary
+            self.ctrl_active = False
+            self.ctrl_var.set("")
+            self._update_ui_for_ctrl()
         
         if token == "=" and not self.state.expression:
             return
@@ -279,11 +290,6 @@ class CalculatorApp:
 
         result = self.state.press(token)
         
-        if self.ctrl_active and secondary:
-            self.ctrl_active = False
-            self.ctrl_var.set("")
-            self._update_ui_for_ctrl()
-
         self.expression_var.set(self.state.expression)
 
         if result is None:
@@ -300,7 +306,8 @@ class CalculatorApp:
 
     def _update_ui_for_ctrl(self) -> None:
         for row in LEFT_BUTTONS + RIGHT_BUTTONS:
-            for label, primary, secondary in row:
+            for item in row:
+                label, primary, secondary = item[0], item[1], item[2]
                 if not label or not secondary: continue
                 btn_id = f"{primary}_{secondary}"
                 if btn_id in self.buttons:
@@ -338,6 +345,7 @@ class CalculatorApp:
             "sen(": "seno", "cos(": "cosseno", "tan(": "tangente", "log(": "logaritmo decimal", "ln(": "logaritmo natural",
             "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
             "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
+            "logbase(": "logaritmo na base x",
             "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternar radianos e graus"
         }
         return names.get(token, token)

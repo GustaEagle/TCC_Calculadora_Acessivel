@@ -4,13 +4,11 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 
 ---
 
-## Última ação
-
-- `git init` na raiz do projeto (pasta **TCC Calculadora**), `origin` → `https://github.com/GustaEagle/TCC_Calculadora_Acessivel`, primeiro push em `main` (merge com o `README.md` criado no GitHub). Pasta local `bootfoverlay/` excluída do Git via `.gitignore` (cópia de firmware/boot, ~73 MB).
+- Implementação da função `logbase(base, value)` acionada por `Shift + log`. Atualização do motor de cálculo (`engine.py`), da interface LCD (`app.py`) e inclusão de testes unitários.
 
 ## Estado atual
 
-- Repositório remoto ativo: **main** em GitHub com PRD, cronograma, docs, esqueleto `software/` / `system/`, KiCad em `hardware/pcb/`.
+- Repositório remoto ativo com a feature de logaritmo customizado (`logbase`) implementada e testada. Interface LCD agora suporta o estado `Shift` para o botão `log`.
 - Documentação normativa: `PRD.md`; tempo: `cronograma/cronograma.md` e `cronograma/cronograma.html`; registo da equipa: `docs/sessoes/`.
 - Backlog: `Sprints.md`.
 
@@ -27,6 +25,6 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 
 - Fechar Sprint 1 (T1.2, T1.3) e iniciar entregáveis de software/hardware alinhados ao PRD e ao cronograma.
 
-## Tasks concluídas na última sessão
+## Tasks concluídas nesta sessão
 
-- Primeiro commit e push para GitHub; repositório Git correto na pasta do projeto.
+- T1.5: Implementar logaritmo com base variável (Shift + log).

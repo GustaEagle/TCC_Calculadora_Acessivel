@@ -24,6 +24,9 @@ class PRDFunctionsTest(unittest.TestCase):
         self.assertAlmostEqual(self.engine.evaluate("log(100)").value, 2.0)
         # Log natural
         self.assertAlmostEqual(self.engine.evaluate("ln(e)").value, 1.0)
+        # Log custom base (logbase(base, value))
+        self.assertAlmostEqual(self.engine.evaluate("logbase(10, 100)").value, 2.0)
+        self.assertAlmostEqual(self.engine.evaluate("logbase(2, 8)").value, 3.0)
 
     def test_constants(self) -> None:
         self.assertAlmostEqual(self.engine.evaluate("π").value, math.pi)

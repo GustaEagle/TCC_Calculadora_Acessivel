@@ -33,6 +33,12 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 - **Responsável:** todos
 - **Status:** todo
 
+### T1.5 — Implementar logaritmo com base variável (Shift + log)
+
+- **Responsável:** todos
+- **Status:** done
+- **Concluído em:** 2026-05-15
+
 ### T1.4 — Criar arquivo de Materiais e métodos listando componentes
 
 - **Responsável:** todos

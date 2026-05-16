@@ -162,6 +162,7 @@ class CalculationEngine:
             "acos": self._acos,
             "atan": lambda value: self._angle_from_radians(math.atan(value)),
             "log": self._log10,
+            "logbase": self._log_base,
             "ln": self._ln,
             "sqrt": self._sqrt,
             "fact": self._factorial,
@@ -202,6 +203,11 @@ class CalculationEngine:
         if value <= 0:
             raise CalculationDomainError("ERR-002", "Argumento invalido para a funcao")
         return math.log10(value)
+
+    def _log_base(self, base: float, value: float) -> float:
+        if value <= 0 or base <= 0 or base == 1:
+            raise CalculationDomainError("ERR-002", "Argumento invalido para a funcao")
+        return math.log(value, base)
 
     def _ln(self, value: float) -> float:
         if value <= 0:
