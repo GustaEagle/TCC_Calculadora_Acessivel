@@ -23,7 +23,7 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 
 ## Próximo foco sugerido
 
-- Fechar Sprint 1 (T1.2, T1.3) e iniciar entregáveis de software/hardware alinhados ao PRD e ao cronograma.
+- Concluir refatoração do botão de separador decimal (T1.6) e testar integração com o estado `Shift`.
 
 ## Tasks concluídas nesta sessão
 

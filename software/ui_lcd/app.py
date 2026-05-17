@@ -31,7 +31,7 @@ RIGHT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
     [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, None)],
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
-    [("0", "0", None, None), (",", ",", None, None), ("+", "+", None, None)], # R4: 0 will span 2
+    [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)], # R4: 0 will span 2
     [("Ans", "Ans", None, None), ("=", "=", None, None), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
 ]
 
@@ -240,13 +240,14 @@ class CalculatorApp:
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
-            self._update_ui_for_ctrl()
+            self._update_keypad_labels()
             self.speech.say("Controle ativo" if self.ctrl_active else "Controle desativado")
             return
 
         if primary == "Shift":
             self.shift_active = not self.shift_active
             self.shift_var.set("SHIFT" if self.shift_active else "")
+            self._update_keypad_labels()
             self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
             return
 
@@ -261,11 +262,12 @@ class CalculatorApp:
             token = shifted
             self.shift_active = False
             self.shift_var.set("")
+            self._update_keypad_labels()
         elif self.ctrl_active and secondary:
             token = secondary
             self.ctrl_active = False
             self.ctrl_var.set("")
-            self._update_ui_for_ctrl()
+            self._update_keypad_labels()
         
         if token == "=" and not self.state.expression:
             return
@@ -304,18 +306,33 @@ class CalculatorApp:
             friendly_msg = ERROR_MESSAGES.get(result.code, result.message)
             self.speech.interrupt_and_say(f"Erro {result.code.split('-')[-1]}. {friendly_msg}")
 
-    def _update_ui_for_ctrl(self) -> None:
-        for row in LEFT_BUTTONS + RIGHT_BUTTONS:
+    def _update_keypad_labels(self) -> None:
+        ctrl_map = {"asin(": "sen⁻¹", "acos(": "cos⁻¹", "atan(": "tan⁻¹", "ln(": "ln", "nPr(": "nPr", "rect(": "Rec", "e": "e"}
+        shift_map = {"logbase(": "log_b", ",": ","}
+        
+        # Combine lists for iteration
+        all_rows = LEFT_BUTTONS + RIGHT_BUTTONS
+        
+        for row in all_rows:
             for item in row:
                 label, primary, secondary = item[0], item[1], item[2]
-                if not label or not secondary: continue
+                shifted = item[3] if len(item) > 3 else None
+                if not label: continue
+                
                 btn_id = f"{primary}_{secondary}"
                 if btn_id in self.buttons:
-                    display_map = {"asin(": "sen⁻¹", "acos(": "cos⁻¹", "atan(": "tan⁻¹", "ln(": "ln", "nPr(": "nPr", "rect(": "Rec", "e": "e"}
-                    new_text = display_map.get(secondary, secondary.rstrip("(")) if self.ctrl_active else label
-                    self.buttons[btn_id].configure(text=new_text)
-                    new_style = "info" if self.ctrl_active else self._button_style(primary)
-                    self.buttons[btn_id].configure(bootstyle=new_style)
+                    button = self.buttons[btn_id]
+                    new_text = label
+                    new_style = self._button_style(primary)
+                    
+                    if self.shift_active and shifted:
+                        new_text = shift_map.get(shifted, shifted.rstrip("("))
+                        new_style = "info"
+                    elif self.ctrl_active and secondary:
+                        new_text = ctrl_map.get(secondary, secondary.rstrip("("))
+                        new_style = "info"
+                    
+                    button.configure(text=new_text, bootstyle=new_style)
 
     def _show_history(self) -> None:
         top = ttk.Toplevel(title="Histórico de Operações")

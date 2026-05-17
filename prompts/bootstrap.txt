@@ -4,8 +4,9 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ## Objetivo desta etapa
 
--NÃO Executar o passo A, vá direto para o passo B.
--Adicionar a feature de Ao pressionar a tecla "shift" a função log deve ficar log Y com base X.
+- Alterar o botão da vírgula altere o app da seguinte maneira
+Botão da "," deve se tornar "."
+Ao apertar SHIFT fazer "." se tornar ","
 
 
 ---

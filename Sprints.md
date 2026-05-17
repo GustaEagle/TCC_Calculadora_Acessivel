@@ -39,6 +39,12 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 - **Status:** done
 - **Concluído em:** 2026-05-15
 
+### T1.6 — Mudar botão "," para "." e adicionar comportamento SHIFT
+
+- **Responsável:** todos
+- **Status:** done
+- **Concluído em:** 2026-05-16
+
 ### T1.4 — Criar arquivo de Materiais e métodos listando componentes
 
 - **Responsável:** todos

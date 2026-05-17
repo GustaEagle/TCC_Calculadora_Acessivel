@@ -81,6 +81,7 @@ class CalculationEngine:
         text = re.sub(r"\bcos-1\s*\(", "acos(", text, flags=re.IGNORECASE)
         text = re.sub(r"\btan-1\s*\(", "atan(", text, flags=re.IGNORECASE)
         text = re.sub(r"\bln\s*\(", "ln(", text, flags=re.IGNORECASE)
+        text = re.sub(r"\blog(\d+)\s*\(", r"logbase(\1, ", text, flags=re.IGNORECASE)
         text = re.sub(r"\bnCr\s*\(", "ncr(", text, flags=re.IGNORECASE)
         text = re.sub(r"\bnPr\s*\(", "npr(", text, flags=re.IGNORECASE)
 
@@ -93,7 +94,7 @@ class CalculationEngine:
         
         # 4. Remove leading zeros from integers to prevent SyntaxError
         # e.g. '09' -> '9', but '0.9' remains '0.9'
-        text = re.sub(r"\b0+(\d+)", r"\1", text)
+        text = re.sub(r"(?<!\.)\b0+(\d+)", r"\1", text)
         
         return text
 
