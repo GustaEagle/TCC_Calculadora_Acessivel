@@ -4,9 +4,7 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ## Objetivo desta etapa
 
-- Alterar o botão da vírgula altere o app da seguinte maneira
-Botão da "," deve se tornar "."
-Ao apertar SHIFT fazer "." se tornar ","
+- leia testes-aritméticos.txt
 
 
 ---

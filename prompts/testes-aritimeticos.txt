@@ -1,0 +1,44 @@
+Objetivo
+
+Realizar testes aritméticos para todas as funções disponíveis na calculadora, garantindo que o motor de cálculo esteja retornando resultados corretos e consistentes.
+
+Etapas
+Criar uma lista de testes contendo:
+a operação matemática a ser executada;
+o resultado esperado da operação.
+Executar todos os cálculos utilizando o motor de cálculo da aplicação.
+Comparar o resultado obtido com o resultado esperado.
+Validar e registrar o status de cada teste:
+✅ Sucesso — resultado correto;
+⚠️ Divergência — diferença aceitável por arredondamento;
+❌ Falha — resultado incorreto;
+🚫 Erro esperado — operação inválida tratada corretamente.
+Escopo dos Testes
+
+Os testes devem abranger todas as funcionalidades aritméticas disponíveis, incluindo:
+
+Soma
+Subtração
+Multiplicação
+Divisão
+Potenciação
+Radiciação
+Porcentagem
+Operações com números negativos
+Operações com casas decimais
+Prioridade de operadores
+Expressões com parênteses
+Funções logarítmicas
+Logaritmo decimal (log)
+Logaritmo natural (ln)
+Logaritmo em bases variáveis
+Funções trigonométricas
+Seno (sin)
+Cosseno (cos)
+Tangente (tan)
+Funções trigonométricas inversas
+Casos especiais e limites numéricos
+Tratamento de erros matemáticos
+Resultado Esperado
+
+Ao final da execução, todos os cálculos devem produzir resultados compatíveis com os valores esperados, validando o funcionamento correto do motor de cálculo da calculadora.

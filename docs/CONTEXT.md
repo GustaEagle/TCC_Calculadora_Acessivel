@@ -13,18 +13,18 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 - Backlog: `Sprints.md`.
 
 ## Pendências / débitos
-
+- Refatoração do botão de separador decimal (T1.6) para suportar Shift (vírgula).
 - Combinar convenção de branches e revisão de PR (T1.3 em `Sprints.md`).
 - Manter `Sprints.md` e este `CONTEXT.md` atualizados por sessão (T1.2).
 
 ## Riscos / atenções
-
+- Discussão com o professor Yuri em 18/05/2026 sobre os resultados e validação das novas funções.
+- Prazo acadêmico: Entrega da Semana 12 em andamento.
 - Existe um repositório Git em **`C:\Users\gusta`** (pasta do utilizador). Fora da pasta do projeto, comandos `git` podem afetar ficheiros errados. Trabalhar sempre com `cd` para `Desktop\TCC Calculadora` ou remover/renomear o `.git` da home se foi criado por engano.
 
 ## Próximo foco sugerido
-
-- Concluir refatoração do botão de separador decimal (T1.6) e testar integração com o estado `Shift`.
+- Concluir refatoração do botão de separador decimal (T1.6).
 
 ## Tasks concluídas nesta sessão
-
-- T1.5: Implementar logaritmo com base variável (Shift + log).
+- [INTERNAL] Validação total do motor de cálculo via `test_arithmetic.py`.
+- [NEW] Suporte a porcentagem (`%`) no engine.

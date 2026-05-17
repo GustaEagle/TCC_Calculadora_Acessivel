@@ -50,11 +50,35 @@ class CalculationEngine:
             return CalculationResult.error(original, "ERR-007", msg)
 
     def _normalize(self, expression: str, ans: float | None) -> str:
-        text = expression
-        # 0. Handle scientific tokens that contain characters used in basic arithmetic
-        text = text.replace("x^-1", "inv")
+        text = expression.strip()
         
-        text = text.replace("×", "*").replace("x", "*").replace("÷", "/")
+        # 0. Handle Ans (case insensitive)
+        if ans is not None:
+            text = re.sub(r"\bAns\b", str(ans), text, flags=re.IGNORECASE)
+
+        # 0.1 Handle scientific tokens that contain characters used in basic arithmetic
+        text = text.replace("x^-1", "inv").replace("X^-1", "inv")
+        
+        # 0.2 Replace math symbols (case insensitive)
+        text = text.replace("×", "*").replace("÷", "/")
+        text = re.sub(r"\bx\b", "*", text, flags=re.IGNORECASE)
+        
+        # 0.3 Replace trig and log functions (case insensitive)
+        # Use regex to replace common function aliases to their canonical internal names
+        replacements = {
+            r"\bsen-1": "asin",
+            r"\bsin-1": "asin",
+            r"\bcos-1": "acos",
+            r"\btan-1": "atan",
+            r"\bsen\b": "sin",
+            r"\blogbase\b": "logbase",
+        }
+        for pattern, replacement in replacements.items():
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+            
+        # Lowercase all remaining text to handle SIN/COS/LOG/PI/E
+        text = text.lower()
+        
         text = text.replace("^", "**")
         # 1. Handle √ followed by parentheses: √(64) -> sqrt(64)
         text = text.replace("√(", "sqrt(")
@@ -91,11 +115,21 @@ class CalculationEngine:
             text = re.sub(r"\bAns\b", str(ans), text, flags=re.IGNORECASE)
 
         text = self._replace_factorials(text)
+        text = self._replace_percentages(text)
         
         # 4. Remove leading zeros from integers to prevent SyntaxError
         # e.g. '09' -> '9', but '0.9' remains '0.9'
         text = re.sub(r"(?<!\.)\b0+(\d+)", r"\1", text)
         
+        return text
+
+    def _replace_percentages(self, text: str) -> str:
+        # Handles postfix percentage cases: 50% -> (50/100)
+        pattern = re.compile(r"(\b\d+(?:\.\d+)?\b|\bpi\b|\be\b|\([^()]*\))%", re.IGNORECASE)
+        previous = None
+        while previous != text:
+            previous = text
+            text = pattern.sub(r"(\1/100)", text)
         return text
 
     def _replace_factorials(self, text: str) -> str:
