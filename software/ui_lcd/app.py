@@ -28,7 +28,7 @@ LEFT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
 
 RIGHT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
     [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", None, None)],
-    [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, None)],
+    [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, "RAD/DEG")],
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
     [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)], # R4: 0 will span 2
@@ -150,10 +150,8 @@ class CalculatorApp:
         for i in range(6): right_frame.rowconfigure(i, weight=1, uniform="row")
         for i in range(4): right_frame.columnconfigure(i, weight=1, uniform="col_right")
 
-        # Update LEFT_BUTTONS to include RAD/DEG
+        # No longer injecting R/D here
         updated_left = [row[:] for row in LEFT_BUTTONS]
-        # Replace the empty button in row 1, col 2 with RAD/DEG
-        updated_left[1][2] = ("R/D", "RAD/DEG", None, None)
 
         # Helper to build buttons
         def build_buttons(container, buttons_list, is_left):
@@ -237,6 +235,21 @@ class CalculatorApp:
             self._handle_token(token, None, None)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
+        if self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}:
+            # Consolidated announcement for Task 3
+            main_name = self._spoken_token(primary)
+            ctrl_name = self._spoken_token(secondary) if secondary else "Nenhuma"
+            shift_name = self._spoken_token(shifted) if shifted else "Nenhuma"
+            
+            msg = f"Função {main_name}."
+            msg += f" Com Controle ativo, função {ctrl_name}."
+            msg += f" Com Shift ativo, função {shift_name}."
+            
+            self.speech.say(msg)
+            # Modifiers remain active for further exploration or can be reset. 
+            # Following usual help patterns, we keep them.
+            return
+
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
@@ -308,7 +321,7 @@ class CalculatorApp:
 
     def _update_keypad_labels(self) -> None:
         ctrl_map = {"asin(": "sen⁻¹", "acos(": "cos⁻¹", "atan(": "tan⁻¹", "ln(": "ln", "nPr(": "nPr", "rect(": "Rec", "e": "e"}
-        shift_map = {"logbase(": "log_b", ",": ","}
+        shift_map = {"logbase(": "log_b", ",": ",", "RAD/DEG": "Deg/Rad"}
         
         # Combine lists for iteration
         all_rows = LEFT_BUTTONS + RIGHT_BUTTONS
@@ -363,7 +376,7 @@ class CalculatorApp:
             "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
             "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
             "logbase(": "logaritmo na base x",
-            "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternar radianos e graus"
+            "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternância entre graus e radianos"
         }
         return names.get(token, token)
 
