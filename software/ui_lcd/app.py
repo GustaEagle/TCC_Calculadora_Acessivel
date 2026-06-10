@@ -4,7 +4,7 @@ from __future__ import annotations
 
 try:
     import ttkbootstrap as ttk
-    from ttkbootstrap.constants import BOTH, CENTER, E, EW, LEFT, RIGHT, W, X
+    from ttkbootstrap.constants import BOTH, CENTER, E, EW, LEFT, NSEW, RIGHT, W, X
 except ImportError as exc:  # pragma: no cover - user-facing startup guard
     raise SystemExit(
         "Instale as dependencias com: python -m pip install -r software/requirements.txt"
@@ -68,15 +68,15 @@ class CalculatorApp:
         # Custom styles for a more premium look
         self.style = ttk.Style()
         self.style.configure("TLabel", font=("Segoe UI", 12))
-        self.style.configure("Display.TLabel", font=("Segoe UI", 28), padding=10)
-        self.style.configure("Result.TLabel", font=("Segoe UI", 40, "bold"), padding=10)
+        self.style.configure("Display.TLabel", font=("Segoe UI", 80), padding=15, foreground="white", background="#303030")
+        self.style.configure("Result.TLabel", font=("Segoe UI", 120, "bold"), padding=15, foreground="white", background="#303030")
         
         # Globally configure TButton for the keypad to ensure consistent font
-        self.style.configure("TButton", font=("Segoe UI", 14, "bold"))
+        self.style.configure("TButton", font=("Segoe UI", 28, "bold"))
         
         # Ensure outline versions also have the correct font just in case
         for color in ["primary", "secondary", "success", "info", "warning", "danger"]:
-            self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 14, "bold"))
+            self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 28, "bold"))
 
         self.ctrl_active = False
         self.shift_active = False # Added shift tracking
@@ -90,9 +90,38 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
+        self.controls_visible = True
+
+        # Truncated display variables
+        self.expression_disp_var = ttk.StringVar(value="")
+        self.result_disp_var = ttk.StringVar(value="")
 
         self._build_layout()
         self._bind_keyboard()
+        
+        # Add tracers for truncation logic
+        self.expression_var.trace_add("write", lambda *_: self._update_display())
+        self.result_var.trace_add("write", lambda *_: self._update_display())
+
+    def _update_display(self) -> None:
+        """Update truncated display variables based on raw variables."""
+        expr = self.expression_var.get()
+        res = self.result_var.get()
+        
+        # Max chars that reasonably fit with current font sizes (80/120)
+        # Increased to utilize more screen width as requested
+        max_expr = 30
+        max_res = 20
+        
+        if len(expr) > max_expr:
+            self.expression_disp_var.set("..." + expr[-(max_expr-3):])
+        else:
+            self.expression_disp_var.set(expr)
+            
+        if len(res) > max_res:
+            self.result_disp_var.set(".." + res[-(max_res-2):])
+        else:
+            self.result_disp_var.set(res)
 
     def run(self) -> None:
         self.speech.say("Calculadora pronta")
@@ -103,11 +132,17 @@ class CalculatorApp:
         root_frame = ttk.Frame(self.root, padding=10)
         root_frame.pack(fill=BOTH, expand=True)
         root_frame.columnconfigure(0, weight=1)
-        root_frame.rowconfigure(1, weight=1)
+        root_frame.rowconfigure(0, weight=0) # Top bar
+        root_frame.rowconfigure(1, weight=1) # Display area
+        root_frame.rowconfigure(2, weight=2) # Keypad area
+        root_frame.rowconfigure(3, weight=0) # Footer
+
+        row_idx = 0
 
         # Top bar with indicators
         top_bar = ttk.Frame(root_frame)
-        top_bar.grid(row=0, column=0, sticky=EW, pady=(0, 5))
+        top_bar.grid(row=row_idx, column=0, sticky=EW, pady=(0, 5))
+        row_idx += 1
         
         ttk.Label(top_bar, textvariable=self.mode_var, bootstyle="info", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
         ttk.Label(top_bar, textvariable=self.ctrl_var, bootstyle="warning", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
@@ -115,37 +150,44 @@ class CalculatorApp:
 
         # Glassmorphism effect simulation
         display = ttk.Frame(root_frame, bootstyle="secondary", padding=15)
-        display.grid(row=1, column=0, sticky=EW, pady=(0, 10))
+        display.grid(row=row_idx, column=0, sticky=NSEW, pady=(0, 10))
         display.columnconfigure(0, weight=1)
+        display.rowconfigure(0, weight=1) # Expression
+        display.rowconfigure(1, weight=2) # Result (more dominant)
+        row_idx += 1
 
-        ttk.Label(
+        self.expression_label = ttk.Label(
             display,
-            textvariable=self.expression_var,
+            textvariable=self.expression_disp_var,
             anchor=E,
             style="Display.TLabel",
-            bootstyle="inverse-secondary",
-        ).grid(row=0, column=0, sticky=EW)
-        ttk.Label(
+            bootstyle="inverse-secondary"
+        )
+        self.expression_label.grid(row=0, column=0, sticky=NSEW)
+
+        self.result_label = ttk.Label(
             display,
-            textvariable=self.result_var,
+            textvariable=self.result_disp_var,
             anchor=E,
             style="Result.TLabel",
-            bootstyle="inverse-secondary",
-        ).grid(row=1, column=0, sticky=EW)
+            bootstyle="inverse-secondary"
+        )
+        self.result_label.grid(row=1, column=0, sticky=NSEW)
 
-        keypad = ttk.Frame(root_frame)
-        keypad.grid(row=2, column=0, sticky="nsew")
-        keypad.columnconfigure(0, weight=3, uniform="kp") # Left section
-        keypad.columnconfigure(1, weight=1, uniform="kp") # Spacer
-        keypad.columnconfigure(2, weight=4, uniform="kp") # Right section
-        keypad.rowconfigure(0, weight=1)
+        self.keypad_frame = ttk.Frame(root_frame)
+        self.keypad_frame.grid(row=row_idx, column=0, sticky=NSEW)
+        row_idx += 1
+        self.keypad_frame.columnconfigure(0, weight=3, uniform="kp") # Left section
+        self.keypad_frame.columnconfigure(1, weight=1, uniform="kp") # Spacer
+        self.keypad_frame.columnconfigure(2, weight=4, uniform="kp") # Right section
+        self.keypad_frame.rowconfigure(0, weight=1)
 
-        left_frame = ttk.Frame(keypad)
+        left_frame = ttk.Frame(self.keypad_frame)
         left_frame.grid(row=0, column=0, sticky="nsew")
         for i in range(6): left_frame.rowconfigure(i, weight=1, uniform="row")
         for i in range(3): left_frame.columnconfigure(i, weight=1, uniform="col_left")
 
-        right_frame = ttk.Frame(keypad)
+        right_frame = ttk.Frame(self.keypad_frame)
         right_frame.grid(row=0, column=2, sticky="nsew")
         for i in range(6): right_frame.rowconfigure(i, weight=1, uniform="row")
         for i in range(4): right_frame.columnconfigure(i, weight=1, uniform="col_right")
@@ -186,11 +228,23 @@ class CalculatorApp:
         build_buttons(right_frame, RIGHT_BUTTONS, False)
 
         footer = ttk.Frame(root_frame, padding=(0, 5))
-        footer.grid(row=3, column=0, sticky=EW)
+        footer.grid(row=row_idx, column=0, sticky=EW, pady=(5, 0))
         
         ttk.Button(footer, text="Histórico", bootstyle="link", command=self._show_history).pack(side=LEFT)
-        ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 11)).pack(side=LEFT, fill=X, expand=True, padx=10)
-        ttk.Label(footer, text="Modo local", anchor=E, bootstyle="info", font=("Segoe UI", 11, "italic")).pack(side=RIGHT)
+        self.toggle_btn = ttk.Button(footer, text="Ocultar Controles", bootstyle="outline-secondary", command=self._toggle_controls)
+        self.toggle_btn.pack(side=LEFT, padx=10)
+        
+        ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 20)).pack(side=LEFT, fill=X, expand=True, padx=10)
+        ttk.Label(footer, text="Modo local", anchor=E, bootstyle="info", font=("Segoe UI", 20, "italic")).pack(side=RIGHT)
+
+    def _toggle_controls(self) -> None:
+        self.controls_visible = not self.controls_visible
+        if self.controls_visible:
+            self.keypad_frame.grid()
+            self.toggle_btn.configure(text="Ocultar Controles")
+        else:
+            self.keypad_frame.grid_remove()
+            self.toggle_btn.configure(text="Exibir Controles")
 
     def _button_style(self, token: str) -> str:
         if token == "AC":
@@ -365,8 +419,8 @@ class CalculatorApp:
             for res in reversed(self.state.history):
                 item = ttk.Frame(list_frame, padding=5, bootstyle="secondary")
                 item.pack(fill=X, pady=2)
-                ttk.Label(item, text=res.expression, font=("Segoe UI", 10)).pack(side=LEFT)
-                ttk.Label(item, text=f"= {res.display}", font=("Segoe UI", 10, "bold")).pack(side=RIGHT)
+                ttk.Label(item, text=res.expression, font=("Segoe UI", 20)).pack(side=LEFT)
+                ttk.Label(item, text=f"= {res.display}", font=("Segoe UI", 20, "bold")).pack(side=RIGHT)
 
     def _spoken_token(self, token: str) -> str:
         names = {

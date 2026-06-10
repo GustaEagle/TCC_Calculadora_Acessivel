@@ -2,19 +2,10 @@ Voce esta iniciando uma nova sessao neste projeto: **TCC Calculadora** (equipe: 
 
 ---
 
-## Objetivo desta etapa
+Objetivo desta etapa
 
-- Necessario ajustes comportamentais na Calculadora, Ex:
-Ao excluir a função "polar(ab,cd)", o comportamento atual realiza a remoção caractere por caractere. A sequência de exclusão ocorre na seguinte ordem:
 
-), d, c, ,, b, a, (, r, a, l, o, p
-
-Entretanto, o comportamento esperado é que os parâmetros sejam removidos individualmente e, ao chegar ao nome da função, ela seja tratada como um único bloco. Dessa forma, a sequência correta de exclusão deveria ser:
-
-), d, c, ,, b, a, polar(
-
-Ou seja, após a remoção dos parâmetros, o identificador da função ("polar(") deve ser apagado integralmente, em vez de ser removido caractere por caractere.
-
+Adicionar um botão para alternar entre exibir e ocultar os controles da calculadora.
 
 ---
 

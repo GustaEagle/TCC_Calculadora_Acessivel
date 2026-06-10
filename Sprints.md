@@ -52,9 +52,66 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 
 ---
 
-## Sprint 2 — (a preencher)
+## Sprint 2 — Refinamento de UI e Acessibilidade
 
-_Adicionar tasks quando a implementação de software/hardware ganhar ritmo, sempre referenciando seções do PRD quando aplicável._
+### T2.1 — Botão de alternância de controles (Toggle keypad) no LCD
+
+- **Responsável:** Yuri (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### T2.2 — Corrigir visor para acompanhar expressões longas (Auto-scroll)
+
+- **Responsável:** João (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### T2.3 — Aumentar tamanho do visor para melhor legibilidade
+
+- **Responsável:** Gustavo (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### T2.4 — Aumentar fonte dos botões do teclado para acessibilidade
+
+- **Responsável:** Yuri (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### T2.5 — Ampliar fontes de resultados (Display, Rodapé, Histórico)
+
+- **Responsável:** João (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### T2.6 — Maximizar tamanho do visor de resultados (Ultra-size)
+
+- **Responsável:** Gustavo (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### Task T2.7 — Ajustar layout para garantir expansão visual do visor
+
+- **Responsável:** Yuri (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### Task T2.8 — Reverter display para Label (com fontes gigantes) e suporte a truncagem
+
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### Task T2.9 — Implementar layout responsivo (Scaling automático)
+
+- **Responsável:** Yuri (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
+
+### Task T2.10 — Polimento final: Silenciar toggle e expandir limites do visor
+
+- **Responsável:** Gustavo (ou rotação)
+- **Status:** done
+- **Concluído em:** 2026-06-10
 
 ---
 
