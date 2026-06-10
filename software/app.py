@@ -10,6 +10,6 @@ if __package__ in {None, ""}:
 
 from software.ui_lcd.app import main
 
-#This is a comment to fix github
+
 if __name__ == "__main__":
     main()
