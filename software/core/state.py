@@ -25,6 +25,18 @@ class CalculatorState:
             self.last_result = None
             return None
         if token == "DEL":
+            # List of function identifiers that should be deleted as a single block
+            # They all end with '(' as per the button definitions in app.py
+            prefixes = [
+                "polar(", "rect(", "sen(", "asin(", "cos(", "acos(", "tan(", "atan(",
+                "log(", "ln(", "logbase(", "inv(", "sqrt(", "ncr(", "npr(", "exp(", "nCr(", "nPr("
+            ]
+            for p in prefixes:
+                if self.expression.endswith(p):
+                    self.expression = self.expression[:-len(p)]
+                    return None
+            
+            # Default behavior for single characters
             self.expression = self.expression[:-1]
             return None
         if token == "=":

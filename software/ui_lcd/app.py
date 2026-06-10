@@ -378,5 +378,5 @@ def main() -> None:
     CalculatorApp().run()
 
 
-def main() -> None:
-    CalculatorApp().run()
+if __name__ == "__main__":
+    main()
