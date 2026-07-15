@@ -1,0 +1,27 @@
+# Sobe a calculadora acessível encaminhando a janela (X11) e o áudio (PulseAudio)
+# para o host Linux. Antes do primeiro `up`, libere o X11 para o container:
+#
+#   xhost +local:docker
+#
+# Depois:
+#
+#   docker compose up --build
+#
+services:
+  calculadora:
+    build: .
+    image: calculadora-acessivel:local
+    environment:
+      # Janela Tkinter -> servidor X do host
+      - DISPLAY=${DISPLAY}
+      # Áudio TTS -> PulseAudio do host (socket montado abaixo)
+      - PULSE_SERVER=unix:/tmp/pulse-native
+    volumes:
+      # Encaminhamento do X11 (somente leitura já basta para desenhar a janela)
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      # Socket do PulseAudio do usuário do host (UID 1001 nesta máquina)
+      - ${XDG_RUNTIME_DIR}/pulse/native:/tmp/pulse-native
+      # Código montado ao vivo: editar em software/ reflete sem rebuild
+      - ./software:/app/software
+    # network_mode host simplifica o acesso ao X11 local (:0)
+    network_mode: host
