@@ -1,0 +1,22 @@
+# Mantém a imagem enxuta: só o código da app entra no build.
+.git
+.github
+.claude
+openspec
+prompts
+cronograma
+docs
+hardware
+system
+*.md
+*.docx
+
+# Ruído de Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# Artefatos locais
+repro_deletion.py
+speech_debug.log
+**/*.log

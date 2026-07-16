@@ -271,7 +271,7 @@ flowchart TD
 - **UPS HAT:** Utiliza barramento **I2C** (SDA/SCL padrão do Raspberry Pi).
 - **Limiares** de software: percentagem ou tensão mínima para **“bateria baixa”** (TTS) e tempos de **debounce** do teclado — calibrar com hardware real.
 
-**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **motor de cálculo em Python**; **TTS em português (Brasil)**; UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
+**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **motor de cálculo em Python**; **TTS em português (Brasil)** via **`espeak-ng`** (o `espeak` clássico é incompatível com o `pyttsx3`); UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
 
 ---
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 try:
     import ttkbootstrap as ttk
     from ttkbootstrap.constants import BOTH, CENTER, E, EW, LEFT, NSEW, RIGHT, W, X
@@ -15,6 +17,11 @@ from software.core import CalculatorState
 from software.hw_platform.display import DisplayMode, DisplaySelector
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
+from software.ui_lcd.error_messages import friendly_message, spoken_priority_prefix
+from software.ui_lcd.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui_lcd.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+
+logger = logging.getLogger(__name__)
 
 
 LEFT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
@@ -32,22 +39,8 @@ RIGHT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
     [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)], # R4: 0 will span 2
-    [("Ans", "Ans", None, None), ("=", "=", None, None), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
+    [("Ans", "Ans", None, None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
 ]
-
-
-ERROR_MESSAGES = {
-    "ERR-001": "Divisão por zero. Limpe ou altere a expressão.",
-    "ERR-002": "Argumento inválido para esta função. Verifique o sinal e o domínio.",
-    "ERR-003": "Valor fora do domínio da função.",
-    "ERR-004": "Parâmetros inválidos para combinação ou permutação.",
-    "ERR-005": "Fatorial não definido para este valor.",
-    "ERR-006": "Resultado muito grande ou não representável.",
-    "ERR-007": "Expressão inválida. Verifique parênteses e operadores.",
-    "ERR-008": "Expressão incompleta.",
-    "ERR-009": "Dados insuficientes ou inválidos para a conversão.",
-    "WRN-010": "Não há resposta anterior.",
-}
 
 
 class CalculatorApp:
@@ -68,15 +61,43 @@ class CalculatorApp:
         # Custom styles for a more premium look
         self.style = ttk.Style()
         self.style.configure("TLabel", font=("Segoe UI", 12))
-        self.style.configure("Display.TLabel", font=("Segoe UI", 80), padding=15, foreground="white", background="#303030")
-        self.style.configure("Result.TLabel", font=("Segoe UI", 120, "bold"), padding=15, foreground="white", background="#303030")
-        
+        self.style.configure(
+            "Display.TLabel", font=("Segoe UI", 80), padding=15,
+            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+        self.style.configure(
+            "Result.TLabel", font=("Segoe UI", 120, "bold"), padding=15,
+            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+
         # Globally configure TButton for the keypad to ensure consistent font
         self.style.configure("TButton", font=("Segoe UI", 28, "bold"))
-        
+
         # Ensure outline versions also have the correct font just in case
         for color in ["primary", "secondary", "success", "info", "warning", "danger"]:
             self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 28, "bold"))
+
+        # Accessibility: override the theme's built-in bootstyle colors with a
+        # WCAG-verified palette (see ui_lcd/palette.py + ui_lcd/contrast.py).
+        # ttkbootstrap's default theme colors aren't guaranteed to meet WCAG AA
+        # and can't be introspected without a running Tk instance, so this app
+        # owns and verifies its own category colors instead of trusting them.
+        for category, colors in BUTTON_PALETTE.items():
+            self.style.configure(
+                f"{category}.TButton",
+                background=colors.background,
+                foreground=colors.foreground,
+            )
+            # Pressed/focused states must stay perceivable without relying on
+            # color alone: press inverts fg/bg (high-contrast tactile cue),
+            # focus gets a bright border (interaction-feedback spec).
+            self.style.map(
+                f"{category}.TButton",
+                background=[("pressed", colors.foreground), ("active", colors.background)],
+                foreground=[("pressed", colors.background)],
+                bordercolor=[("focus", "#FFFFFF")],
+                relief=[("pressed", "sunken")],
+            )
 
         self.ctrl_active = False
         self.shift_active = False # Added shift tracking
@@ -98,14 +119,15 @@ class CalculatorApp:
 
         self._build_layout()
         self._bind_keyboard()
-        
+        self._set_initial_focus()
+
         # Add tracers for truncation logic
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
     def _update_display(self) -> None:
         """Update truncated display variables based on raw variables."""
-        expr = self.expression_var.get()
+        expr = format_expression_for_display(self.expression_var.get())
         res = self.result_var.get()
         
         # Max chars that reasonably fit with current font sizes (80/120)
@@ -212,7 +234,7 @@ class CalculatorApp:
                         container, text=label, bootstyle=style,
                         command=lambda p=primary, s=secondary, sh=shifted: self._handle_token(p, s, sh)
                     )
-                    
+
                     # Special spans
                     cspan = 1
                     if is_left:
@@ -237,14 +259,22 @@ class CalculatorApp:
         ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 20)).pack(side=LEFT, fill=X, expand=True, padx=10)
         ttk.Label(footer, text="Modo local", anchor=E, bootstyle="info", font=("Segoe UI", 20, "italic")).pack(side=RIGHT)
 
+    def _set_initial_focus(self) -> None:
+        """Give Tab traversal a predictable starting point (keyboard-navigation)."""
+        first_digit = self.buttons.get("7_None")
+        if first_digit is not None:
+            first_digit.focus_set()
+
     def _toggle_controls(self) -> None:
         self.controls_visible = not self.controls_visible
         if self.controls_visible:
             self.keypad_frame.grid()
             self.toggle_btn.configure(text="Ocultar Controles")
+            self.speech.say("Controles exibidos")
         else:
             self.keypad_frame.grid_remove()
             self.toggle_btn.configure(text="Exibir Controles")
+            self.speech.say("Controles ocultados")
 
     def _button_style(self, token: str) -> str:
         if token == "AC":
@@ -284,8 +314,7 @@ class CalculatorApp:
         char = getattr(event, "char", "")
         token = self.keyboard.map_key(char)
         if token:
-            with open("speech_debug.log", "a", encoding="utf-8") as logs:
-                logs.write(f"EVENTO TECLADO: char='{char}' -> token='{token}'\n")
+            logger.debug("key event: char=%r -> token=%r", char, token)
             self._handle_token(token, None, None)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
@@ -335,7 +364,11 @@ class CalculatorApp:
             self.ctrl_active = False
             self.ctrl_var.set("")
             self._update_keypad_labels()
-        
+
+        if token == "RECALL":
+            self._recall_last_answer()
+            return
+
         if token == "=" and not self.state.expression:
             return
 
@@ -366,16 +399,25 @@ class CalculatorApp:
             self.speech.say(spoken)
             return
 
-        self.result_var.set(result.display)
         if result.ok:
+            self.result_var.set(result.display)
             self.speech.interrupt_and_say(f"Resultado {result.display}")
         else:
-            friendly_msg = ERROR_MESSAGES.get(result.code, result.message)
-            self.speech.interrupt_and_say(f"Erro {result.code.split('-')[-1]}. {friendly_msg}")
+            # Same friendly text on screen and in speech (error-messaging spec:
+            # UI and TTS must agree, not just share a code) and the PRD §13
+            # prefix by priority: P1 codes are "Erro", P2 codes are "Aviso"
+            # (WRN-010 previously always announced as "Erro", which was wrong).
+            friendly_msg = friendly_message(result.code, result.message)
+            prefix = spoken_priority_prefix(result.code)
+            self.result_var.set(f"{result.code}: {friendly_msg}")
+            self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
     def _update_keypad_labels(self) -> None:
-        ctrl_map = {"asin(": "sen⁻¹", "acos(": "cos⁻¹", "atan(": "tan⁻¹", "ln(": "ln", "nPr(": "nPr", "rect(": "Rec", "e": "e"}
-        shift_map = {"logbase(": "log_b", ",": ",", "RAD/DEG": "Deg/Rad"}
+        # Reuse FUNCTION_DISPLAY_SYMBOLS so the button label always matches the
+        # symbol shown in the expression and spoken by the TTS (task 1.3).
+        symbol_labels = {token: symbol.rstrip("(") for token, symbol in FUNCTION_DISPLAY_SYMBOLS.items()}
+        ctrl_map = {**symbol_labels, "ln(": "ln", "nPr(": "nPr", "e": "e", "RECALL": "Últ. resp."}
+        shift_map = {"logbase(": symbol_labels["logbase("], ",": ",", "RAD/DEG": "Deg/Rad", "RECALL": "Últ. resp."}
         
         # Combine lists for iteration
         all_rows = LEFT_BUTTONS + RIGHT_BUTTONS
@@ -404,23 +446,37 @@ class CalculatorApp:
     def _show_history(self) -> None:
         top = ttk.Toplevel(title="Histórico de Operações")
         top.geometry("400x500")
-        
+
         frame = ttk.Frame(top, padding=10)
         frame.pack(fill=BOTH, expand=True)
-        
+
         ttk.Label(frame, text="Últimas 10 operações", font=("Segoe UI", 12, "bold")).pack(pady=(0, 10))
-        
+
         list_frame = ttk.Frame(frame)
         list_frame.pack(fill=BOTH, expand=True)
-        
+
         if not self.state.history:
             ttk.Label(list_frame, text="Nenhuma operação realizada.", font=("Segoe UI", 10, "italic")).pack()
+            self.speech.say("Histórico vazio. Nenhuma operação realizada.")
         else:
             for res in reversed(self.state.history):
                 item = ttk.Frame(list_frame, padding=5, bootstyle="secondary")
                 item.pack(fill=X, pady=2)
                 ttk.Label(item, text=res.expression, font=("Segoe UI", 20)).pack(side=LEFT)
                 ttk.Label(item, text=f"= {res.display}", font=("Segoe UI", 20, "bold")).pack(side=RIGHT)
+            self.speech.say(f"Histórico aberto. {len(self.state.history)} operações.")
+
+    def _recall_last_answer(self) -> None:
+        """Shift/Ctrl + '=' : re-announce/redisplay the last full result
+        without recalculating or touching the in-progress expression."""
+        result = self.state.recall_last_answer()
+        if result.ok:
+            self.result_var.set(result.display)
+            self.speech.interrupt_and_say(f"Última resposta: {result.display}")
+        else:
+            friendly_msg = friendly_message(result.code, result.message)
+            prefix = spoken_priority_prefix(result.code)
+            self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
     def _spoken_token(self, token: str) -> str:
         names = {
@@ -429,7 +485,7 @@ class CalculatorApp:
             "sen(": "seno", "cos(": "cosseno", "tan(": "tangente", "log(": "logaritmo decimal", "ln(": "logaritmo natural",
             "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
             "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
-            "logbase(": "logaritmo na base x",
+            "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "exponencial", "%": "porcento",
             "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternância entre graus e radianos"
         }
         return names.get(token, token)

@@ -1,0 +1,58 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  ## Produto
+  Calculadora científica com foco em ACESSIBILIDADE (feedback por voz + operação
+  sem depender exclusivamente da tela). TCC — equipe: Gustavo, João, Yuri.
+  Referência normativa: PRD.md (v1.4). Documentação de apoio em docs/.
+
+  ## Arquitetura física (pasta hardware/)
+  - SBC principal: Raspberry Pi 4B (SO, app, áudio, vídeo).
+  - Painel local: LCD Waveshare 4,3" HDMI (B) — saída HDMI dedicada, com
+    interruptor físico (rotulado em Braille) que corta o HDMI do LCD (standby).
+  - Monitor externo via 2ª saída HDMI: quando reconhecido, vira a saída visual
+    PREFERENCIAL (o LCD não espelha a UI principal nesse caso).
+  - Alimentação: Waveshare UPS HAT (leitura de carga por I2C; aviso de bateria
+    baixa por TTS; sem persistência obrigatória de sessão).
+  - Teclado físico: Cherry MX Red hotswap, matriz 6x7 ligada direto aos GPIO do
+    Pi por cabo flat (SEM microcontrolador intermediário).
+  - PCB: fenolite dupla face 15x15 cm, projetada em KiCad (hardware/pcb/), várias
+    revisões datadas; snapshots de export (Gerber/PDF/STEP) em pcb/snapshots/.
+  - Identificação em Braille PT-BR, peças em PLA (impressora Bambu Lab A1).
+
+  ## Software (pasta software/)
+  App Python exibido NA TELA do próprio Raspberry Pi — o Pi roda a interface
+  localmente e a espelha no monitor conectado por HDMI (não é cliente/servidor
+  nem app remoto). Camadas desacopladas (PRD §8), núcleo independente da UI:
+  - core/    -> motor de cálculo (engine.py: normalização de expressão via regex +
+               ast.parse seguro; state.py: máquina de estados Shift/Ctrl/Ans/histórico;
+               models.py: CalculationResult). NÃO usa eval().
+  - ui_lcd/  -> front atual em ttkbootstrap (Tkinter), dimensionado p/ 800x480 do
+               LCD; também serve para testes locais no PC.
+  - ui_hdmi/ -> front do monitor externo (planejado; ainda vazio).
+  - accessibility/ -> speech.py: TTS pt-BR offline via pyttsx3, fila não-bloqueante
+               em thread + processo separado para permitir interrupção (RF-08).
+  - hw_platform/ -> adaptadores/stubs de hardware (keyboard, display, ups) que
+               isolam GPIO/I2C; hoje simulados p/ rodar no PC.
+  - tests/   -> unittest (27 testes passando): aritmética, funções do PRD, engine.
+
+  ## Convenções
+  - Mensagens de commit em INGLÊS (.github/COMMIT_GUIDELINES.md).
+  - Trabalhar em branch a partir de main atualizada; PRs revisados.
+  - Erros seguem catálogo de códigos do PRD §13 (ERR-0xx / WRN-0xx, prioridade
+    P1/P2); mesmo código -> mesmo significado em UI e TTS. Voz sempre pt-BR.
+  - Escopo matemático fixo no PRD §5 — não adicionar funções sem revisar o TCC.
+  - CI: .github/workflows/ci.yml roda os testes (Python 3.11) em todo push/PR.
+  - Fluxo de mudanças gerido por OpenSpec (este diretório).
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - Amarrar toda mudança a um requisito do PRD (RF-xx / RNF-xx) ou justificar novo.
+    - Incluir seção "Não-objetivos" para não expandir o escopo matemático (§5).
+    - Não acoplar o motor de cálculo (core/) a nenhuma stack de UI.
+  tasks:
+    - Toda função nova do motor deve vir com teste em software/tests/.
+    - Novos erros devem reusar/estender os códigos do PRD §13, nunca inventar texto solto.

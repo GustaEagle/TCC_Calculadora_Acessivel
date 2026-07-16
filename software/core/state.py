@@ -52,6 +52,14 @@ class CalculatorState:
         self.expression += token
         return None
 
+    def recall_last_answer(self) -> CalculationResult:
+        """Return the last complete result without recalculating or touching
+        the in-progress expression (recall-last-answer spec). Mirrors WRN-010
+        when no previous answer exists in the session."""
+        if self.last_result is None:
+            return CalculationResult.error("", "WRN-010", "Sem resposta anterior", "P2")
+        return self.last_result
+
     def evaluate(self) -> CalculationResult:
         result = self.engine.evaluate(self.expression, self.ans)
         self.last_result = result
