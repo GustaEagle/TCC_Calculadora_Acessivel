@@ -39,54 +39,58 @@ O app é Tkinter, então precisa de um X11 mínimo — mas **sem desktop**, só 
 ```
 Liga o Pi
   → Autologin no console (raspi-config → Boot → Console Autologin)
-  → systemd (ou ~/.xinitrc) inicia:  python3 -m software.app
-  → Só a janela da calculadora na tela (sem menu, sem barra)
+  → ~/.bash_profile dispara:  startx
+  → ~/.xinitrc prepara a tela e executa:  python3 -m software.app
+  → Só a janela da calculadora na tela (sem menu, sem barra, sem cursor)
 ```
 
-Para appliance de verdade, prefira **systemd com Restart=always** (reinicia o app
-se ele cair) em vez do `.xinitrc` simples.
+O `.xinitrc` também **reinicia o app se ele cair** (laço `while true`), fazendo o
+papel de um `Restart=always` sem a complicação de iniciar o X a partir de um
+serviço systemd (que exige mexer no `Xwrapper.config`).
 
 ---
 
-## Passo a passo (Pi OS Lite + kiosk via systemd)
+## Passo a passo (Pi OS Lite + kiosk via ~/.xinitrc)
 
-1. **Gravar Pi OS Lite (64-bit)** no cartão (Raspberry Pi Imager).
+1. **Gravar Pi OS Lite (64-bit)** no cartão (Raspberry Pi Imager). Dá para
+   pré-configurar usuário/senha/Wi-Fi/SSH no próprio Imager (ícone de engrenagem).
 
 2. **Instalar dependências** no Pi:
    ```bash
    sudo apt update
-   sudo apt install -y xserver-xorg xinit python3-tk espeak python3-pip unclutter
-   pip3 install --break-system-packages ttkbootstrap pyttsx3
+   sudo apt install -y xserver-xorg xinit python3-tk espeak-ng python3-pip unclutter
    ```
 
-3. **Copiar o código** para o Pi (ex.: `/home/pi/calculadora/`, contendo a pasta
-   `software/`).
+   > ⚠️ É `espeak-ng`, **não** `espeak`. O `espeak` clássico é incompatível com o
+   > driver do `pyttsx3` (falha com `SetVoiceByName ... gmw/en`) e o TTS não sobe.
+
+3. **Copiar o código** para o Pi (ex.: `/home/pi/calculadora/`, contendo `software/`)
+   e instalar as libs Python com as versões fixadas do projeto:
+   ```bash
+   cd /home/pi/calculadora
+   pip3 install --break-system-packages -r software/requirements.txt
+   ```
 
 4. **Autologin no console:** `sudo raspi-config` → *System Options* →
    *Boot / Auto Login* → **Console Autologin**.
 
-5. **Criar o serviço** `/etc/systemd/system/calculadora.service`:
-   ```ini
-   [Unit]
-   Description=Calculadora Acessivel (kiosk)
-   After=systemd-user-sessions.service
-
-   [Service]
-   User=pi
-   WorkingDirectory=/home/pi/calculadora
-   Environment=DISPLAY=:0
-   # startx sobe um X mínimo e executa só o app como cliente
-   ExecStart=/usr/bin/startx /usr/bin/python3 -m software.app
-   Restart=always
-   RestartSec=2
-
-   [Install]
-   WantedBy=multi-user.target
+5. **Criar o lançador do kiosk** em `/home/pi/.xinitrc`:
+   ```bash
+   xset s off -dpms          # nunca apagar/desligar a tela
+   unclutter -idle 0 &       # esconder o cursor do mouse
+   cd /home/pi/calculadora
+   while true; do            # reinicia o app se ele fechar/cair
+       python3 -m software.app
+   done
    ```
 
-6. **Habilitar e reiniciar:**
+6. **Disparar o X no login** adicionando ao final de `/home/pi/.bash_profile`:
    ```bash
-   sudo systemctl enable calculadora.service
+   [ "$(tty)" = "/dev/tty1" ] && startx
+   ```
+
+7. **Reiniciar:**
+   ```bash
    sudo reboot
    ```
 
@@ -96,11 +100,17 @@ Ao voltar, o Pi arranca direto na calculadora.
 
 ## Ajustes recomendados de appliance
 
-- **Sem blanking de tela:** no X, `xset s off -dpms` (adicionar antes do app).
-- **Esconder cursor:** `unclutter -idle 0` (já instalado no passo 2).
-- **Áudio:** garantir saída correta (`raspi-config` → *Audio*) para o TTS pt-BR.
+- **Sem blanking de tela / cursor escondido / auto-restart:** já embutidos no
+  `~/.xinitrc` do passo 5.
+- **Áudio:** garantir a saída correta (`raspi-config` → *System Options* → *Audio*)
+  para o TTS pt-BR sair no dispositivo certo (HDMI vs. jack).
 - **HDMI/LCD:** a lógica de `DisplaySelector` (RF-02) ainda é stub; o kiosk
   desenha na saída ativa do X. Detecção/troca automática é trabalho à parte.
+
+> **Alternativa via systemd:** se preferir gerenciar por serviço, é possível, mas
+> exige um launcher separado **e** `allowed_users=anybody` em
+> `/etc/X11/Xwrapper.config` para o systemd conseguir iniciar o X. O método
+> `~/.xinitrc` acima evita isso e é o padrão consagrado de kiosk no Pi.
 
 ---
 
@@ -144,9 +154,11 @@ adiciona um "estágio" próprio que instala o app e o kiosk — o resultado é u
    cd pi-gen
    ```
 2. Criar um estágio `stage-calculadora/` com:
-   - `00-packages` — lista de pacotes apt (`xserver-xorg xinit python3-tk espeak unclutter`).
-   - `01-run.sh` — copia a pasta `software/`, cria o `calculadora.service` e habilita
-     autologin (os mesmos passos 3–6 da seção kiosk, mas em script).
+   - `00-packages` — lista de pacotes apt (`xserver-xorg xinit python3-tk espeak-ng unclutter`).
+   - `01-run.sh` — copia a pasta `software/`, instala as libs Python
+     (`pip3 install --break-system-packages -r software/requirements.txt`), grava o
+     `~/.xinitrc` e o `~/.bash_profile` e habilita o autologin (os mesmos passos 3–6
+     da seção kiosk, mas em script).
 3. Definir `config` (nome da imagem, `TARGET_HOSTNAME`, usuário) e rodar:
    ```bash
    sudo ./build.sh
@@ -173,7 +185,7 @@ alguns pacotes Python não existem prontos no Buildroot. Os artefatos reutilizá
    - **Toolchain:** headers/compilador compatíveis.
    - **Target packages → Interpreter languages:** `python3` + a opção **tkinter**.
    - **Graphic libraries → X.org:** servidor X mínimo (xserver + xinit).
-   - **Audio/misc:** `espeak` (para o TTS).
+   - **Audio/misc:** `espeak-ng` (para o TTS; o `espeak` clássico não serve ao pyttsx3).
    - **System:** init (systemd **ou** BusyBox) e autologin.
 3. **App + dependências Python:** `ttkbootstrap` e `pyttsx3` não são pacotes
    nativos do Buildroot. Opções:

@@ -8,7 +8,14 @@ Alinhado ao [PRD.md](../PRD.md) §8: **motor em Python**, **dois fronts** (LCD e
 | `ui_lcd/` | Interface para o painel 4,3" (restrições de tamanho e legibilidade). |
 | `ui_hdmi/` | Interface para monitor externo (layout mais rico). |
 | `accessibility/` | TTS, fila de anúncios, política de interrupção (RF-08); idioma pt-BR. |
-| `platform/` | GPIO / matriz teclado, leitura UPS quando existir, detecção de saídas HDMI (helpers). |
+| `hw_platform/` | GPIO / matriz teclado, leitura UPS quando existir, detecção de saídas HDMI (helpers). |
 | `tests/` | Testes de integração ou smoke que cruzam módulos. |
 
 Cada subprojeto pode ter o seu próprio `tests/` ou `pyproject.toml` quando a stack estabilizar.
+
+## Dependências
+
+- **Python:** `ttkbootstrap` e `pyttsx3`, com versões fixadas em [requirements.txt](requirements.txt) (`ttkbootstrap==1.20.4`, `pyttsx3==2.99`).
+- **Sistema:** `python3-tk` (Tkinter) e **`espeak-ng`** para o TTS.
+  > ⚠️ Use **`espeak-ng`**, **não** o `espeak` clássico: este último é incompatível com o driver do `pyttsx3` (falha com `SetVoiceByName ... gmw/en`) e o áudio não inicia. Vale para qualquer forma de empacotar (Docker, Pi OS, Buildroot).
+- **Testes:** só a biblioteca padrão (`unittest`) — nenhuma dependência extra. Ver `make check`.
