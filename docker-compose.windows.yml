@@ -1,0 +1,51 @@
+# Variante para rodar a calculadora acessível no Windows com Docker Desktop.
+# Diferente do docker-compose.yml (feito para Linux nativo), aqui não há
+# socket X11 nem PulseAudio locais — a janela é enviada via TCP para um
+# servidor X rodando no próprio Windows.
+#
+# ---------------------------------------------------------------------------
+# PASSO A PASSO (uma vez por máquina Windows)
+# ---------------------------------------------------------------------------
+# 1. Instalar um X server no Windows (gratuito): VcXsrv
+#      https://sourceforge.net/projects/vcxsrv/
+#
+# 2. Abrir o "XLaunch" com estas opções:
+#      - Multiple windows
+#      - Start no client
+#      - MARCAR "Disable access control"   <- essencial, senão o container
+#        não consegue desenhar a janela
+#
+# 3. Na primeira execução, o Firewall do Windows vai perguntar se libera o
+#    VCXSRV.EXE -> marcar "Redes privadas" (Private networks) e permitir.
+#
+# 4. Rodar (não combinar com o docker-compose.yml do Linux; este arquivo já
+#    é completo sozinho):
+#
+#      docker compose -f docker-compose.windows.yml up --build
+#
+# ---------------------------------------------------------------------------
+# ÁUDIO (TTS): não configurado aqui.
+# ---------------------------------------------------------------------------
+# O Windows não tem um socket de áudio equivalente ao PulseAudio do Linux.
+# Sem configuração extra, o app abre e funciona normalmente na tela, mas o
+# pyttsx3/espeak falha ao iniciar a voz dentro do container -- o erro fica
+# só registrado em software/speech_debug.log, sem travar a aplicação.
+# Se precisar mesmo do áudio no Windows, a via mais simples é instalar um
+# servidor PulseAudio para Windows e então acrescentar aqui:
+#   environment:
+#     - PULSE_SERVER=tcp:host.docker.internal:4713
+#
+services:
+  calculadora:
+    build: .
+    image: calculadora-acessivel:local
+    environment:
+      # host.docker.internal resolve para o IP do Windows a partir do
+      # container (recurso nativo do Docker Desktop, não precisa configurar).
+      - DISPLAY=host.docker.internal:0.0
+    volumes:
+      # Código montado ao vivo, igual ao setup do Linux.
+      - ./software:/app/software
+    # Sem network_mode: host aqui -- não é suportado da mesma forma no
+    # Docker Desktop para Windows; a rede padrão (bridge) + host.docker.internal
+    # já resolve o acesso ao X server do host.

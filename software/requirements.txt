@@ -1,2 +1,2 @@
-ttkbootstrap
-pyttsx3
+ttkbootstrap==1.20.4
+pyttsx3==2.99
