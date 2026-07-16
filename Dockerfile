@@ -10,18 +10,30 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Dependências de sistema:
 #  - python3 / python3-tk : interpretador 3.11 + Tkinter (ttkbootstrap)
-#  - espeak / libespeak1   : motor TTS offline usado pelo pyttsx3
+#  - espeak-ng             : motor TTS offline usado pelo pyttsx3. O pacote
+#    clássico "espeak" usa nomes de voz simples ("en"), mas o driver do
+#    pyttsx3 espera a convenção hierárquica do espeak-ng ("gmw/en"),
+#    então "espeak" isolado falha ao inicializar a voz padrão.
 #  - libasound2-plugins    : ponte ALSA -> PulseAudio (áudio para o host)
+#  - alsa-utils            : fornece o binário "aplay" que o espeak-ng chama
+#    para reproduzir o áudio sintetizado
 #  - fonts-dejavu-core     : fontes para a UI não ficar sem glifos
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \
         python3-tk \
-        espeak \
-        libespeak1 \
+        espeak-ng \
+        libespeak-ng1 \
         libasound2-plugins \
+        alsa-utils \
         fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Sem isso, aplay/ALSA tenta abrir uma placa de som física ("hw:0") que não
+# existe no container e falha; direciona o PCM padrão para o plugin "pulse"
+# (fornecido por libasound2-plugins), que fala com o PulseAudio do host via
+# o socket montado em /tmp/pulse-native (ver docker-compose.yml).
+RUN printf 'pcm.!default {\n  type pulse\n}\nctl.!default {\n  type pulse\n}\n' > /etc/asound.conf
 
 WORKDIR /app
 
