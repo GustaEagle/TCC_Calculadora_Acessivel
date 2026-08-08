@@ -231,6 +231,15 @@
       margin: 0.4rem 0 0;
     }
 
+    .week-detail ul {
+      margin: 0.4rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .week-detail li {
+      margin: 0.25rem 0;
+    }
+
     .milestone-row {
       display: flex;
       align-items: flex-start;
@@ -312,7 +321,7 @@
     }
 
     .gantt-inner {
-      min-width: 900px;
+      min-width: 1100px;
       padding: 1rem 1.1rem 1.25rem;
     }
 
@@ -382,6 +391,24 @@
       margin-top: 0.85rem;
       margin-bottom: 0;
     }
+
+    .horizon-grid {
+      display: grid;
+      gap: 0.45rem;
+      font-size: 0.88rem;
+    }
+
+    .horizon-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .horizon-row:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -389,8 +416,10 @@
     <header>
       <h1>Cronograma do projeto (TCC — calculadora)</h1>
       <p class="sub">
-        Linha do tempo alinhada ao consolidado do professor (semanas de domingo a sábado, início
-        <strong>01/03/2026</strong>).         Fonte:
+        Linha do tempo alinhada ao consolidado (semanas de domingo a sábado, início
+        <strong>01/03/2026</strong>). Atualização do 2º semestre em
+        <strong>07/08/2026</strong>; horizonte principal até
+        <strong>18/12/2026</strong>. Fonte:
         <a href="cronograma.md" target="_blank" rel="noopener">cronograma.md</a>
         e export <a href="Cronograma_raw.txt" target="_blank" rel="noopener">Cronograma_raw.txt</a>.
         Marcos podem ser marcados como concluídos — a preferência fica salva neste navegador.
@@ -404,16 +433,23 @@
         <div id="weekPill" class="pill pill-now">—</div>
       </div>
       <div class="card">
-        <h2>Esta semana</h2>
+        <h2>Este período</h2>
         <div id="thisWeekTitle" class="big-date" style="font-size:1.05rem">—</div>
         <p class="muted" id="thisWeekRange" style="margin:0.5rem 0 0">—</p>
       </div>
     </div>
 
+    <section class="block" style="margin-bottom:1.25rem">
+      <h2>Visão geral do horizonte</h2>
+      <div class="card" id="horizonCard">
+        <div class="horizon-grid" id="horizonList"></div>
+      </div>
+    </section>
+
     <section class="block" id="teamDatesSection" style="margin-bottom:1.25rem">
-      <h2>Datas importantes (equipe)</h2>
+      <h2>Datas importantes (equipe / instituição)</h2>
       <div class="card" id="teamDatesCard" style="border-color:rgba(61,156,245,0.45)">
-        <p class="muted" style="margin:0 0 0.75rem">Compromissos explícitos com orientação; detalhe em <code>cronograma.md</code>.</p>
+        <p class="muted" style="margin:0 0 0.75rem">Compromissos explícitos com orientação e prazos do COBRIC; detalhe em <code>cronograma.md</code>.</p>
         <ul id="teamDatesList" style="margin:0;padding-left:1.2rem"></ul>
       </div>
     </section>
@@ -421,10 +457,11 @@
     <div id="alerts"></div>
 
     <section class="block gantt-section">
-      <h2>Diagrama de Gantt (intervalos do consolidado)</h2>
+      <h2>Diagrama de Gantt</h2>
       <p class="muted" style="margin-top:-0.4rem;margin-bottom:0.6rem">
-        Escala de <strong>março a setembro/2026</strong> (alinhada ao plano). A linha <strong style="color:var(--warn)">âmbar</strong> é a data de hoje no seu computador.
-        Os losangos na última faixa são <strong>marcos de data única</strong> (verde se marcados como feitos acima).
+        Escala de <strong>março a dezembro/2026</strong>. Barras históricas do consolidado + fases do 2º semestre.
+        A linha <strong style="color:var(--warn)">âmbar</strong> é a data de hoje no seu computador.
+        Os losangos na última faixa são <strong>marcos de data única</strong> (verde se marcados como feitos).
       </p>
       <div class="card">
         <div class="gantt-scroll">
@@ -434,14 +471,14 @@
     </section>
 
     <section class="block">
-      <h2>O que está em vigência nesta semana</h2>
+      <h2>O que está em vigência neste período</h2>
       <div class="card" id="thisWeekTasks"></div>
     </section>
 
     <section class="block">
-      <h2>Intervalos do consolidado (referência)</h2>
+      <h2>Intervalos do consolidado (referência histórica)</h2>
       <p class="muted" style="margin-top:-0.4rem;margin-bottom:0.6rem">
-        Linhas em destaque ainda estão dentro do prazo em relação à <strong>data de hoje</strong> do seu computador.
+        Tabela histórica do 1º semestre. A partir de <strong>07/08/2026</strong>, prevalece o bloco de atualização prioritária.
       </p>
       <div style="overflow-x:auto">
         <table class="ref-table" id="refTable"></table>
@@ -454,11 +491,19 @@
     </section>
 
     <section class="block">
-      <h2>Todas as semanas</h2>
+      <h2>Primeiro semestre — semanas</h2>
       <p class="muted" style="margin-top:-0.4rem;margin-bottom:0.6rem">
         Clique numa semana para expandir o texto completo (igual ao markdown).
       </p>
       <div class="week-list" id="weekList"></div>
+    </section>
+
+    <section class="block">
+      <h2>Atualização prioritária — segundo semestre de 2026</h2>
+      <p class="muted" style="margin-top:-0.4rem;margin-bottom:0.6rem">
+        Substitui o planejamento genérico de banner a partir de <strong>07/08/2026</strong>. Clique para expandir tarefas e marcos.
+      </p>
+      <div class="week-list" id="phaseList"></div>
     </section>
 
     <div class="github-hint">
@@ -469,7 +514,7 @@
     </div>
 
     <footer>
-      Última data do consolidado no planejamento: 25/09/2026. Ajuste entregas se a banca for antes.
+      Encerramento principal previsto: 18/12/2026. Contingência de validação física: fim de janeiro ou início de fevereiro de 2027.
     </footer>
   </div>
 
@@ -495,21 +540,198 @@
         { n: 13, month: "Maio", start: [2026, 5, 24], end: [2026, 5, 30], ongoing: ["encapsulamento", "conclusão (texto do TCC)", "criação de banner"], milestones: [{ d: [2026, 5, 24], t: "Parte escrita homologada (prof. Yuri)" }], notes: "Ver secção «Datas importantes» no cronograma.md." },
         { n: 14, month: "Junho", start: [2026, 5, 31], end: [2026, 6, 6], ongoing: ["encapsulamento", "criação de banner"], milestones: [], notes: "" },
         { n: 15, month: "Junho", start: [2026, 6, 7], end: [2026, 6, 13], ongoing: ["encapsulamento", "criação de banner"], milestones: [{ d: [2026, 6, 10], t: "Encapsulamento finalizado + entrega física + software" }], notes: "" },
-        { n: 16, month: "Junho", start: [2026, 6, 14], end: [2026, 6, 20], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 17, month: "Junho", start: [2026, 6, 21], end: [2026, 6, 27], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 18, month: "Junho", start: [2026, 6, 28], end: [2026, 7, 4], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 19, month: "Julho", start: [2026, 7, 5], end: [2026, 7, 11], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 20, month: "Julho", start: [2026, 7, 12], end: [2026, 7, 18], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 21, month: "Julho", start: [2026, 7, 19], end: [2026, 7, 25], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 22, month: "Julho", start: [2026, 7, 26], end: [2026, 8, 1], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 23, month: "Agosto", start: [2026, 8, 2], end: [2026, 8, 8], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 24, month: "Agosto", start: [2026, 8, 9], end: [2026, 8, 15], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 25, month: "Agosto", start: [2026, 8, 16], end: [2026, 8, 22], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 26, month: "Agosto", start: [2026, 8, 23], end: [2026, 8, 29], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 27, month: "Agosto", start: [2026, 8, 30], end: [2026, 9, 5], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 28, month: "Setembro", start: [2026, 9, 6], end: [2026, 9, 12], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 29, month: "Setembro", start: [2026, 9, 13], end: [2026, 9, 19], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "" },
-        { n: 30, month: "Setembro", start: [2026, 9, 20], end: [2026, 9, 26], ongoing: ["criação de banner (até 25/09/2026 — último dia previsto no consolidado)"], milestones: [], notes: "" }
+        { n: 16, month: "Junho", start: [2026, 6, 14], end: [2026, 6, 20], ongoing: ["criação de banner (até 25/09/2026)"], milestones: [], notes: "A partir de 07/08/2026 o detalhamento do banner/pôster segue as fases do 2º semestre; o intervalo consolidado de criação de banner vai até 25/09/2026." }
+      ];
+
+      const phases = [
+        {
+          id: "p-placa",
+          title: "Placa e diagnóstico inicial",
+          start: [2026, 8, 7],
+          end: [2026, 8, 10],
+          tasks: [
+            "Revisar a placa até 10/08 (esquema, layout, dimensões, conectores e fixação).",
+            "Fazer/fechar os ajustes da placa até 10/08 e gerar a versão de fabricação.",
+            "Pedir a placa no AliExpress até 10/08.",
+            "Iniciar a revisão do DOCX atual e separar conteúdo reaproveitável para o COBRIC.",
+            "Levantar onde e como ferramentas de IA foram usadas."
+          ],
+          marco: "10/08 — revisão/ajustes da placa encerrados; pedido realizado."
+        },
+        {
+          id: "p-encap-soft",
+          title: "Início do encapsulamento e adaptação do software",
+          start: [2026, 8, 11],
+          end: [2026, 8, 16],
+          tasks: [
+            "Iniciar encapsulamento: medidas, fixação, ventilação, portas, cabos e protótipo inicial.",
+            "Criar a nova tela para uso no monitor externo HDMI.",
+            "Iniciar ajustes do front-end (resolução, escala, legibilidade, navegação).",
+            "Continuar revisão do DOCX (conteúdo técnico, resultados, figuras, tabelas, referências)."
+          ],
+          marco: ""
+        },
+        {
+          id: "p-testes-encap",
+          title: "Primeiros testes do encapsulamento",
+          start: [2026, 8, 17],
+          end: [2026, 8, 20],
+          tasks: [
+            "Realizar e documentar os primeiros testes de montagem e encaixe.",
+            "Verificar acesso a HDMI, alimentação, teclado, conectores e manutenção.",
+            "Registrar problemas, fotos, medidas e ajustes necessários.",
+            "Testar a nova tela HDMI e corrigir falhas críticas do front-end."
+          ],
+          marco: "20/08 — primeiros testes do encapsulamento concluídos e pendências registradas."
+        },
+        {
+          id: "p-consolidacao",
+          title: "Correções e consolidação técnica",
+          start: [2026, 8, 21],
+          end: [2026, 8, 30],
+          tasks: [
+            "Corrigir o encapsulamento a partir dos primeiros testes.",
+            "Finalizar a primeira rodada da tela HDMI e dos ajustes do front-end.",
+            "Executar testes integrados de hardware e software e guardar evidências.",
+            "Concluir a revisão estrutural do DOCX atual.",
+            "Definir a declaração de IA com base no histórico real de uso."
+          ],
+          marco: "30/08 — versão técnica integrada utilizável e decisão documentada sobre declaração de IA."
+        },
+        {
+          id: "p-docx",
+          title: "Novo DOCX do COBRIC",
+          start: [2026, 8, 31],
+          end: [2026, 9, 13],
+          tasks: [
+            "Criar o novo artigo no modelo oficial de submissão de 2026.",
+            "Transferir e adaptar introdução, materiais e métodos, resultados e discussão e conclusão.",
+            "Preparar título e resumo em PT/EN (500 a 800 caracteres com espaços).",
+            "Inserir 3 a 5 palavras-chave e 3 a 5 keywords.",
+            "Conferir figuras, tabelas, SI, citações e referências reais.",
+            "Manter 6–12 páginas, .doc/.docx, sem hyperlinks, até 2 MB."
+          ],
+          marco: "13/09 — primeira versão completa do DOCX do COBRIC."
+        },
+        {
+          id: "p-revisao",
+          title: "Revisão científica, textual e de IA",
+          start: [2026, 9, 14],
+          end: [2026, 9, 27],
+          tasks: [
+            "Revisar conteúdo técnico e coerência objetivos/metodologia/resultados/conclusão.",
+            "Revisar português e inglês, autoria, instituição, e-mail, citações e referências.",
+            "Verificar originalidade/plágio; detector de IA só como sinal auxiliar.",
+            "Auditar manualmente trechos e referências potencialmente gerados/alterados por IA.",
+            "Inserir a seção DECLARAÇÃO DE USO DE IA antes das referências.",
+            "Enviar a versão revisada ao orientador."
+          ],
+          marco: "27/09 — artigo revisado e enviado ao orientador."
+        },
+        {
+          id: "p-fechamento",
+          title: "Fechamento do artigo e pré-produção do pôster",
+          start: [2026, 9, 28],
+          end: [2026, 10, 5],
+          tasks: [
+            "Aplicar correções do orientador e fazer conferência final do DOCX.",
+            "Validar 6–12 páginas, 2 MB, formatação, autores, orientador e declaração de IA.",
+            "Separar material do pôster: título, autores, logotipos, imagens, gráficos, resultados.",
+            "Confirmar modelo de pôster 2026; senão, usar referência 2025 — 90 × 120 cm, vertical."
+          ],
+          marco: "05/10 — DOCX final aprovado internamente e pronto para submissão."
+        },
+        {
+          id: "p-inscricao",
+          title: "Inscrição e submissão no COBRIC",
+          start: [2026, 10, 6],
+          end: [2026, 10, 13],
+          tasks: [
+            "Submeter o artigo e efetivar a inscrição até 06/10 (meta interna).",
+            "Conferir autores, orientador, CPF, e-mails, instituições, título, área e arquivo.",
+            "Conferir a declaração de IA no sistema de inscrição.",
+            "Guardar e-mails e comprovantes de confirmação.",
+            "Usar 13/10 apenas como prazo final oficial/contingência."
+          ],
+          marco: "06/10 meta interna; 13/10 prazo oficial de submissão."
+        },
+        {
+          id: "p-poster-v1",
+          title: "Acompanhamento e primeira versão do pôster",
+          start: [2026, 10, 14],
+          end: [2026, 10, 20],
+          tasks: [
+            "Acompanhar o e-mail do autor responsável e comunicações do evento.",
+            "Criar a primeira versão do pôster como síntese visual do artigo.",
+            "Organizar introdução curta, objetivos, métodos, resultados, conclusões e referências."
+          ],
+          marco: "20/10 — verificar o aceite e manter a 1ª versão do pôster pronta."
+        },
+        {
+          id: "p-poster-final",
+          title: "Banner/pôster final",
+          start: [2026, 10, 21],
+          end: [2026, 10, 30],
+          tasks: [
+            "Após o aceite, finalizar o pôster (título, autores, orientador, instituição, contato).",
+            "Garantir legibilidade à distância e imagens sem pixelização.",
+            "Em 26/10, conferir data, horário, local e posição do pôster.",
+            "Submeter o pôster à revisão do orientador até 27/10.",
+            "Aplicar correções e fechar o arquivo até 28/10.",
+            "Enviar para impressão até 30/10."
+          ],
+          marco: ""
+        },
+        {
+          id: "p-apresentacao",
+          title: "Preparação e apresentação no COBRIC",
+          start: [2026, 10, 31],
+          end: [2026, 11, 5],
+          tasks: [
+            "Conferir o pôster impresso e preparar apresentação oral curta.",
+            "Treinar respostas (problema, objetivo, metodologia, resultados, conclusão, IA).",
+            "Em 05/11, chegar 15–20 min antes, instalar o pôster e permanecer na sessão."
+          ],
+          marco: "05/11/2026, 19h–21h30 — apresentação presencial (Ciências Exatas e Engenharias)."
+        },
+        {
+          id: "p-prep-banca",
+          title: "Preparação para validação física e banca",
+          start: [2026, 11, 6],
+          end: [2026, 11, 22],
+          tasks: [
+            "Incorporar correções finais no hardware, encapsulamento, tela HDMI e front-end.",
+            "Organizar evidências, documentação técnica e roteiro para a banca.",
+            "Em 11/11, consultar premiação e certificados do COBRIC."
+          ],
+          marco: ""
+        },
+        {
+          id: "p-validacao",
+          title: "Validação, ENADE, banca e entrega",
+          start: [2026, 11, 23],
+          end: [2026, 12, 18],
+          tasks: [
+            "23/11 a 03/12: validação principal da parte física.",
+            "29/11: realizar o ENADE.",
+            "Se necessário, 2ª tentativa de validação entre 04/12 e a data da banca.",
+            "07/12 a 12/12: apresentar a banca final.",
+            "07/12 a 18/12: entregar pendrive do TCC e caixa de MDF do FabLab.",
+            "Se necessário, 3ª janela de validação até ~1 semana após a banca."
+          ],
+          marco: "Encerramento principal previsto em 18/12/2026."
+        },
+        {
+          id: "p-contingencia",
+          title: "Contingência — janeiro/fevereiro de 2027",
+          start: [2027, 1, 25],
+          end: [2027, 2, 7],
+          tasks: [
+            "Última oportunidade de validação física se as três janelas anteriores falharem.",
+            "Alinhar com a instituição a última semana de janeiro ou a primeira de fevereiro."
+          ],
+          marco: "Última contingência de validação física."
+        }
       ];
 
       const refIntervals = [
@@ -525,6 +747,17 @@
         { start: [2026, 5, 5], end: [2026, 5, 22], label: "Resultados (texto)" },
         { start: [2026, 5, 15], end: [2026, 5, 30], label: "Conclusão (texto)" },
         { start: [2026, 5, 15], end: [2026, 9, 25], label: "Criação de banner" }
+      ];
+
+      const semesterIntervals = [
+        { start: [2026, 8, 7], end: [2026, 8, 30], label: "Placa + encapsulamento + software" },
+        { start: [2026, 8, 31], end: [2026, 10, 5], label: "Artigo COBRIC (DOCX)" },
+        { start: [2026, 10, 6], end: [2026, 10, 13], label: "Inscrição / submissão COBRIC" },
+        { start: [2026, 10, 14], end: [2026, 10, 30], label: "Pôster / banner" },
+        { start: [2026, 10, 31], end: [2026, 11, 5], label: "Apresentação COBRIC" },
+        { start: [2026, 11, 23], end: [2026, 12, 3], label: "Validação física (principal)" },
+        { start: [2026, 12, 7], end: [2026, 12, 12], label: "Banca final" },
+        { start: [2026, 12, 7], end: [2026, 12, 18], label: "Entrega pendrive + caixa MDF" }
       ];
 
       const ganttOnlyMilestones = [
@@ -549,7 +782,25 @@
         { id: "2026-05-22", d: [2026, 5, 22], t: "Outras funções (testes)" },
         { id: "2026-05-23", d: [2026, 5, 23], t: "Revisão conclusão e revisão final" },
         { id: "2026-05-24", d: [2026, 5, 24], t: "Parte escrita homologada (prof. Yuri)" },
-        { id: "2026-06-10", d: [2026, 6, 10], t: "Encapsulamento finalizado + entrega física + software" }
+        { id: "2026-06-10", d: [2026, 6, 10], t: "Encapsulamento finalizado + entrega física + software" },
+        { id: "2026-08-10", d: [2026, 8, 10], t: "Revisar/ajustar placa e pedir no AliExpress" },
+        { id: "2026-08-20", d: [2026, 8, 20], t: "Primeiros testes do encapsulamento concluídos" },
+        { id: "2026-08-30", d: [2026, 8, 30], t: "Versão técnica integrada + decisão declaração de IA" },
+        { id: "2026-09-13", d: [2026, 9, 13], t: "Primeira versão completa do DOCX do COBRIC" },
+        { id: "2026-09-27", d: [2026, 9, 27], t: "Artigo revisado e enviado ao orientador" },
+        { id: "2026-10-05", d: [2026, 10, 5], t: "DOCX final aprovado internamente" },
+        { id: "2026-10-06", d: [2026, 10, 6], t: "Meta interna: inscrição/submissão COBRIC" },
+        { id: "2026-10-13", d: [2026, 10, 13], t: "Prazo final oficial COBRIC" },
+        { id: "2026-10-20", d: [2026, 10, 20], t: "Notificação de aceite COBRIC + pôster v1" },
+        { id: "2026-10-26", d: [2026, 10, 26], t: "Divulgação local/horário/posição do pôster" },
+        { id: "2026-10-27", d: [2026, 10, 27], t: "Pôster enviado à revisão do orientador" },
+        { id: "2026-10-28", d: [2026, 10, 28], t: "Arquivo do pôster fechado" },
+        { id: "2026-10-30", d: [2026, 10, 30], t: "Envio do pôster para impressão" },
+        { id: "2026-11-05", d: [2026, 11, 5], t: "Apresentação presencial COBRIC (19h–21h30)" },
+        { id: "2026-11-11", d: [2026, 11, 11], t: "Consultar premiação e certificados COBRIC" },
+        { id: "2026-11-29", d: [2026, 11, 29], t: "ENADE" },
+        { id: "2026-12-12", d: [2026, 12, 12], t: "Fim do período previsto da banca final" },
+        { id: "2026-12-18", d: [2026, 12, 18], t: "Fim do prazo de entrega (pendrive + caixa MDF)" }
       ];
 
       function dParts(y, m, day) {
@@ -582,6 +833,17 @@
         return idx > weeks.length ? weeks.length + 1 : idx;
       }
 
+      function phaseForDate(today) {
+        const t = startOfDay(today).getTime();
+        for (let i = 0; i < phases.length; i++) {
+          const p = phases[i];
+          const s = startOfDay(dParts(p.start[0], p.start[1], p.start[2])).getTime();
+          const e = startOfDay(dParts(p.end[0], p.end[1], p.end[2])).getTime();
+          if (t >= s && t <= e) return p;
+        }
+        return null;
+      }
+
       function storageKey(id) {
         return "tcc-cronograma-done-" + id;
       }
@@ -603,8 +865,27 @@
 
       const today = startOfDay(new Date());
       const wIdx = weekIndexForDate(today);
+      const currentPhase = phaseForDate(today);
+      const semesterStart = dParts(2026, 8, 7);
+      const mainEnd = dParts(2026, 12, 18);
 
       document.getElementById("todayStr").textContent = fmtBR(today);
+
+      (function renderHorizon() {
+        const items = [
+          { label: "Início do consolidado", value: "01/03/2026" },
+          { label: "Atualização do segundo semestre", value: "07/08/2026" },
+          { label: "Encerramento principal previsto", value: "18/12/2026" },
+          { label: "Última contingência de validação física", value: "Fim de jan. / início de fev. 2027" }
+        ];
+        const root = document.getElementById("horizonList");
+        items.forEach(function (x) {
+          const row = document.createElement("div");
+          row.className = "horizon-row";
+          row.innerHTML = "<span>" + x.label + "</span><strong>" + x.value + "</strong>";
+          root.appendChild(row);
+        });
+      })();
 
       (function renderTeamHighlightDates() {
         const teamHighlight = [
@@ -617,6 +898,56 @@
             d: [2026, 6, 10],
             title: "Entrega parte física + software",
             detail: "Encapsulamento finalizado no plano; produto integrado (hardware + software embarcado)."
+          },
+          {
+            d: [2026, 8, 10],
+            title: "Revisar placa e pedir no AliExpress",
+            detail: "Prazo para revisar, ajustar e solicitar a nova placa."
+          },
+          {
+            d: [2026, 8, 20],
+            title: "Primeiros testes do encapsulamento",
+            detail: "Concluir os primeiros testes de montagem/encaixe e registrar pendências."
+          },
+          {
+            d: [2026, 10, 6],
+            title: "Meta interna COBRIC",
+            detail: "Trabalho inscrito/submetido, com margem antes do prazo oficial."
+          },
+          {
+            d: [2026, 10, 13],
+            title: "Prazo final oficial COBRIC",
+            detail: "Submissão do artigo completo e efetivação da inscrição."
+          },
+          {
+            d: [2026, 10, 20],
+            title: "Notificação de aceite COBRIC",
+            detail: "Aceite previsto até esta data."
+          },
+          {
+            d: [2026, 10, 26],
+            title: "Divulgação local e horário",
+            detail: "Conferir também a posição do pôster."
+          },
+          {
+            d: [2026, 11, 5],
+            title: "Apresentação presencial COBRIC",
+            detail: "19h–21h30 — Ensino Superior, Ciências Exatas e Engenharias."
+          },
+          {
+            d: [2026, 11, 23],
+            title: "Início da validação física principal",
+            detail: "Período principal: 23/11 a 03/12/2026."
+          },
+          {
+            d: [2026, 11, 29],
+            title: "ENADE",
+            detail: "Compromisso institucional."
+          },
+          {
+            d: [2026, 12, 7],
+            title: "Início do período da banca / entregas",
+            detail: "Banca: 07–12/12. Pendrive + caixa MDF: 07–18/12."
           }
         ];
         const ul = document.getElementById("teamDatesList");
@@ -624,11 +955,14 @@
         teamHighlight.forEach(function (x) {
           const li = document.createElement("li");
           li.style.marginBottom = "0.65rem";
+          const md = dParts(x.d[0], x.d[1], x.d[2]);
+          const past = md < today;
           li.innerHTML =
             "<strong>" +
-            fmtShort(dParts(x.d[0], x.d[1], x.d[2])) +
+            fmtShort(md) +
             "</strong> — " +
             x.title +
+            (past ? ' <span class="muted">(passou)</span>' : "") +
             "<br /><span class=\"muted\" style=\"font-size:0.86rem\">" +
             x.detail +
             "</span>";
@@ -637,22 +971,53 @@
       })();
 
       const pill = document.getElementById("weekPill");
-      if (wIdx === 0) {
+      if (today < WEEK_START_ANCHOR) {
         pill.textContent = "Antes do início do cronograma (01/03/2026)";
         pill.className = "pill pill-before";
-      } else if (wIdx > weeks.length) {
-        pill.textContent = "Após a Semana 30 (ver observações no rodapé)";
-        pill.className = "pill pill-after";
-      } else {
+      } else if (currentPhase) {
+        pill.textContent = "Fase atual do 2º semestre";
+        pill.className = "pill pill-now";
+      } else if (wIdx >= 1 && wIdx <= weeks.length) {
         pill.textContent = "Semana " + wIdx + " do plano";
         pill.className = "pill pill-now";
+      } else if (today > mainEnd) {
+        pill.textContent = "Após o encerramento principal (18/12/2026)";
+        pill.className = "pill pill-after";
+      } else if (today >= semesterStart) {
+        pill.textContent = "Entre fases do 2º semestre";
+        pill.className = "pill pill-warn";
+      } else {
+        pill.textContent = "Entre o 1º semestre e a atualização de 07/08";
+        pill.className = "pill pill-warn";
       }
 
       const twTitle = document.getElementById("thisWeekTitle");
       const twRange = document.getElementById("thisWeekRange");
       const twTasks = document.getElementById("thisWeekTasks");
 
-      if (wIdx >= 1 && wIdx <= weeks.length) {
+      if (currentPhase) {
+        twTitle.textContent = currentPhase.title;
+        twRange.textContent =
+          fmtShort(dParts(currentPhase.start[0], currentPhase.start[1], currentPhase.start[2])) +
+          " a " +
+          fmtShort(dParts(currentPhase.end[0], currentPhase.end[1], currentPhase.end[2]));
+        const ul = document.createElement("ul");
+        ul.style.margin = "0";
+        ul.style.paddingLeft = "1.2rem";
+        currentPhase.tasks.forEach(function (item) {
+          const li = document.createElement("li");
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+        twTasks.appendChild(ul);
+        if (currentPhase.marco) {
+          const p = document.createElement("p");
+          p.className = "muted";
+          p.style.marginTop = "0.75rem";
+          p.textContent = "Marco: " + currentPhase.marco;
+          twTasks.appendChild(p);
+        }
+      } else if (wIdx >= 1 && wIdx <= weeks.length) {
         const w = weeks[wIdx - 1];
         twTitle.textContent = "Semana " + w.n + " — " + w.month + " de 2026";
         twRange.textContent =
@@ -680,10 +1045,18 @@
         twTitle.textContent = "Ainda não começou o período planificado";
         twRange.textContent = "A primeira semana inicia em 01/03/2026.";
         twTasks.innerHTML = "<p class=\"muted\" style=\"margin:0\">Use o cronograma para antecipar o que vem nas Semanas 1–3.</p>";
+      } else if (today > mainEnd) {
+        twTitle.textContent = "Horizonte principal encerrado";
+        twRange.textContent = "Encerramento previsto em 18/12/2026; restam apenas contingências de validação.";
+        twTasks.innerHTML = "<p class=\"muted\" style=\"margin:0\">Se a validação física ainda estiver pendente, use a janela de jan./fev. 2027.</p>";
+      } else if (today >= semesterStart) {
+        twTitle.textContent = "Fora de uma fase com data contínua";
+        twRange.textContent = "Consulte a lista de fases do 2º semestre abaixo.";
+        twTasks.innerHTML = "<p class=\"muted\" style=\"margin:0\">Há intervalos curtos entre algumas fases; use a seção de atualização prioritária.</p>";
       } else {
-        twTitle.textContent = "Período formal do cronograma encerrado";
-        twRange.textContent = "A Semana 30 vai até 26/09/2026; último dia citado no consolidado para banner: 25/09/2026.";
-        twTasks.innerHTML = "<p class=\"muted\" style=\"margin:0\">Revise entregáveis finais e datas reais da banca.</p>";
+        twTitle.textContent = "Transição para o 2º semestre";
+        twRange.textContent = "A atualização prioritária começa em 07/08/2026.";
+        twTasks.innerHTML = "<p class=\"muted\" style=\"margin:0\">O planejamento genérico de banner foi substituído pelas fases a partir de agosto.</p>";
       }
 
       const alerts = document.getElementById("alerts");
@@ -765,11 +1138,12 @@
       });
       refTable.appendChild(tb);
 
-      const ganttHues = [200, 145, 280, 32, 175, 265, 95, 330, 58, 310, 220];
+      const ganttHues = [200, 145, 280, 32, 175, 265, 95, 330, 58, 310, 220, 15, 120, 250];
+      const ganttBars = refIntervals.concat(semesterIntervals);
 
       function renderGantt() {
         const ganttStart = dParts(2026, 3, 1);
-        const ganttEnd = dParts(2026, 9, 26);
+        const ganttEnd = dParts(2026, 12, 18);
         const t0 = startOfDay(ganttStart).getTime();
         const t1 = startOfDay(ganttEnd).getTime();
         const total = Math.max(1, t1 - t0);
@@ -804,7 +1178,10 @@
           [2026, 6, 1],
           [2026, 7, 1],
           [2026, 8, 1],
-          [2026, 9, 1]
+          [2026, 9, 1],
+          [2026, 10, 1],
+          [2026, 11, 1],
+          [2026, 12, 1]
         ];
         monthStarts.forEach(function (mm) {
           const dd = dParts(mm[0], mm[1], mm[2]);
@@ -818,7 +1195,7 @@
         }
         html += "</div>";
 
-        refIntervals.forEach(function (r, i) {
+        ganttBars.forEach(function (r, i) {
           const s = dParts(r.start[0], r.start[1], r.start[2]);
           const e = dParts(r.end[0], r.end[1], r.end[2]);
           const left = pctTime(s);
@@ -882,7 +1259,7 @@
         html += "</div></div>";
 
         html +=
-          '<p class="gantt-legend">Barras = intervalos da referência. Losangos azuis = marcos só no calendário export; vermelho/verde = marcos com checkbox abaixo (concluído neste navegador).</p>';
+          '<p class="gantt-legend">Barras = intervalos históricos + fases do 2º semestre. Losangos azuis = marcos só no calendário export; vermelho/verde = marcos com checkbox abaixo.</p>';
 
         root.innerHTML = html;
       }
@@ -928,8 +1305,8 @@
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "week-item";
-        if (w.n === wIdx) btn.classList.add("current");
-        if (w.n < wIdx) btn.classList.add("past");
+        if (!currentPhase && w.n === wIdx) btn.classList.add("current");
+        if (w.n < wIdx || currentPhase || today >= semesterStart) btn.classList.add("past");
         const title = document.createElement("div");
         title.className = "week-title";
         title.textContent = "Semana " + w.n + " — " + w.month + " de 2026";
@@ -946,9 +1323,7 @@
           html += "<p><strong>Marcos:</strong> ";
           html += w.milestones
             .map(function (m) {
-              return (
-                m.t + " em " + fmtShort(dParts(m.d[0], m.d[1], m.d[2]))
-              );
+              return m.t + " em " + fmtShort(dParts(m.d[0], m.d[1], m.d[2]));
             })
             .join("; ");
           html += ".</p>";
@@ -961,10 +1336,46 @@
         btn.addEventListener("click", function () {
           btn.classList.toggle("open");
         });
-        if (w.n === wIdx) {
+        if (!currentPhase && w.n === wIdx) {
           btn.classList.add("open");
         }
         weekList.appendChild(btn);
+      });
+
+      const phaseList = document.getElementById("phaseList");
+      phases.forEach(function (p) {
+        const s = dParts(p.start[0], p.start[1], p.start[2]);
+        const e = dParts(p.end[0], p.end[1], p.end[2]);
+        const isCurrent = currentPhase && currentPhase.id === p.id;
+        const isPast = e < today && !isCurrent;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "week-item";
+        if (isCurrent) btn.classList.add("current");
+        if (isPast) btn.classList.add("past");
+        const title = document.createElement("div");
+        title.className = "week-title";
+        title.textContent = p.title;
+        const range = document.createElement("div");
+        range.className = "week-range";
+        range.textContent = fmtShort(s) + " a " + fmtShort(e);
+        const det = document.createElement("div");
+        det.className = "week-detail";
+        let html = "<p><strong>Tarefas:</strong></p><ul>";
+        p.tasks.forEach(function (t) {
+          html += "<li>" + t + "</li>";
+        });
+        html += "</ul>";
+        if (p.marco) html += "<p><strong>Marco:</strong> " + p.marco + "</p>";
+        det.innerHTML = html;
+        btn.appendChild(title);
+        btn.appendChild(range);
+        btn.appendChild(det);
+        btn.addEventListener("click", function () {
+          btn.classList.toggle("open");
+        });
+        if (isCurrent) btn.classList.add("open");
+        phaseList.appendChild(btn);
       });
     })();
   </script>
