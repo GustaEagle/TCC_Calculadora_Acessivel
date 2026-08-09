@@ -23,7 +23,11 @@ Thumbs.db
 system/**/build/
 system/**/output/
 system/**/dist/
+# Imagem Alpine (system/rpi-os/alpine/build-alpine-img.sh): diretório de trabalho
+# (rootfs, downloads, mount) e o .img gerado nunca são versionados.
+system/rpi-os/alpine/.work/
 *.img
+*.img.gz
 
 # Logs temporários
 *.log

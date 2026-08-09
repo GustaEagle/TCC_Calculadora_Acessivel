@@ -1,0 +1,40 @@
+# Pacotes apk instalados no rootfs da imagem Alpine da calculadora.
+# Base fixada: Alpine 3.24.1 aarch64 (branch v3.24) — ver build-alpine-img.sh.
+# Um pacote por linha; linhas em branco e comentários (#) são ignorados.
+#
+# Regra do projeto: usar espeak-ng (NÃO o espeak clássico), incompatível com o
+# driver do pyttsx3 (falha em SetVoiceByName ... gmw/en). Ver software/README.md.
+
+# --- Base do sistema / init (OpenRC) ---
+alpine-base
+openrc
+agetty            # autologin do usuário kiosk no tty1 (--autologin)
+e2fsprogs         # fsck/ferramentas do root ext4 (modo "sys" gravável)
+dosfstools        # fsck da partição de boot FAT32
+eudev             # udev (detecção de teclado/entrada para o X)
+
+# --- Kernel + firmware do Raspberry Pi 4B (aarch64) ---
+linux-rpi         # kernel do Raspberry Pi (vmlinuz-rpi + módulos em /lib/modules)
+raspberrypi-bootloader   # firmware (start4.elf, fixup4.dat) + dtbs/overlays
+mkinitfs          # gera o initramfs-rpi (features: base ext4 mmc, ver script)
+
+# --- Python + Tkinter (front ttkbootstrap) ---
+python3
+python3-tkinter   # _tkinter ligado ao Tcl/Tk do Alpine (evita recompilar Tk)
+py3-pip           # instala ttkbootstrap/pyttsx3 de software/requirements.txt
+
+# --- X11 mínimo (sem desktop) ---
+xorg-server
+xinit             # fornece startx/xinit
+xset              # xset s off -dpms (não apagar a tela)
+xf86-input-libinput
+mesa-dri-gallium  # driver KMS (vc4-kms-v3d) para o Pi 4
+xf86-video-fbdev  # driver de vídeo de reserva (plano B do LCD)
+font-dejavu       # glifos para a UI não ficar sem fonte
+unclutter-xfixes  # esconde o cursor no kiosk (uso é "best-effort" no .xinitrc)
+
+# --- TTS offline (pyttsx3 -> espeak-ng) + áudio ALSA no hardware do Pi ---
+espeak-ng         # motor TTS offline (voz pt-BR definida por speech.py)
+alsa-lib
+alsa-utils        # aplay/alsactl/amixer (saída HDMI ou jack; ver asound.conf)
+alsa-plugins

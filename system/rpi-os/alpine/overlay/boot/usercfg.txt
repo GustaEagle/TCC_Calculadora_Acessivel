@@ -1,0 +1,26 @@
+# Ajustes de vídeo/áudio do usuário para o Raspberry Pi 4B.
+# O config.txt gerado pelo build faz "include usercfg.txt", então mantenha aqui
+# apenas os overrides do produto (o config.txt base cuida de kernel/initramfs).
+#
+# ATENÇÃO: os valores do LCD Waveshare 4,3" HDMI (B) precisam ser confirmados no
+# hardware — ver docs/waveshare/README.md. Comece por KMS; se o LCD não sincronizar,
+# troque para o bloco fbdev/HDMI custom comentado no fim.
+
+# Driver gráfico KMS do Pi 4 (usado pelo Xorg via modesetting/mesa-dri-gallium).
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+
+# Sem borda preta em volta da imagem no LCD.
+disable_overscan=1
+
+# Áudio: habilita a saída analógica do jack 3,5 mm (além do HDMI). Escolha a saída
+# final em /etc/asound.conf conforme `aplay -l`.
+dtparam=audio=on
+
+# --- Plano B: LCD Waveshare 4,3" via HDMI custom (descomente se o KMS não pegar) ---
+# Remova o dtoverlay=vc4-kms-v3d acima e use o modo custom 800x480 do painel:
+#hdmi_force_hotplug=1
+#hdmi_group=2
+#hdmi_mode=87
+#hdmi_cvt=800 480 60 6 0 0 0
+#hdmi_drive=1

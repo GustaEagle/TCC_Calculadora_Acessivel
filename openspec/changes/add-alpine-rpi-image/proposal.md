@@ -26,7 +26,7 @@ Escolhemos **Alpine Linux (aarch64)** como base minimalista: footprint pequeno e
 ## Impact
 
 - **Novos artefatos** (sem tocar no código da aplicação): `system/rpi-os/alpine/` com script de build da imagem, lista de pacotes (apk), lançador do kiosk (`.xinitrc`/init), overrides de `config.txt`/`usercfg.txt` do LCD e um `README` de "como gerar e gravar".
-- **Dependências de sistema na imagem:** `python3`, `py3-tkinter`, `espeak-ng`, `alsa-utils`/plugins, `xorg-server`/`xinit` mínimos, fontes; libs Python (`ttkbootstrap==1.20.4`, `pyttsx3==2.99`) instaladas via `pip` a partir de [software/requirements.txt](../../../software/requirements.txt).
+- **Dependências de sistema na imagem:** `python3`, `python3-tkinter`, `espeak-ng`, `alsa-utils`/plugins, `xorg-server`/`xinit` mínimos, fontes; libs Python (`ttkbootstrap==1.20.4`, `pyttsx3==2.99`) instaladas via `pip` a partir de [software/requirements.txt](../../../software/requirements.txt).
 - **Alvo de hardware:** Raspberry Pi 4B, arquitetura **aarch64** (64-bit); saída de vídeo padrão no LCD Waveshare 4,3" (HDMI). musl libc (Alpine) → validar Tkinter + `pyttsx3`/`espeak-ng` nesse ambiente é o principal risco técnico (detalhado no design).
 - **Não afeta** `software/core/`, `ui_lcd/`, `accessibility/` nem os testes — a mudança é de empacotamento/arranque. O `Dockerfile` Debian de desenvolvimento permanece como está (coexistem).
 - **CI/testes** de aplicação (Python 3.11) seguem inalterados; a validação da imagem é feita no hardware, fora do CI.

@@ -40,16 +40,17 @@ Alpine no Pi normalmente arranca em **modo diskless** (roda da RAM, persiste num
 
 ### D2 — Imagem montada por script com rootfs "baked" (cross via qemu-binfmt)
 
-O `.img` é produzido por um script em `system/rpi-os/alpine/` que: (1) baixa e verifica o tarball oficial `alpine-rpi-<versão>-aarch64` (partição de boot FAT + kernel `-rpi`/initramfs/dtbs), (2) monta um **rootfs aarch64** fazendo `apk add` dos pacotes e `pip install` das libs **dentro de um chroot emulado com `qemu-aarch64-static`/binfmt** no PC de desenvolvimento, (3) copia `software/` e grava os arquivos de kiosk/config, (4) empacota as partições (FAT boot + ext4 root) num `.img` (via `genimage` ou script `dd`+`mkfs`+`mount`+`cp`).
+O `.img` é produzido por `system/rpi-os/alpine/build-alpine-img.sh`, que: (1) baixa e verifica (sha256) o **minirootfs oficial** `alpine-minirootfs-3.24.1-aarch64`, (2) monta um **rootfs ext4 "sys"** fazendo `apk add` dos pacotes — incluindo o **kernel/firmware do Pi** (`linux-rpi`, `raspberrypi-bootloader`, `mkinitfs`) — e `pip install` das libs **dentro de um chroot emulado com `qemu-aarch64-static`/binfmt** no PC, (3) copia `software/` e grava os arquivos de kiosk/config (overlay), (4) empacota as partições (FAT boot + ext4 root) num `.img` via loopback (`parted`+`mkfs`+`mount`+`cp`).
 
-- **Por quê:** atende "gerado por script", "reprodutível" e "offline no aparelho" (tudo já vem baked). Fixamos versão do Alpine e dos pacotes `apk`/`pip`.
-- **Alternativa A:** montar no **próprio Pi** (nativo, sem qemu) e clonar o cartão. Mais simples de acertar (sem binfmt), porém menos "um comando no PC". Fica como **fallback** se o cross incomodar.
+- **Por quê:** atende "gerado por script", "reprodutível" e "offline no aparelho" (tudo já vem baked). Versão fixada: **Alpine 3.24.1 aarch64** (branch v3.24).
+- **Por que minirootfs (e não o tarball `alpine-rpi`):** o tarball `alpine-rpi` é feito para **diskless** (roda da RAM com `modloop`), o que atrita com o root gravável "sys" do D1. Partir do `minirootfs` e puxar kernel/firmware por `apk` dá um root ext4 limpo, sem modloop.
+- **Alternativa A (fallback):** montar no **próprio Pi** (nativo, sem qemu) — como já é aarch64, dispensa binfmt. Fica como plano B se o cross incomodar.
 - **Alternativa B:** `pi-gen`/Buildroot — já documentadas; fora do pedido (Alpine) e mais pesadas/lentas de montar.
 - **Trade-off:** cross-build com qemu pode ter arestas; mitigado pelo fallback nativo (Alternativa A).
 
 ### D3 — Boot chain do Pi 4B a partir da partição FAT do Alpine
 
-Reusar o firmware/kernel do tarball `alpine-rpi` (flavor `-rpi`, com `dtbs`). Ajustar na partição FAT:
+Usar o kernel/firmware do Pi instalados via `apk` (`linux-rpi` → `vmlinuz-rpi`/`initramfs-rpi`; `raspberrypi-bootloader` → firmware + dtbs/overlays), copiando-os para a partição FAT. Ajustar na partição FAT:
 
 - `usercfg.txt`/`config.txt`: modo de vídeo do **LCD Waveshare 4,3" B** (seguir [docs/waveshare/4.3inch_HDMI_LCD_B.md](../../../docs/waveshare/README.md)), `disable_overscan`, e KMS (`dtoverlay=vc4-kms-v3d`) ou fallback fbdev.
 - `cmdline.txt`: apontar `root=` para a partição ext4 (D1), `console=tty1`, quiet para arranque limpo.
@@ -71,9 +72,9 @@ while true; do python3 -m software.app; done   # auto-restart
 
 ### D5 — X11 mínimo + Tkinter em musl
 
-Pacotes `apk`: `xorg-server`, `xinit`, `xset`, driver de vídeo (`mesa-dri-gallium` p/ KMS vc4, ou `xf86-video-fbdev`), `libinput`/`eudev` p/ input, `unclutter` (ou `unclutter-xfixes`), fontes (`font-dejavu`), e **`py3-tkinter`** (fornece `_tkinter` ligado ao Tcl/Tk do Alpine). `ttkbootstrap` e `pyttsx3` vêm por **`pip`** (`--break-system-packages`) das versões fixadas em [software/requirements.txt](../../../software/requirements.txt) (pure-Python; sem compilação nativa).
+Pacotes `apk`: `xorg-server`, `xinit`, `xset`, driver de vídeo (`mesa-dri-gallium` p/ KMS vc4, ou `xf86-video-fbdev`), `libinput`/`eudev` p/ input, `unclutter` (ou `unclutter-xfixes`), fontes (`font-dejavu`), e **`python3-tkinter`** (fornece `_tkinter` ligado ao Tcl/Tk do Alpine). `ttkbootstrap` e `pyttsx3` vêm por **`pip`** (`--break-system-packages`) das versões fixadas em [software/requirements.txt](../../../software/requirements.txt) (pure-Python; sem compilação nativa).
 
-- **Por quê:** `py3-tkinter` do Alpine evita recompilar Tk (mesmo espírito do Dockerfile Debian, que usa `python3-tk` por isso).
+- **Por quê:** `python3-tkinter` do Alpine evita recompilar Tk (mesmo espírito do Dockerfile Debian, que usa `python3-tk` por isso).
 
 ### D6 — TTS: `espeak-ng` (não `espeak`) e ligação do `pyttsx3` em musl
 

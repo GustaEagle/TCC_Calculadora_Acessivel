@@ -20,6 +20,7 @@ sem mostrar o SO, desktop ou terminal. Referência: [PRD.md](../../PRD.md) §12
 | Abordagem | Boot | Esforço | Recomendação |
 | --------- | ---- | ------- | ------------ |
 | **Pi OS Lite + kiosk** | ~15–25 s | Baixo | ✅ Começar por aqui |
+| **Alpine (`system/rpi-os/alpine/`)** | rápido (enxuto) | Médio | ✅ Imagem por script, kiosk embutido; alternativa leve ao Buildroot |
 | **Buildroot** (`system/buildroot/`) | ~3–8 s | Alto | ⚠️ Só se precisar provar boot ultrarrápido (RNF-06) |
 | **Docker no Pi** | Lento | Médio | ❌ Não usar no produto (bom só p/ testar no PC) |
 
@@ -140,6 +141,7 @@ regenera só rodando um build — há duas vias:
 | Via | O que gera | Esforço | Quando escolher |
 | --- | ---------- | ------- | --------------- |
 | **pi-gen** | Imagem baseada no Pi OS, montada por script | Médio | ✅ Reprodutível sem sair do ecossistema Pi OS |
+| **Alpine** | Imagem Alpine mínima (musl) montada por script | Médio | ✅ Appliance enxuto e reprodutível; boot rápido sem o custo do Buildroot |
 | **Buildroot** | Linux mínimo do zero (kernel + rootfs custom) | Alto | ⚠️ Só p/ boot ultrarrápido / appliance enxuto (RNF-06) |
 
 ### Via A — pi-gen (Pi OS montado por script)
@@ -167,6 +169,29 @@ adiciona um "estágio" próprio que instala o app e o kiosk — o resultado é u
 
 > Vantagem: o build é o "código" da imagem. Versione o estágio
 > `stage-calculadora/` em `system/rpi-os/` (não o `.img`).
+
+### Via C — Alpine (kiosk enxuto por script)
+
+Imagem **Alpine Linux (aarch64)** montada 100% por script, já com o app e o kiosk
+embutidos. Fica mais enxuta que o Pi OS e é bem mais rápida de montar que o
+Buildroot (usa pacotes prontos: `python3`, `py3-tkinter`, `espeak-ng`, X mínimo).
+Base fixada e reprodutível; roda no PC via `qemu-user`/binfmt (ou nativo no Pi).
+
+Tudo vive em [../system/rpi-os/alpine/](../system/rpi-os/alpine/):
+
+```bash
+cd system/rpi-os/alpine
+sudo ./build-alpine-img.sh          # gera calculadora-alpine-<ver>-aarch64.img
+```
+
+O script baixa+verifica o minirootfs oficial, instala os pacotes de `packages` +
+kernel/firmware do Pi + as libs Python de `software/requirements.txt`, configura
+o autologin/kiosk (mesmo padrão `~/.xinitrc` desta doc, adaptado ao OpenRC/BusyBox
+do Alpine) e empacota a imagem. Detalhes de gravação e a **checklist de validação
+no hardware** estão no [README da pasta](../system/rpi-os/alpine/README.md).
+
+> Como nas demais vias: versione só os scripts/config de `system/rpi-os/alpine/`,
+> **nunca** o `.img`.
 
 ### Via B — Buildroot (Linux do zero)
 
