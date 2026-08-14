@@ -17,10 +17,10 @@ from software.core import CalculatorState
 from software.hw_platform.display import DisplayMode, DisplaySelector
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
-from software.ui_common.error_messages import friendly_message, spoken_priority_prefix
-from software.ui_common.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
-from software.ui_common.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
-from software.ui_common.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
+from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui.shared.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
+from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class CalculatorApp:
             self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 28, "bold"))
 
         # Accessibility: override the theme's built-in bootstyle colors with a
-        # WCAG-verified palette (see ui_lcd/palette.py + ui_lcd/contrast.py).
+        # WCAG-verified palette (see ui/shared/palette.py + ui/shared/contrast.py).
         # ttkbootstrap's default theme colors aren't guaranteed to meet WCAG AA
         # and can't be introspected without a running Tk instance, so this app
         # owns and verifies its own category colors instead of trusting them.

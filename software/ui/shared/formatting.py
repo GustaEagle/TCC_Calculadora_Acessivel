@@ -2,8 +2,8 @@
 
 Purely cosmetic. Never touches the string sent to CalculationEngine; only the
 text shown to the user changes. Keep FUNCTION_DISPLAY_SYMBOLS in sync with the
-button labels and ctrl_map/shift_map in both fronts (ui_lcd/app.py and
-ui_hdmi/app.py) so the symbol shown on a button, in the expression, and spoken
+button labels and ctrl_map/shift_map in both fronts (ui/lcd/app.py and
+ui/hdmi/app.py) so the symbol shown on a button, in the expression, and spoken
 by the TTS always agree.
 """
 

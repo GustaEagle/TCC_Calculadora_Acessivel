@@ -44,13 +44,13 @@ def run_mode(mode: DisplayMode) -> None:
     runtime, and so a headless machine can still run the audio path.
     """
     if mode == DisplayMode.HDMI:
-        from software.ui_hdmi.app import CalculatorApp
+        from software.ui.hdmi.app import CalculatorApp
 
         CalculatorApp().run()
         return
 
     if mode == DisplayMode.LCD:
-        from software.ui_lcd.app import CalculatorApp
+        from software.ui.lcd.app import CalculatorApp
 
         CalculatorApp().run()
         return

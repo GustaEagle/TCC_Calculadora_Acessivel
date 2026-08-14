@@ -1,6 +1,6 @@
 import unittest
 
-from software.ui_common.responsive import (
+from software.ui.shared.responsive import (
     FONT_SPECS,
     MAX_SCALE,
     MIN_SCALE,

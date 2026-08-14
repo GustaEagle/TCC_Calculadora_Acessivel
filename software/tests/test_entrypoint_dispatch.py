@@ -37,8 +37,8 @@ class RunModeDispatchTest(unittest.TestCase):
     """Exactly one front must start per run (never both, never none)."""
 
     def test_hdmi_mode_starts_only_the_hdmi_front(self) -> None:
-        with mock.patch("software.ui_hdmi.app.CalculatorApp") as hdmi, \
-             mock.patch("software.ui_lcd.app.CalculatorApp") as lcd, \
+        with mock.patch("software.ui.hdmi.app.CalculatorApp") as hdmi, \
+             mock.patch("software.ui.lcd.app.CalculatorApp") as lcd, \
              mock.patch("software.audio_only.AudioOnlyCalculator") as audio:
             app.run_mode(DisplayMode.HDMI)
 
@@ -47,8 +47,8 @@ class RunModeDispatchTest(unittest.TestCase):
         audio.assert_not_called()
 
     def test_lcd_mode_starts_only_the_lcd_front(self) -> None:
-        with mock.patch("software.ui_hdmi.app.CalculatorApp") as hdmi, \
-             mock.patch("software.ui_lcd.app.CalculatorApp") as lcd, \
+        with mock.patch("software.ui.hdmi.app.CalculatorApp") as hdmi, \
+             mock.patch("software.ui.lcd.app.CalculatorApp") as lcd, \
              mock.patch("software.audio_only.AudioOnlyCalculator") as audio:
             app.run_mode(DisplayMode.LCD)
 
@@ -57,8 +57,8 @@ class RunModeDispatchTest(unittest.TestCase):
         audio.assert_not_called()
 
     def test_audio_only_mode_starts_no_visual_front(self) -> None:
-        with mock.patch("software.ui_hdmi.app.CalculatorApp") as hdmi, \
-             mock.patch("software.ui_lcd.app.CalculatorApp") as lcd, \
+        with mock.patch("software.ui.hdmi.app.CalculatorApp") as hdmi, \
+             mock.patch("software.ui.lcd.app.CalculatorApp") as lcd, \
              mock.patch("software.audio_only.AudioOnlyCalculator") as audio:
             app.run_mode(DisplayMode.AUDIO_ONLY)
 

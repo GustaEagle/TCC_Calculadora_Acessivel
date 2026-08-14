@@ -1,7 +1,7 @@
 import unittest
 
 from software.core import CalculationEngine, CalculatorState
-from software.ui_lcd.formatting import format_expression_for_display
+from software.ui.shared.formatting import format_expression_for_display
 
 
 class ExpressionDisplayTest(unittest.TestCase):

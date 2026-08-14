@@ -14,8 +14,8 @@ import logging
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
 from software.hw_platform.keyboard import KeyboardAdapter
-from software.ui_common.error_messages import friendly_message, spoken_priority_prefix
-from software.ui_common.keypad import spoken_token
+from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
+from software.ui.shared.keypad import spoken_token
 
 logger = logging.getLogger(__name__)
 

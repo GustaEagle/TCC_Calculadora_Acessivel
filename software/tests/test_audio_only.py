@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 
 from software.audio_only import AudioOnlyCalculator
-from software.ui_common.error_messages import ERROR_MESSAGES
+from software.ui.shared.error_messages import ERROR_MESSAGES
 
 
 class AudioOnlyCalculatorTest(unittest.TestCase):

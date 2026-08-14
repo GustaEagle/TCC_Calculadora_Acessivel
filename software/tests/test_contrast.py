@@ -1,7 +1,7 @@
 import unittest
 
-from software.ui_lcd.contrast import contrast_ratio, hex_to_rgb, meets_wcag_aa
-from software.ui_lcd.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.contrast import contrast_ratio, hex_to_rgb, meets_wcag_aa
+from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 
 
 class ContrastRatioTest(unittest.TestCase):

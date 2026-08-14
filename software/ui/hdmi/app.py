@@ -1,6 +1,6 @@
 """ttkbootstrap front-end for the external HDMI monitor.
 
-Sibling of ui_lcd/app.py, not an extension of it: the monitor gets its own
+Sibling of ui/lcd/app.py, not an extension of it: the monitor gets its own
 composition (persistent history panel beside the keypad, PRD §8 "maior area,
 layout mais rico") instead of the 800x480 panel arrangement.
 
@@ -26,11 +26,11 @@ from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
-from software.ui_common.error_messages import friendly_message, spoken_priority_prefix
-from software.ui_common.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
-from software.ui_common.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
-from software.ui_common.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
-from software.ui_common.responsive import (
+from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
+from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui.shared.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
+from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.responsive import (
     MIN_USABLE_HEIGHT,
     MIN_USABLE_WIDTH,
     font_sizes,
@@ -146,7 +146,7 @@ class CalculatorApp:
         self._update_display()
 
     def _configure_palette(self) -> None:
-        """Same WCAG-verified palette as the LCD front (ui_common/palette.py):
+        """Same WCAG-verified palette as the LCD front (ui/shared/palette.py):
         ttkbootstrap's built-in colors are not guaranteed to meet WCAG AA."""
         for category, colors in BUTTON_PALETTE.items():
             self.style.configure(
@@ -366,7 +366,7 @@ class CalculatorApp:
             self.speech.say("Controles ocultados")
 
     # ------------------------------------------------------------------
-    # Input handling (mirrors ui_lcd so both fronts behave identically)
+    # Input handling (mirrors ui/lcd so both fronts behave identically)
     # ------------------------------------------------------------------
 
     def _bind_keyboard(self) -> None:

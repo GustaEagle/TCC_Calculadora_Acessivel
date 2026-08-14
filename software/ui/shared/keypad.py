@@ -50,7 +50,7 @@ def spoken_token(token: str) -> str:
 
 
 def button_style(token: str) -> str:
-    """Map a token to its palette category (see ui_common/palette.py)."""
+    """Map a token to its palette category (see ui/shared/palette.py)."""
     if token == "AC":
         return "danger"
     if token == "DEL":
