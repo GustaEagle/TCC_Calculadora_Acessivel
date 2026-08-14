@@ -6,6 +6,7 @@ Hoje só existe `ui_lcd/app.py` (ttkbootstrap, janela fixa 800x480). `software/h
 
 **Goals:**
 - Front-end `ui_hdmi/` funcional para tela maior (layout, tipografia e área de histórico redesenhados — não um `ui_lcd` esticado).
+- Janela do `ui_hdmi` responsiva à resolução real do monitor conectado (sem tamanho-alvo fixo tipo 1920x1080), usando grid/weight dinâmico do ttkbootstrap.
 - `DisplaySelector` real, testável, que decide entre `LCD`, `HDMI` e `AUDIO_ONLY` seguindo o fluxograma do PRD §7.4.
 - Um entrypoint (`software/app.py`) que consulta o `DisplaySelector` e instancia o front correto (ou roda em modo somente áudio).
 - `core/` e `accessibility/speech.py` permanecem inalterados e compartilhados pelos dois fronts.
@@ -20,15 +21,20 @@ Hoje só existe `ui_lcd/app.py` (ttkbootstrap, janela fixa 800x480). `software/h
 
 **1. `ui_hdmi/` é um pacote-irmão de `ui_lcd/`, não uma extensão dele.**
 Ambos importam `core.CalculatorState`, `accessibility.speech.SpeechService` e os adaptadores de `hw_platform/`. `ui_hdmi/app.py` terá sua própria `palette.py`/`formatting.py`/`error_messages.py` quando o layout maior exigir (ex.: mais linhas de histórico visíveis, fontes proporcionalmente menores que as do LCD). Reaproveitar por importação direta dos módulos do LCD quando o conteúdo for idêntico (ex.: `error_messages.py`, que só mapeia código PRD §13 → texto, é candidato a mover para um local compartilhado em vez de duplicar).
-- Alternativa descartada: um único `app.py` parametrizado por resolução — rejeitada porque o PRD pede *dois* front-ends distintos (§8: "layout mais rico" no monitor), não um layout responsivo.
+- Alternativa descartada: um único `app.py` parametrizado por resolução — rejeitada porque o PRD pede *dois* front-ends distintos (§8: "layout mais rico" no monitor), não uma única UI que apenas escala numericamente para caber em telas diferentes.
 
-**2. `DisplaySelector` recebe um `HdmiPortReader` injetável.**
+**2. Layout do `ui_hdmi` é responsivo, não fixo em uma resolução-alvo.**
+A janela usa `columnconfigure`/`rowconfigure` com `weight` (como já faz `ui_lcd/app.py` internamente) para que expressão, resultado, teclado e histórico se realocam proporcionalmente ao tamanho real reportado pelo SO na inicialização — sem herdar o `geometry("800x480")`/`minsize(800, 480)` fixos do LCD. Cobre tanto monitores diferentes (ex.: 1920x1080 vs. 1366x768) quanto redimensionamento manual da janela durante desenvolvimento/testes no PC.
+- Alternativa descartada: fixar uma resolução-alvo única (ex.: sempre 1920x1080) — mais simples, mas quebraria em monitores com resolução menor/maior e não atende ao PRD §8 ("maior área, layout mais rico") de forma geral.
+- Alternativa descartada: fullscreen com geometria fixada só na inicialização (sem recalcular ao redimensionar) — insuficiente para testes locais no PC, onde a janela é redimensionada manualmente com frequência.
+
+**3. `DisplaySelector` recebe um `HdmiPortReader` injetável.**
 `DisplaySelector.__init__(self, port_reader: HdmiPortReader | None = None)`. Em testes, um fake `HdmiPortReader` simula as combinações do §7.4. Em produção (fora de escopo desta mudança), uma implementação real consultaria o SO. Isso mantém `hw_platform/` consistente com `keyboard.py`/`ups.py`, que já isolam hardware atrás de adaptadores simulados.
 - Alternativa descartada: variável de ambiente/flag de configuração fixa — insuficiente porque RF-02 exige reagir à presença real de cada saída, não a uma escolha estática.
 
-**3. Prioridade de decisão implementa exatamente o fluxograma do PRD §7.4** (`both HDMI reconhecidos → só monitor`; `só LCD HDMI → só LCD`; `nenhum → sem vídeo/AUDIO_ONLY`), com o áudio sempre ativo em paralelo (§7.3) independente do resultado.
+**4. Prioridade de decisão implementa exatamente o fluxograma do PRD §7.4** (`both HDMI reconhecidos → só monitor`; `só LCD HDMI → só LCD`; `nenhum → sem vídeo/AUDIO_ONLY`), com o áudio sempre ativo em paralelo (§7.3) independente do resultado.
 
-**4. Entrypoint único `software/app.py`** substitui a chamada direta a `ui_lcd.app:main()`: lê `DisplaySelector().current_mode()` e despacha para `ui_hdmi.app.CalculatorApp`, `ui_lcd.app.CalculatorApp`, ou um laço somente-áudio (RF-04) que aceita teclado e responde por TTS sem janela gráfica visível.
+**5. Entrypoint único `software/app.py`** substitui a chamada direta a `ui_lcd.app:main()`: lê `DisplaySelector().current_mode()` e despacha para `ui_hdmi.app.CalculatorApp`, `ui_lcd.app.CalculatorApp`, ou um laço somente-áudio (RF-04) que aceita teclado e responde por TTS sem janela gráfica visível.
 
 ## Risks / Trade-offs
 

@@ -11,6 +11,17 @@ O sistema SHALL fornecer um front-end visual próprio para o monitor externo HDM
 - **WHEN** o front-end HDMI monta sua interface
 - **THEN** ele usa dimensões, fontes e composição próprias (não uma cópia esticada de `ui_lcd/app.py`), aproveitando o espaço extra do monitor para mostrar mais histórico e/ou controles visíveis simultaneamente.
 
+### Requirement: Layout responsivo à resolução do monitor
+O front-end HDMI SHALL adaptar seu layout (dimensionamento de expressão, resultado, teclado e histórico) à resolução real reportada pelo sistema na inicialização, em vez de assumir uma resolução-alvo fixa.
+
+#### Scenario: Monitor com resolução diferente do padrão
+- **WHEN** o front-end HDMI é iniciado em um monitor com resolução diferente de outros já testados (ex.: 1366x768 em vez de 1920x1080)
+- **THEN** os elementos da interface se realocam proporcionalmente ao espaço disponível (sem cortar, sobrepor ou deixar áreas vazias fixas desproporcionais), sem exigir alteração de código para essa resolução.
+
+#### Scenario: Redimensionamento manual da janela
+- **WHEN** a janela do front-end HDMI é redimensionada manualmente (ex.: durante testes locais no PC)
+- **THEN** o layout recalcula proporções via grid/weight, mantendo a legibilidade e a proporção relativa entre expressão, resultado, teclado e histórico.
+
 ### Requirement: Paridade de acessibilidade entre fronts
 Toda entrada e resultado anunciados pelo front-end HDMI SHALL seguir o mesmo catálogo de mensagens e prioridades de erro do PRD §13 usado pelo front do LCD (mesmo código → mesmo significado em UI e voz).
 

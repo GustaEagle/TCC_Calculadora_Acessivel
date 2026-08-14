@@ -17,7 +17,8 @@
 ## 3. Front-end ui_hdmi (hdmi-ui)
 
 - [ ] 3.1 Criar `software/ui_hdmi/__init__.py` e o esqueleto de `software/ui_hdmi/app.py` com `CalculatorApp` (ttkbootstrap), importando `CalculatorState` de `software/core`, `SpeechService` de `software/accessibility`, e os adaptadores de `software/hw_platform`.
-- [ ] 3.2 Projetar o layout para tela maior: dimensionamento próprio de janela (não 800x480 fixo), tipografia e área de histórico redimensionadas para aproveitar o espaço extra (design.md, decisão 1).
+- [ ] 3.2 Projetar o layout para tela maior e responsivo: sem `geometry`/`minsize` fixos como o LCD, usando `columnconfigure`/`rowconfigure` com `weight` para expressão, resultado, teclado e histórico se realocarem proporcionalmente à resolução real do monitor detectada na inicialização (design.md, decisões 1 e 2).
+- [ ] 3.2.1 Testar manualmente o layout em pelo menos duas resoluções/tamanhos de janela diferentes (ex.: 1920x1080 e 1366x768, ou redimensionamento manual no PC) e confirmar que nada é cortado, sobreposto ou fica desproporcional.
 - [ ] 3.3 Reaproveitar/mover para local compartilhado o que for idêntico ao `ui_lcd` (ex.: `error_messages.py` — mapeamento de código PRD §13 → texto amigável) evitando duplicar texto de erro.
 - [ ] 3.4 Criar `palette.py`/`formatting.py` (ou reaproveitar os do `ui_lcd` se não houver motivo para divergir) mantendo a paleta WCOG AA já validada em `ui_lcd/contrast.py`.
 - [ ] 3.5 Implementar o mapeamento de teclado físico (`KeyboardAdapter`) e a lógica de tokens/Ctrl/Shift equivalente à do `ui_lcd/app.py`, adaptada ao novo layout.
