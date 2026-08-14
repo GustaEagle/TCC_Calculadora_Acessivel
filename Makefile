@@ -12,6 +12,12 @@
 #   make install   / make run    # cria venv, instala deps e roda o app no host
 #   make build    # (re)constrói a imagem Docker do app
 #
+# Saída de vídeo: `make run` detecta sozinho (monitor HDMI > LCD > só áudio,
+# PRD §7). Para forçar uma saída em desenvolvimento/demonstração:
+#   make run-hdmi   # front do monitor externo (responsivo à resolução)
+#   make run-lcd    # front do painel 4,3" (800x480)
+#   make run-audio  # somente voz, sem janela (RF-04)
+#
 # Imagem do PRODUTO (SD do Raspberry Pi, Alpine + kiosk) — pede sudo:
 #   make rpi-img              # gera a imagem do ZERO (baixa, apk, pip, empacota)
 #   make rpi-img CONTINUE=1   # reaproveita o rootfs de .work/ e refaz só o .img
@@ -32,7 +38,8 @@ RPI_IMG_SCRIPT := ./build-alpine-img.sh
 CONTINUE ?= 0
 
 .DEFAULT_GOAL := check
-.PHONY: check check-docker install run build image up down clean help \
+.PHONY: check check-docker install run run-hdmi run-lcd run-audio \
+        build image up down clean help \
         rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean
 
 check: ## Roda toda a suíte de testes com unittest (igual ao CI)
@@ -53,6 +60,17 @@ install: ## Cria um venv (.venv) e instala as deps Python do app — evita o PEP
 
 run: ## Roda o app no host usando o venv criado por `make install`
 	$(VENV_PY) -m software.app
+
+# Atalhos de --force-mode: pulam a detecção do DisplaySelector (PRD §7) e abrem
+# uma saída específica. Úteis para desenvolver/demonstrar sem o hardware.
+run-hdmi: ## Força o front do monitor externo (janela responsiva)
+	$(VENV_PY) -m software.app --force-mode hdmi
+
+run-lcd: ## Força o front do painel LCD 4,3" (800x480)
+	$(VENV_PY) -m software.app --force-mode lcd
+
+run-audio: ## Força o modo somente áudio (RF-04) — sem janela, só voz
+	$(VENV_PY) -m software.app --force-mode audio
 
 build: ## (Re)constrói a imagem Docker do app
 	docker build -t $(IMAGE) .

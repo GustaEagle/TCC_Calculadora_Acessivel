@@ -9,8 +9,11 @@ Este documento liga o [PRD.md](../PRD.md) à organização de código e hardware
 | Área no PRD | Pasta(s) |
 | ----------- | -------- |
 | Motor de cálculo (§8), Python | [`software/core/`](../software/core/) |
+| Ponto de entrada (escolhe a saída ativa, §7) | [`software/app.py`](../software/app.py) |
 | Front LCD 7.x (§7) | [`software/ui_lcd/`](../software/ui_lcd/) |
 | Front monitor HDMI (§7) | [`software/ui_hdmi/`](../software/ui_hdmi/) |
+| Peças de UI partilhadas pelos dois fronts | [`software/ui_common/`](../software/ui_common/) |
+| Modo somente áudio (RF-04) | [`software/audio_only.py`](../software/audio_only.py) |
 | Áudio / TTS / acessibilidade (§8) | [`software/accessibility/`](../software/accessibility/) |
 | GPIO, UPS, detecção HDMI, integração | [`software/platform/`](../software/platform/) |
 | Testes (cruzados ou por módulo) | [`software/tests/`](../software/tests/) + `tests/` dentro de cada pacote quando fizer sentido |

@@ -17,30 +17,12 @@ from software.core import CalculatorState
 from software.hw_platform.display import DisplayMode, DisplaySelector
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
-from software.ui_lcd.error_messages import friendly_message, spoken_priority_prefix
-from software.ui_lcd.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
-from software.ui_lcd.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui_common.error_messages import friendly_message, spoken_priority_prefix
+from software.ui_common.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui_common.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
+from software.ui_common.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 
 logger = logging.getLogger(__name__)
-
-
-LEFT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
-    [("Pol", "polar(", "rect(", None), ("x!", "!", None, None), ("Pi", "π", "e", None)],
-    [("sen", "sen(", "asin(", None), ("cos", "cos(", "acos(", None), ("", "", None, None)],
-    [("tan", "tan(", "atan(", None), ("log", "log(", "ln(", "logbase("), ("", "", None, None)],
-    [("x⁻¹", "inv(", None, None), ("^", "^", None, None)], # R3: x^-1 will span 2
-    [("?", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
-    [("Ctrl", "Ctrl", None, None), ("exp", "exp(", None, None), ("Shift", "Shift", None, None)], # R5: Ctrl will span 2
-]
-
-RIGHT_BUTTONS: list[list[tuple[str, str, str | None, str | None]]] = [
-    [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", None, None)],
-    [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, "RAD/DEG")],
-    [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
-    [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
-    [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)], # R4: 0 will span 2
-    [("Ans", "Ans", None, None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
-]
 
 
 class CalculatorApp:
@@ -277,28 +259,7 @@ class CalculatorApp:
             self.speech.say("Controles ocultados")
 
     def _button_style(self, token: str) -> str:
-        if token == "AC":
-            return "danger"
-        if token == "DEL":
-            return "warning"
-        if token in {"=", "RAD/DEG"}:
-            return "success"
-        if token in {"Ctrl", "Shift"}:
-            return "warning"
-        
-        # Operators and other symbols
-        if token in {"+", "-", "*", "/", "^", "nCr(", "polar(", "π", ",", "."}:
-            return "warning"
-            
-        # Scientific functions
-        if any(f in token for f in ["sin", "cos", "tan", "log", "sqrt", "!", "asin", "acos", "atan", "inv", "ln", "nPr", "rect"]):
-            return "success"
-            
-        # Numeric keys
-        if token.isdigit() or token == "Ans":
-            return "info"
-            
-        return "primary"
+        return button_style(token)
 
     def _bind_keyboard(self) -> None:
         self.root.bind("<Key>", self._on_key)
@@ -479,16 +440,7 @@ class CalculatorApp:
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
     def _spoken_token(self, token: str) -> str:
-        names = {
-            "AC": "limpar tudo", "DEL": "apagar", "/": "dividido por", "*": "vezes", "-": "menos", "+": "mais", "^": "elevado a",
-            "π": "pi", "e": "é", "(": "abre parênteses", ")": "fecha parênteses", "Ans": "resposta anterior",
-            "sen(": "seno", "cos(": "cosseno", "tan(": "tangente", "log(": "logaritmo decimal", "ln(": "logaritmo natural",
-            "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
-            "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
-            "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "exponencial", "%": "porcento",
-            "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto", "RAD/DEG": "alternância entre graus e radianos"
-        }
-        return names.get(token, token)
+        return spoken_token(token)
 
     def _status_text(self) -> str:
         display_mode = self.display_selector.current_mode()
