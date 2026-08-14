@@ -44,6 +44,26 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
 }
 
 
+# O teclado na tela começa OCULTO nos dois fronts: a entrada real é o teclado
+# físico (RF-05), então o padrão é deixar a área livre para expressão e
+# resultado. O botão que revela o teclado fica deliberadamente discreto, mas
+# continua sendo texto (não só ícone) para ser legível e anunciável.
+KEYPAD_SHOW_LABEL = "Mostrar teclado"
+KEYPAD_HIDE_LABEL = "Ocultar teclado"
+KEYPAD_SHOWN_SPEECH = "Teclado exibido"
+KEYPAD_HIDDEN_SPEECH = "Teclado ocultado"
+
+
+def keypad_toggle_label(controls_visible: bool) -> str:
+    """Texto do botão: descreve a AÇÃO, não o estado atual."""
+    return KEYPAD_HIDE_LABEL if controls_visible else KEYPAD_SHOW_LABEL
+
+
+def keypad_toggle_speech(controls_visible: bool) -> str:
+    """Anúncio por voz após alternar o teclado."""
+    return KEYPAD_SHOWN_SPEECH if controls_visible else KEYPAD_HIDDEN_SPEECH
+
+
 def spoken_token(token: str) -> str:
     """pt-BR name announced for a token (falls back to the token itself)."""
     return SPOKEN_TOKEN_NAMES.get(token, token)

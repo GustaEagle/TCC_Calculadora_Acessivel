@@ -28,7 +28,14 @@ from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.ups import UpsMonitor
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
-from software.ui.shared.keypad import LEFT_BUTTONS, RIGHT_BUTTONS, button_style, spoken_token
+from software.ui.shared.keypad import (
+    LEFT_BUTTONS,
+    RIGHT_BUTTONS,
+    button_style,
+    keypad_toggle_label,
+    keypad_toggle_speech,
+    spoken_token,
+)
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.responsive import (
     MIN_USABLE_HEIGHT,
@@ -79,13 +86,16 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
-        self.controls_visible = True
+        # Teclado na tela começa oculto: a entrada real é o teclado físico
+        # (RF-05) e a área livre vai para expressão/resultado/histórico.
+        self.controls_visible = False
 
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
 
         self._configure_palette()
         self._build_layout()
+        self._apply_controls_visibility()
         self._bind_keyboard()
         self._set_initial_focus()
 
@@ -142,6 +152,11 @@ class CalculatorApp:
         self.style.configure("TButton", font=("Segoe UI", button_size, "bold"))
         for category in BUTTON_PALETTE:
             self.style.configure(f"{category}.TButton", font=("Segoe UI", button_size, "bold"))
+
+        # O botão de mostrar/ocultar teclado acompanha a escala, mas continua
+        # no tamanho de rótulo (discreto), não no de tecla.
+        if hasattr(self, "_toggle_style"):
+            self.style.configure(self._toggle_style, font=("Segoe UI", label_size), padding=(6, 2))
 
         self._update_display()
 
@@ -268,10 +283,15 @@ class CalculatorApp:
 
         footer = ttk.Frame(root_frame, padding=(0, 6))
         footer.grid(row=2, column=0, sticky=EW, pady=(8, 0))
+        # Discreto de propósito: estilo "link" (sem moldura) e fonte pequena,
+        # para não roubar área do monitor. Continua focável por Tab e anunciado
+        # por voz. A fonte acompanha a resolução em _apply_scale().
         self.toggle_btn = ttk.Button(
-            footer, text="Ocultar Controles", bootstyle="outline-secondary",
-            command=self._toggle_controls,
+            footer, text=keypad_toggle_label(self.controls_visible),
+            bootstyle="secondary-link", command=self._toggle_controls,
         )
+        self._toggle_style = f"Compact.{self.toggle_btn.cget('style')}"
+        self.toggle_btn.configure(style=self._toggle_style)
         self.toggle_btn.pack(side=LEFT, padx=(0, 10))
         ttk.Label(footer, textvariable=self.status_var, anchor=W, style="Status.TLabel").pack(
             side=LEFT, fill=X, expand=True, padx=10
@@ -348,22 +368,31 @@ class CalculatorApp:
                 row, text=f"= {result.display}", anchor=E, style="HistoryValue.TLabel",
             ).grid(row=1, column=0, sticky=EW)
 
+    def _apply_controls_visibility(self) -> None:
+        """Sincroniza teclado e rótulo do botão com self.controls_visible."""
+        if self.controls_visible:
+            self.keypad_frame.grid()
+        else:
+            self.keypad_frame.grid_remove()
+        self.toggle_btn.configure(text=keypad_toggle_label(self.controls_visible))
+
     def _set_initial_focus(self) -> None:
-        """Give Tab traversal a predictable starting point."""
-        first_digit = self.buttons.get("7_None")
-        if first_digit is not None:
-            first_digit.focus_set()
+        """Give Tab traversal a predictable starting point.
+
+        Com o teclado oculto por padrão, o ponto de partida passa a ser o
+        próprio botão que o revela - senão o Tab começaria em algo invisível.
+        """
+        if self.controls_visible:
+            first_digit = self.buttons.get("7_None")
+            if first_digit is not None:
+                first_digit.focus_set()
+                return
+        self.toggle_btn.focus_set()
 
     def _toggle_controls(self) -> None:
         self.controls_visible = not self.controls_visible
-        if self.controls_visible:
-            self.keypad_frame.grid()
-            self.toggle_btn.configure(text="Ocultar Controles")
-            self.speech.say("Controles exibidos")
-        else:
-            self.keypad_frame.grid_remove()
-            self.toggle_btn.configure(text="Exibir Controles")
-            self.speech.say("Controles ocultados")
+        self._apply_controls_visibility()
+        self.speech.say(keypad_toggle_speech(self.controls_visible))
 
     # ------------------------------------------------------------------
     # Input handling (mirrors ui/lcd so both fronts behave identically)
