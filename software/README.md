@@ -6,9 +6,9 @@ Alinhado ao [PRD.md](../PRD.md) §8: **motor em Python**, **dois fronts** (LCD e
 | ----- | ------------------ |
 | `core/` | Parser, precedência, funções §5, códigos de erro; API estável para as UIs. |
 | `app.py` | Ponto de entrada: escolhe a saída ativa (§7) e inicia **um** front. |
-| `ui/lcd/` | Interface para o painel 4,3" (restrições de tamanho e legibilidade). |
-| `ui/hdmi/` | Interface para monitor externo (layout mais rico, responsivo à resolução). |
-| `ui/shared/` | O que os dois fronts partilham: textos de erro §13, paleta, teclado, formatação, escala. |
+| `ui/lcd/` | Painel 4,3" — **somente a tela** (800x480 fixo): sem teclado nem botões, entrada só pelo teclado físico. |
+| `ui/hdmi/` | Monitor externo — janela de **tamanho fixo** 1280x720 (padrão Calculadora do Windows), teclado na tela oculto por padrão. |
+| `ui/shared/` | O que os dois fronts partilham: textos de erro §13, paleta, teclado, formatação, histórico. |
 | `audio_only.py` | Modo somente áudio (RF-04), sem janela gráfica. |
 | `accessibility/` | TTS, fila de anúncios, política de interrupção (RF-08); idioma pt-BR. |
 | `hw_platform/` | GPIO / matriz teclado, leitura UPS quando existir, detecção de saídas HDMI (helpers). |

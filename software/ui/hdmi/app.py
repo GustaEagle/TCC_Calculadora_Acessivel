@@ -4,10 +4,9 @@ Sibling of ui/lcd/app.py, not an extension of it: the monitor gets its own
 composition (persistent history panel beside the keypad, PRD §8 "maior area,
 layout mais rico") instead of the 800x480 panel arrangement.
 
-Responsive by design: unlike the LCD front, this window never pins itself to a
-physical size. It opens at whatever resolution the OS reports and every font
-and cell is recomputed from the *current* window size, so the same code fits a
-1366x768 monitor, a 4K one, or a hand-resized window during local testing.
+Fixed-size window, in the style of the Windows Calculator: one reference
+resolution, non-resizable, with font sizes declared once. The layout is not
+recomputed at runtime - there is no resize path to get wrong.
 """
 
 from __future__ import annotations
@@ -25,10 +24,11 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
 from software.hw_platform.keyboard import KeyboardAdapter
-from software.hw_platform.ups import UpsMonitor
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import (
+    HISTORY_TOKEN,
     LEFT_BUTTONS,
     RIGHT_BUTTONS,
     button_style,
@@ -37,15 +37,25 @@ from software.ui.shared.keypad import (
     spoken_token,
 )
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
-from software.ui.shared.responsive import (
-    MIN_USABLE_HEIGHT,
-    MIN_USABLE_WIDTH,
-    font_sizes,
-    responsive_scale,
-    visible_chars,
-)
 
 logger = logging.getLogger(__name__)
+
+# Janela de tamanho fixo (padrão Calculadora do Windows): não redimensionável,
+# então todo o layout é dimensionado uma vez para esta resolução.
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
+
+FONT_SIZES = {
+    "expression": 34,
+    "result": 58,
+    "button": 17,
+    "label": 13,
+    "history": 14,
+}
+
+# Truncamento do display: quantos caracteres cabem nas fontes acima.
+MAX_EXPRESSION_CHARS = 42
+MAX_RESULT_CHARS = 24
 
 _HISTORY_VISIBLE_ROWS = 10
 
@@ -57,23 +67,15 @@ class CalculatorApp:
         self.state = CalculatorState()
         self.speech = SpeechService()
         self.keyboard = KeyboardAdapter()
-        self.ups = UpsMonitor()
 
         self.root = ttk.Window(themename="darkly")
-        self.root.title("Calculadora Cientifica Acessivel - Monitor")
+        self.root.title("Calculadora Cientifica Acessivel")
 
-        # Open at the resolution the OS actually reports for this output rather
-        # than assuming one (RF-02/RF-03: the monitor is the preferred output,
-        # and we do not know its size ahead of time).
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        self.root.geometry(f"{screen_width}x{screen_height}+0+0")
-        # A degenerate-window guard only - never a target size. Everything
-        # inside adapts continuously via grid weights.
-        self.root.minsize(MIN_USABLE_WIDTH, MIN_USABLE_HEIGHT)
+        # Tamanho fixo, não redimensionável (padrão Calculadora do Windows).
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.root.resizable(False, False)
 
         self.style = ttk.Style()
-        self._scale = 0.0  # forces the first _apply_scale() to run
 
         self.ctrl_active = False
         self.shift_active = False
@@ -81,7 +83,6 @@ class CalculatorApp:
 
         self.expression_var = ttk.StringVar(value="")
         self.result_var = ttk.StringVar(value="Pronto")
-        self.status_var = ttk.StringVar(value=self._status_text())
 
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
@@ -93,6 +94,7 @@ class CalculatorApp:
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
 
+        self._configure_styles()
         self._configure_palette()
         self._build_layout()
         self._apply_controls_visibility()
@@ -102,63 +104,24 @@ class CalculatorApp:
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
-        # Recompute proportions whenever the window changes size, so a resized
-        # window (or a different monitor) re-lays out instead of clipping.
-        self.root.bind("<Configure>", self._on_configure)
-        self.root.update_idletasks()
-        self._apply_scale(force=True)
-
-    # ------------------------------------------------------------------
-    # Responsive sizing
-    # ------------------------------------------------------------------
-
-    def _current_scale(self) -> float:
-        return responsive_scale(self.root.winfo_width(), self.root.winfo_height())
-
-    def _on_configure(self, event: object) -> None:
-        # <Configure> fires for child widgets too; only react to the toplevel.
-        if getattr(event, "widget", None) is not self.root:
-            return
-        self._apply_scale()
-
-    def _apply_scale(self, force: bool = False) -> None:
-        scale = self._current_scale()
-        # Ignore sub-pixel jitter so a drag-resize does not restyle every frame.
-        if not force and abs(scale - self._scale) < 0.02:
-            return
-        self._scale = scale
-
-        sizes = font_sizes(scale)
-        expression_size = sizes["expression"]
-        result_size = sizes["result"]
-        button_size = sizes["button"]
-        label_size = sizes["label"]
-        history_size = sizes["history"]
-
-        self.style.configure("TLabel", font=("Segoe UI", label_size))
+    def _configure_styles(self) -> None:
+        """Fontes fixas: a janela não redimensiona, então isto roda uma só vez."""
+        self.style.configure("TLabel", font=("Segoe UI", FONT_SIZES["label"]))
         self.style.configure(
-            "Display.TLabel", font=("Segoe UI", expression_size), padding=int(10 * scale),
+            "Display.TLabel", font=("Segoe UI", FONT_SIZES["expression"]), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
         )
         self.style.configure(
-            "Result.TLabel", font=("Segoe UI", result_size, "bold"), padding=int(10 * scale),
+            "Result.TLabel", font=("Segoe UI", FONT_SIZES["result"], "bold"), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
         )
-        self.style.configure("Indicator.TLabel", font=("Segoe UI", label_size, "bold"))
-        self.style.configure("History.TLabel", font=("Segoe UI", history_size))
-        self.style.configure("HistoryValue.TLabel", font=("Segoe UI", history_size, "bold"))
-        self.style.configure("Status.TLabel", font=("Segoe UI", label_size))
+        self.style.configure("Indicator.TLabel", font=("Segoe UI", FONT_SIZES["label"], "bold"))
+        self.style.configure("History.TLabel", font=("Segoe UI", FONT_SIZES["history"]))
+        self.style.configure("HistoryValue.TLabel", font=("Segoe UI", FONT_SIZES["history"], "bold"))
 
-        self.style.configure("TButton", font=("Segoe UI", button_size, "bold"))
+        self.style.configure("TButton", font=("Segoe UI", FONT_SIZES["button"], "bold"))
         for category in BUTTON_PALETTE:
-            self.style.configure(f"{category}.TButton", font=("Segoe UI", button_size, "bold"))
-
-        # O botão de mostrar/ocultar teclado acompanha a escala, mas continua
-        # no tamanho de rótulo (discreto), não no de tecla.
-        if hasattr(self, "_toggle_style"):
-            self.style.configure(self._toggle_style, font=("Segoe UI", label_size), padding=(6, 2))
-
-        self._update_display()
+            self.style.configure(f"{category}.TButton", font=("Segoe UI", FONT_SIZES["button"], "bold"))
 
     def _configure_palette(self) -> None:
         """Same WCAG-verified palette as the LCD front (ui/shared/palette.py):
@@ -180,16 +143,12 @@ class CalculatorApp:
             )
 
     def _update_display(self) -> None:
-        """Truncate to what actually fits the current width, not a fixed count."""
+        """Truncate to what fits the fixed window at the declared font sizes."""
         expr = format_expression_for_display(self.expression_var.get())
         res = self.result_var.get()
 
-        # Capacity follows the current width and font size, so a bigger screen
-        # shows a longer expression instead of truncating at a fixed count.
-        width = self.root.winfo_width()
-        sizes = font_sizes(self._scale)
-        max_expr = visible_chars(width, sizes["expression"])
-        max_res = visible_chars(width, sizes["result"])
+        max_expr = MAX_EXPRESSION_CHARS
+        max_res = MAX_RESULT_CHARS
 
         if len(expr) > max_expr:
             self.expression_disp_var.set("..." + expr[-(max_expr - 3):])
@@ -281,22 +240,21 @@ class CalculatorApp:
 
         self._build_history_panel(main)
 
+        # Rodapé só com o botão do teclado: nada de indicar qual saída de video
+        # ou fonte de energia está em uso - isso é diagnóstico, não interface.
         footer = ttk.Frame(root_frame, padding=(0, 6))
         footer.grid(row=2, column=0, sticky=EW, pady=(8, 0))
         # Discreto de propósito: estilo "link" (sem moldura) e fonte pequena,
-        # para não roubar área do monitor. Continua focável por Tab e anunciado
-        # por voz. A fonte acompanha a resolução em _apply_scale().
+        # para não roubar área da tela. Continua focável por Tab e anunciado
+        # por voz.
         self.toggle_btn = ttk.Button(
             footer, text=keypad_toggle_label(self.controls_visible),
             bootstyle="secondary-link", command=self._toggle_controls,
         )
-        self._toggle_style = f"Compact.{self.toggle_btn.cget('style')}"
-        self.toggle_btn.configure(style=self._toggle_style)
-        self.toggle_btn.pack(side=LEFT, padx=(0, 10))
-        ttk.Label(footer, textvariable=self.status_var, anchor=W, style="Status.TLabel").pack(
-            side=LEFT, fill=X, expand=True, padx=10
-        )
-        ttk.Label(footer, text="Monitor HDMI", anchor=E, bootstyle="info", style="Status.TLabel").pack(side=RIGHT)
+        compact = f"Compact.{self.toggle_btn.cget('style')}"
+        self.style.configure(compact, font=("Segoe UI", FONT_SIZES["label"]), padding=(6, 2))
+        self.toggle_btn.configure(style=compact)
+        self.toggle_btn.pack(side=LEFT)
 
     def _build_buttons(self, container: ttk.Frame, rows: list, is_left: bool) -> None:
         for r, row in enumerate(rows):
@@ -348,14 +306,14 @@ class CalculatorApp:
         for child in self.history_frame.winfo_children():
             child.destroy()
 
-        if not self.state.history:
+        recent = recent_entries(self.state.history, _HISTORY_VISIBLE_ROWS)
+        if not recent:
             ttk.Label(
                 self.history_frame, text="Nenhuma operacao ainda.",
                 anchor=W, style="History.TLabel",
             ).grid(row=0, column=0, sticky=EW)
             return
 
-        recent = list(reversed(self.state.history))[:_HISTORY_VISIBLE_ROWS]
         for index, result in enumerate(recent):
             row = ttk.Frame(self.history_frame)
             row.grid(row=index, column=0, sticky=EW, pady=2)
@@ -416,6 +374,11 @@ class CalculatorApp:
             self._handle_token(token, None, None)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
+        # Vindo do teclado (_on_key) não há 'secondary'; sem isto o Ctrl + Ans
+        # do teclado físico não abriria o histórico - só o clique no botão.
+        if primary == "Ans" and secondary is None:
+            secondary = HISTORY_TOKEN
+
         if self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}:
             main_name = spoken_token(primary)
             ctrl_name = spoken_token(secondary) if secondary else "Nenhuma"
@@ -463,6 +426,10 @@ class CalculatorApp:
             self._recall_last_answer()
             return
 
+        if token == HISTORY_TOKEN:
+            self._announce_history()
+            return
+
         if token == "=" and not self.state.expression:
             return
 
@@ -504,7 +471,10 @@ class CalculatorApp:
 
     def _update_keypad_labels(self) -> None:
         symbol_labels = {token: symbol.rstrip("(") for token, symbol in FUNCTION_DISPLAY_SYMBOLS.items()}
-        ctrl_map = {**symbol_labels, "ln(": "ln", "nPr(": "nPr", "e": "e", "RECALL": "Últ. resp."}
+        ctrl_map = {
+            **symbol_labels, "ln(": "ln", "nPr(": "nPr", "e": "e",
+            "RECALL": "Últ. resp.", HISTORY_TOKEN: "Histórico",
+        }
         shift_map = {
             "logbase(": symbol_labels["logbase("], ",": ",",
             "RAD/DEG": "Deg/Rad", "RECALL": "Últ. resp.",
@@ -543,13 +513,15 @@ class CalculatorApp:
             prefix = spoken_priority_prefix(result.code)
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
-    def _status_text(self) -> str:
-        # This front only ever runs as the monitor output (the entry point
-        # picks it precisely when DisplayMode.HDMI won), so report that
-        # directly instead of re-querying the selector - re-reading it here
-        # reported "LCD" while the monitor UI was on screen.
-        ups_status = self.ups.read_status()
-        return f"Saida visual: monitor | Energia: {ups_status.label}"
+    def _announce_history(self) -> None:
+        """Ctrl + Ans: o painel já está visível aqui, então basta anunciar.
+
+        Mantém o histórico acessível por voz (RF-04/RF-07) sem depender de
+        enxergar o painel.
+        """
+        self._refresh_history()
+        entries = recent_entries(self.state.history, _HISTORY_VISIBLE_ROWS)
+        self.speech.interrupt_and_say(spoken_history(entries))
 
 
 def main() -> None:

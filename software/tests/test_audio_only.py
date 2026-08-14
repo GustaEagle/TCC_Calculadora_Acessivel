@@ -37,7 +37,8 @@ class AudioOnlyCalculatorTest(unittest.TestCase):
         """The audio path must not import a Tk front to work."""
         import software.audio_only as audio_only
 
-        source = open(audio_only.__file__, encoding="utf-8").read()
+        with open(audio_only.__file__, encoding="utf-8") as handle:
+            source = handle.read()
         self.assertNotIn("ttkbootstrap", source)
         self.assertNotIn("tkinter", source)
 

@@ -1,4 +1,13 @@
-"""ttkbootstrap LCD prototype for local testing and Raspberry Pi use."""
+"""ttkbootstrap front-end for the 4.3 inch Waveshare LCD.
+
+The LCD is *only a screen*: there is no on-screen keypad and no buttons at all.
+Every input arrives from the physical 6x7 keyboard (RF-05), so the whole 800x480
+panel is spent on what the user needs to read - the expression, the result, and
+the active modifiers.
+
+History is reached by keyboard (Ctrl + Ans), never by a button; it takes over
+the display area while open and is also announced by voice.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +15,7 @@ import logging
 
 try:
     import ttkbootstrap as ttk
-    from ttkbootstrap.constants import BOTH, CENTER, E, EW, LEFT, NSEW, RIGHT, W, X
+    from ttkbootstrap.constants import BOTH, E, EW, LEFT, NSEW, W
 except ImportError as exc:  # pragma: no cover - user-facing startup guard
     raise SystemExit(
         "Instale as dependencias com: python -m pip install -r software/requirements.txt"
@@ -14,289 +23,202 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
-from software.hw_platform.display import DisplayMode, DisplaySelector
 from software.hw_platform.keyboard import KeyboardAdapter
-from software.hw_platform.ups import UpsMonitor
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
-from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
-from software.ui.shared.keypad import (
-    LEFT_BUTTONS,
-    RIGHT_BUTTONS,
-    button_style,
-    keypad_toggle_label,
-    keypad_toggle_speech,
-    spoken_token,
-)
-from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.formatting import format_expression_for_display
+from software.ui.shared.history import recent_entries, spoken_history
+from software.ui.shared.keypad import HISTORY_TOKEN, spoken_token
+from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 
 logger = logging.getLogger(__name__)
 
+# Painel Waveshare 4,3": tamanho fixo, não redimensionável.
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 480
+
+FONT_SIZES = {
+    "expression": 44,
+    "result": 96,
+    "indicator": 14,
+    "history": 22,
+}
+
+# Truncamento do display para as fontes acima nos 800x480.
+MAX_EXPRESSION_CHARS = 26
+MAX_RESULT_CHARS = 14
+
+_HISTORY_VISIBLE_ROWS = 6
+
 
 class CalculatorApp:
-    """Main visual shell sized for the 4.3 inch 800x480 LCD."""
+    """Display-only shell for the 4.3 inch 800x480 LCD."""
 
     def __init__(self) -> None:
         self.state = CalculatorState()
         self.speech = SpeechService()
         self.keyboard = KeyboardAdapter()
-        self.display_selector = DisplaySelector()
-        self.ups = UpsMonitor()
 
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")
-        self.root.geometry("800x480")
-        self.root.minsize(800, 480)
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.root.resizable(False, False)
 
-        # Custom styles for a more premium look
         self.style = ttk.Style()
-        self.style.configure("TLabel", font=("Segoe UI", 12))
-        self.style.configure(
-            "Display.TLabel", font=("Segoe UI", 80), padding=15,
-            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
-        )
-        self.style.configure(
-            "Result.TLabel", font=("Segoe UI", 120, "bold"), padding=15,
-            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
-        )
-
-        # Globally configure TButton for the keypad to ensure consistent font
-        self.style.configure("TButton", font=("Segoe UI", 28, "bold"))
-
-        # Ensure outline versions also have the correct font just in case
-        for color in ["primary", "secondary", "success", "info", "warning", "danger"]:
-            self.style.configure(f"{color}.Outline.TButton", font=("Segoe UI", 28, "bold"))
-
-        # Accessibility: override the theme's built-in bootstyle colors with a
-        # WCAG-verified palette (see ui/shared/palette.py + ui/shared/contrast.py).
-        # ttkbootstrap's default theme colors aren't guaranteed to meet WCAG AA
-        # and can't be introspected without a running Tk instance, so this app
-        # owns and verifies its own category colors instead of trusting them.
-        for category, colors in BUTTON_PALETTE.items():
-            self.style.configure(
-                f"{category}.TButton",
-                background=colors.background,
-                foreground=colors.foreground,
-            )
-            # Pressed/focused states must stay perceivable without relying on
-            # color alone: press inverts fg/bg (high-contrast tactile cue),
-            # focus gets a bright border (interaction-feedback spec).
-            self.style.map(
-                f"{category}.TButton",
-                background=[("pressed", colors.foreground), ("active", colors.background)],
-                foreground=[("pressed", colors.background)],
-                bordercolor=[("focus", "#FFFFFF")],
-                relief=[("pressed", "sunken")],
-            )
 
         self.ctrl_active = False
-        self.shift_active = False # Added shift tracking
-        self.buttons: dict[str, ttk.Button] = {}
+        self.shift_active = False
+        self.history_open = False
 
         self.expression_var = ttk.StringVar(value="")
         self.result_var = ttk.StringVar(value="Pronto")
-        self.status_var = ttk.StringVar(value=self._status_text())
-        
-        # Indicators for special states
+
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
-        # Teclado na tela começa oculto: a entrada real é o teclado físico
-        # (RF-05) e a área livre vai para expressão/resultado.
-        self.controls_visible = False
 
-        # Truncated display variables
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
 
+        self._configure_styles()
         self._build_layout()
-        self._apply_controls_visibility()
         self._bind_keyboard()
-        self._set_initial_focus()
+        self.root.focus_set()
 
-        # Add tracers for truncation logic
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
-    def _update_display(self) -> None:
-        """Update truncated display variables based on raw variables."""
-        expr = format_expression_for_display(self.expression_var.get())
-        res = self.result_var.get()
-        
-        # Max chars that reasonably fit with current font sizes (80/120)
-        # Increased to utilize more screen width as requested
-        max_expr = 30
-        max_res = 20
-        
-        if len(expr) > max_expr:
-            self.expression_disp_var.set("..." + expr[-(max_expr-3):])
-        else:
-            self.expression_disp_var.set(expr)
-            
-        if len(res) > max_res:
-            self.result_disp_var.set(".." + res[-(max_res-2):])
-        else:
-            self.result_disp_var.set(res)
+    def _configure_styles(self) -> None:
+        """Fontes fixas: o painel tem tamanho conhecido e não redimensiona."""
+        self.style.configure(
+            "Display.TLabel", font=("Segoe UI", FONT_SIZES["expression"]), padding=8,
+            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+        self.style.configure(
+            "Result.TLabel", font=("Segoe UI", FONT_SIZES["result"], "bold"), padding=8,
+            foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+        self.style.configure("Indicator.TLabel", font=("Segoe UI", FONT_SIZES["indicator"], "bold"))
+        self.style.configure("History.TLabel", font=("Segoe UI", FONT_SIZES["history"]))
+        self.style.configure(
+            "HistoryValue.TLabel", font=("Segoe UI", FONT_SIZES["history"], "bold"),
+        )
 
     def run(self) -> None:
         self.speech.say("Calculadora pronta")
         self.root.mainloop()
         self.speech.stop()
 
+    # ------------------------------------------------------------------
+    # Layout
+    # ------------------------------------------------------------------
+
     def _build_layout(self) -> None:
         root_frame = ttk.Frame(self.root, padding=10)
         root_frame.pack(fill=BOTH, expand=True)
         root_frame.columnconfigure(0, weight=1)
-        root_frame.rowconfigure(0, weight=0) # Top bar
-        root_frame.rowconfigure(1, weight=1) # Display area
-        root_frame.rowconfigure(2, weight=2) # Keypad area
-        root_frame.rowconfigure(3, weight=0) # Footer
+        root_frame.rowconfigure(0, weight=0)  # indicadores
+        root_frame.rowconfigure(1, weight=1)  # display / histórico
 
-        row_idx = 0
+        indicators = ttk.Frame(root_frame)
+        indicators.grid(row=0, column=0, sticky=EW, pady=(0, 6))
+        ttk.Label(indicators, textvariable=self.mode_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        ttk.Label(indicators, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        ttk.Label(indicators, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=5)
 
-        # Top bar with indicators
-        top_bar = ttk.Frame(root_frame)
-        top_bar.grid(row=row_idx, column=0, sticky=EW, pady=(0, 5))
-        row_idx += 1
-        
-        ttk.Label(top_bar, textvariable=self.mode_var, bootstyle="info", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
-        ttk.Label(top_bar, textvariable=self.ctrl_var, bootstyle="warning", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
-        ttk.Label(top_bar, textvariable=self.shift_var, bootstyle="success", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
+        # Display e histórico ocupam a MESMA célula; o histórico é levantado por
+        # cima quando aberto (Ctrl + Ans) e baixado ao fechar.
+        self.stack = ttk.Frame(root_frame)
+        self.stack.grid(row=1, column=0, sticky=NSEW)
+        self.stack.columnconfigure(0, weight=1)
+        self.stack.rowconfigure(0, weight=1)
 
-        # Glassmorphism effect simulation
-        display = ttk.Frame(root_frame, bootstyle="secondary", padding=15)
-        display.grid(row=row_idx, column=0, sticky=NSEW, pady=(0, 10))
-        display.columnconfigure(0, weight=1)
-        display.rowconfigure(0, weight=1) # Expression
-        display.rowconfigure(1, weight=2) # Result (more dominant)
-        row_idx += 1
+        self.display = ttk.Frame(self.stack, bootstyle="secondary", padding=12)
+        self.display.grid(row=0, column=0, sticky=NSEW)
+        self.display.columnconfigure(0, weight=1)
+        self.display.rowconfigure(0, weight=1)
+        self.display.rowconfigure(1, weight=2)
 
-        self.expression_label = ttk.Label(
-            display,
-            textvariable=self.expression_disp_var,
-            anchor=E,
-            style="Display.TLabel",
-            bootstyle="inverse-secondary"
-        )
-        self.expression_label.grid(row=0, column=0, sticky=NSEW)
+        ttk.Label(
+            self.display, textvariable=self.expression_disp_var, anchor=E,
+            style="Display.TLabel", bootstyle="inverse-secondary",
+        ).grid(row=0, column=0, sticky=NSEW)
 
-        self.result_label = ttk.Label(
-            display,
-            textvariable=self.result_disp_var,
-            anchor=E,
-            style="Result.TLabel",
-            bootstyle="inverse-secondary"
-        )
-        self.result_label.grid(row=1, column=0, sticky=NSEW)
+        ttk.Label(
+            self.display, textvariable=self.result_disp_var, anchor=E,
+            style="Result.TLabel", bootstyle="inverse-secondary",
+        ).grid(row=1, column=0, sticky=NSEW)
 
-        self.keypad_frame = ttk.Frame(root_frame)
-        self.keypad_frame.grid(row=row_idx, column=0, sticky=NSEW)
-        row_idx += 1
-        self.keypad_frame.columnconfigure(0, weight=3, uniform="kp") # Left section
-        self.keypad_frame.columnconfigure(1, weight=1, uniform="kp") # Spacer
-        self.keypad_frame.columnconfigure(2, weight=4, uniform="kp") # Right section
-        self.keypad_frame.rowconfigure(0, weight=1)
+        self.history_view = ttk.Frame(self.stack, bootstyle="secondary", padding=12)
+        self.history_view.grid(row=0, column=0, sticky=NSEW)
+        self.history_view.columnconfigure(0, weight=1)
+        self.display.tkraise()
 
-        left_frame = ttk.Frame(self.keypad_frame)
-        left_frame.grid(row=0, column=0, sticky="nsew")
-        for i in range(6): left_frame.rowconfigure(i, weight=1, uniform="row")
-        for i in range(3): left_frame.columnconfigure(i, weight=1, uniform="col_left")
+    def _update_display(self) -> None:
+        expr = format_expression_for_display(self.expression_var.get())
+        res = self.result_var.get()
 
-        right_frame = ttk.Frame(self.keypad_frame)
-        right_frame.grid(row=0, column=2, sticky="nsew")
-        for i in range(6): right_frame.rowconfigure(i, weight=1, uniform="row")
-        for i in range(4): right_frame.columnconfigure(i, weight=1, uniform="col_right")
-
-        # No longer injecting R/D here
-        updated_left = [row[:] for row in LEFT_BUTTONS]
-
-        # Helper to build buttons
-        def build_buttons(container, buttons_list, is_left):
-            for r, row in enumerate(buttons_list):
-                curr_col = 0
-                for item in row:
-                    label, primary, secondary = item[0], item[1], item[2]
-                    shifted = item[3] if len(item) > 3 else None
-                    if not label: 
-                        curr_col += 1
-                        continue
-                    btn_id = f"{primary}_{secondary}"
-                    style = self._button_style(primary)
-                    
-                    button = ttk.Button(
-                        container, text=label, bootstyle=style,
-                        command=lambda p=primary, s=secondary, sh=shifted: self._handle_token(p, s, sh)
-                    )
-
-                    # Special spans
-                    cspan = 1
-                    if is_left:
-                        if (r == 3 and primary == "inv(") or (r == 5 and primary == "Ctrl"): cspan = 2
-                    else:
-                        if (r == 4 and primary == "0"): cspan = 2
-                        
-                    button.grid(row=r, column=curr_col, sticky="nsew", padx=3, pady=3, columnspan=cspan)
-                    self.buttons[btn_id] = button
-                    curr_col += cspan
-
-        build_buttons(left_frame, updated_left, True)
-        build_buttons(right_frame, RIGHT_BUTTONS, False)
-
-        footer = ttk.Frame(root_frame, padding=(0, 5))
-        footer.grid(row=row_idx, column=0, sticky=EW, pady=(5, 0))
-        
-        ttk.Button(footer, text="Histórico", bootstyle="link", command=self._show_history).pack(side=LEFT)
-        # Discreto de propósito: estilo "link" (sem moldura) e fonte pequena,
-        # para não roubar espaço dos 800x480. Continua focável por Tab e
-        # anunciado por voz.
-        self.toggle_btn = ttk.Button(
-            footer, text=keypad_toggle_label(self.controls_visible),
-            bootstyle="secondary-link", command=self._toggle_controls,
-        )
-        self._style_discreet(self.toggle_btn, size=11)
-        self.toggle_btn.pack(side=LEFT, padx=10)
-        
-        ttk.Label(footer, textvariable=self.status_var, anchor=W, font=("Segoe UI", 20)).pack(side=LEFT, fill=X, expand=True, padx=10)
-        ttk.Label(footer, text="Modo local", anchor=E, bootstyle="info", font=("Segoe UI", 20, "italic")).pack(side=RIGHT)
-
-    def _style_discreet(self, button: ttk.Button, size: int) -> None:
-        """Encolhe só este botão.
-
-        A app configura "TButton" globalmente com 28pt bold (tamanho de tecla),
-        o que deixaria o botão do rodapé enorme. Deriva um estilo do que o
-        ttkbootstrap gerou, herdando as cores e trocando apenas a fonte.
-        """
-        compact = f"Compact.{button.cget('style')}"
-        self.style.configure(compact, font=("Segoe UI", size), padding=(6, 2))
-        button.configure(style=compact)
-
-    def _apply_controls_visibility(self) -> None:
-        """Sincroniza teclado e rótulo do botão com self.controls_visible."""
-        if self.controls_visible:
-            self.keypad_frame.grid()
+        if len(expr) > MAX_EXPRESSION_CHARS:
+            self.expression_disp_var.set("..." + expr[-(MAX_EXPRESSION_CHARS - 3):])
         else:
-            self.keypad_frame.grid_remove()
-        self.toggle_btn.configure(text=keypad_toggle_label(self.controls_visible))
+            self.expression_disp_var.set(expr)
 
-    def _set_initial_focus(self) -> None:
-        """Give Tab traversal a predictable starting point (keyboard-navigation).
+        if len(res) > MAX_RESULT_CHARS:
+            self.result_disp_var.set(".." + res[-(MAX_RESULT_CHARS - 2):])
+        else:
+            self.result_disp_var.set(res)
 
-        Com o teclado oculto por padrão, o ponto de partida passa a ser o
-        próprio botão que o revela - senão o Tab começaria em algo invisível.
-        """
-        if self.controls_visible:
-            first_digit = self.buttons.get("7_None")
-            if first_digit is not None:
-                first_digit.focus_set()
-                return
-        self.toggle_btn.focus_set()
+    # ------------------------------------------------------------------
+    # Histórico (só por teclado: Ctrl + Ans)
+    # ------------------------------------------------------------------
 
-    def _toggle_controls(self) -> None:
-        self.controls_visible = not self.controls_visible
-        self._apply_controls_visibility()
-        self.speech.say(keypad_toggle_speech(self.controls_visible))
+    def _toggle_history(self) -> None:
+        if self.history_open:
+            self._close_history()
+        else:
+            self._open_history()
 
-    def _button_style(self, token: str) -> str:
-        return button_style(token)
+    def _open_history(self) -> None:
+        for child in self.history_view.winfo_children():
+            child.destroy()
+
+        ttk.Label(
+            self.history_view, text="Historico", anchor=W,
+            style="Indicator.TLabel", bootstyle="inverse-secondary",
+        ).grid(row=0, column=0, sticky=EW, pady=(0, 6))
+
+        recent = recent_entries(self.state.history, _HISTORY_VISIBLE_ROWS)
+        if not recent:
+            ttk.Label(
+                self.history_view, text="Nenhuma operacao realizada.", anchor=W,
+                style="History.TLabel", bootstyle="inverse-secondary",
+            ).grid(row=1, column=0, sticky=EW)
+            self.speech.interrupt_and_say(spoken_history(recent))
+        else:
+            for index, result in enumerate(recent, start=1):
+                row = ttk.Frame(self.history_view)
+                row.grid(row=index, column=0, sticky=EW, pady=1)
+                row.columnconfigure(0, weight=1)
+                ttk.Label(
+                    row, text=format_expression_for_display(result.expression), anchor=W,
+                    style="History.TLabel",
+                ).grid(row=0, column=0, sticky=EW)
+                ttk.Label(
+                    row, text=f"= {result.display}", anchor=E, style="HistoryValue.TLabel",
+                ).grid(row=0, column=1, sticky=E)
+
+            self.speech.interrupt_and_say(spoken_history(recent))
+
+        self.history_view.tkraise()
+        self.history_open = True
+
+    def _close_history(self) -> None:
+        self.display.tkraise()
+        self.history_open = False
+        self.speech.say("Histórico fechado")
+
+    # ------------------------------------------------------------------
+    # Entrada (somente teclado físico - RF-05)
+    # ------------------------------------------------------------------
 
     def _bind_keyboard(self) -> None:
         self.root.bind("<Key>", self._on_key)
@@ -316,32 +238,20 @@ class CalculatorApp:
             self._handle_token(token, None, None)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
-        if self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}:
-            # Consolidated announcement for Task 3
-            main_name = self._spoken_token(primary)
-            ctrl_name = self._spoken_token(secondary) if secondary else "Nenhuma"
-            shift_name = self._spoken_token(shifted) if shifted else "Nenhuma"
-            
-            msg = f"Função {main_name}."
-            msg += f" Com Controle ativo, função {ctrl_name}."
-            msg += f" Com Shift ativo, função {shift_name}."
-            
-            self.speech.say(msg)
-            # Modifiers remain active for further exploration or can be reset. 
-            # Following usual help patterns, we keep them.
-            return
+        # A tecla Ans carrega o histórico como função de Ctrl (ver ui/shared/keypad.py),
+        # então o atalho é o mesmo no PC e na matriz 6x7.
+        if primary == "Ans" and secondary is None:
+            secondary = HISTORY_TOKEN
 
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
-            self._update_keypad_labels()
             self.speech.say("Controle ativo" if self.ctrl_active else "Controle desativado")
             return
 
         if primary == "Shift":
             self.shift_active = not self.shift_active
             self.shift_var.set("SHIFT" if self.shift_active else "")
-            self._update_keypad_labels()
             self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
             return
 
@@ -356,12 +266,18 @@ class CalculatorApp:
             token = shifted
             self.shift_active = False
             self.shift_var.set("")
-            self._update_keypad_labels()
         elif self.ctrl_active and secondary:
             token = secondary
             self.ctrl_active = False
             self.ctrl_var.set("")
-            self._update_keypad_labels()
+
+        if token == HISTORY_TOKEN:
+            self._toggle_history()
+            return
+
+        # Qualquer outra tecla com o histórico aberto volta para o display.
+        if self.history_open:
+            self._close_history()
 
         if token == "RECALL":
             self._recall_last_answer()
@@ -375,98 +291,37 @@ class CalculatorApp:
             self.state.press("AC")
 
         operators = {"+", "-", "*", "/", "^"}
-        
-        # CHAINING LOGIC: If a result was just shown and user presses an operator, 
-        # auto-insert 'Ans' to chain the calculation.
+
+        # Chaining: after a result, an operator continues from Ans.
         if self.state.last_result and self.state.last_result.ok and token in operators:
-             self.state.expression = "Ans"
-             self.state.last_result = None
-             
+            self.state.expression = "Ans"
+            self.state.last_result = None
+
         if token in operators and self.state.expression:
-            last_char = self.state.expression[-1]
-            if last_char in operators:
+            if self.state.expression[-1] in operators:
                 self.speech.say("Substituindo")
                 self.state.press("DEL")
 
         result = self.state.press(token)
-        
         self.expression_var.set(self.state.expression)
 
         if result is None:
-            spoken = self._spoken_token(token)
-            self.speech.say(spoken)
+            self.speech.say(spoken_token(token))
             return
 
         if result.ok:
             self.result_var.set(result.display)
             self.speech.interrupt_and_say(f"Resultado {result.display}")
         else:
-            # Same friendly text on screen and in speech (error-messaging spec:
-            # UI and TTS must agree, not just share a code) and the PRD §13
-            # prefix by priority: P1 codes are "Erro", P2 codes are "Aviso"
-            # (WRN-010 previously always announced as "Erro", which was wrong).
+            # Same friendly text on screen and in speech, with the PRD §13
+            # priority prefix (P1 -> "Erro", P2 -> "Aviso").
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)
             self.result_var.set(f"{result.code}: {friendly_msg}")
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
-    def _update_keypad_labels(self) -> None:
-        # Reuse FUNCTION_DISPLAY_SYMBOLS so the button label always matches the
-        # symbol shown in the expression and spoken by the TTS (task 1.3).
-        symbol_labels = {token: symbol.rstrip("(") for token, symbol in FUNCTION_DISPLAY_SYMBOLS.items()}
-        ctrl_map = {**symbol_labels, "ln(": "ln", "nPr(": "nPr", "e": "e", "RECALL": "Últ. resp."}
-        shift_map = {"logbase(": symbol_labels["logbase("], ",": ",", "RAD/DEG": "Deg/Rad", "RECALL": "Últ. resp."}
-        
-        # Combine lists for iteration
-        all_rows = LEFT_BUTTONS + RIGHT_BUTTONS
-        
-        for row in all_rows:
-            for item in row:
-                label, primary, secondary = item[0], item[1], item[2]
-                shifted = item[3] if len(item) > 3 else None
-                if not label: continue
-                
-                btn_id = f"{primary}_{secondary}"
-                if btn_id in self.buttons:
-                    button = self.buttons[btn_id]
-                    new_text = label
-                    new_style = self._button_style(primary)
-                    
-                    if self.shift_active and shifted:
-                        new_text = shift_map.get(shifted, shifted.rstrip("("))
-                        new_style = "info"
-                    elif self.ctrl_active and secondary:
-                        new_text = ctrl_map.get(secondary, secondary.rstrip("("))
-                        new_style = "info"
-                    
-                    button.configure(text=new_text, bootstyle=new_style)
-
-    def _show_history(self) -> None:
-        top = ttk.Toplevel(title="Histórico de Operações")
-        top.geometry("400x500")
-
-        frame = ttk.Frame(top, padding=10)
-        frame.pack(fill=BOTH, expand=True)
-
-        ttk.Label(frame, text="Últimas 10 operações", font=("Segoe UI", 12, "bold")).pack(pady=(0, 10))
-
-        list_frame = ttk.Frame(frame)
-        list_frame.pack(fill=BOTH, expand=True)
-
-        if not self.state.history:
-            ttk.Label(list_frame, text="Nenhuma operação realizada.", font=("Segoe UI", 10, "italic")).pack()
-            self.speech.say("Histórico vazio. Nenhuma operação realizada.")
-        else:
-            for res in reversed(self.state.history):
-                item = ttk.Frame(list_frame, padding=5, bootstyle="secondary")
-                item.pack(fill=X, pady=2)
-                ttk.Label(item, text=res.expression, font=("Segoe UI", 20)).pack(side=LEFT)
-                ttk.Label(item, text=f"= {res.display}", font=("Segoe UI", 20, "bold")).pack(side=RIGHT)
-            self.speech.say(f"Histórico aberto. {len(self.state.history)} operações.")
-
     def _recall_last_answer(self) -> None:
-        """Shift/Ctrl + '=' : re-announce/redisplay the last full result
-        without recalculating or touching the in-progress expression."""
+        """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
             self.result_var.set(result.display)
@@ -475,15 +330,6 @@ class CalculatorApp:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
-
-    def _spoken_token(self, token: str) -> str:
-        return spoken_token(token)
-
-    def _status_text(self) -> str:
-        display_mode = self.display_selector.current_mode()
-        ups_status = self.ups.read_status()
-        visual = "LCD" if display_mode == DisplayMode.LCD else "monitor"
-        return f"Saida visual: {visual} | Energia: {ups_status.label}"
 
 
 def main() -> None:

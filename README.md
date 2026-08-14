@@ -40,6 +40,8 @@ python software/app.py --force-mode lcd    # front do painel 4,3"
 python software/app.py --force-mode audio  # somente voz, sem janela
 ```
 
+**Histórico:** abre por **Ctrl + Ans** (no PC, a tecla `a` faz o papel do `Ans` da matriz 6x7). Não há botão de histórico — a entrada é sempre pelo teclado.
+
 Testes: `make check` (ou `python -m unittest discover -s software/tests -t .`).
 
 ---

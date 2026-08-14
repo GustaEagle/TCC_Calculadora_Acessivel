@@ -29,7 +29,7 @@ RIGHT_BUTTONS: list[KeypadRow] = [
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
     [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)],
-    [("Ans", "Ans", None, None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
+    [("Ans", "Ans", "HISTORY", None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
 ]
 
 SPOKEN_TOKEN_NAMES: dict[str, str] = {
@@ -40,8 +40,14 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
     "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "exponencial", "%": "porcento",
     "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto",
-    "RAD/DEG": "alternância entre graus e radianos",
+    "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
 }
+
+# O histórico abre por TECLADO (Ctrl + Ans), nunca por um botão dedicado.
+# Ans + Ctrl foi escolhido por usar só teclas que existem na matriz 6x7 do
+# teclado físico, então o atalho é o mesmo no PC e no hardware do TCC.
+HISTORY_TOKEN = "HISTORY"
+HISTORY_SHORTCUT_LABEL = "Ctrl + Ans"
 
 
 # O teclado na tela começa OCULTO nos dois fronts: a entrada real é o teclado
