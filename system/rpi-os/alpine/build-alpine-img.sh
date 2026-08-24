@@ -151,9 +151,17 @@ ${MIRROR}/${ALPINE_BRANCH}/main
 ${MIRROR}/${ALPINE_BRANCH}/community
 EOF
 
-    mount -t proc none "${ROOTFS}/proc"
-    mount --rbind /sys "${ROOTFS}/sys"
-    mount --rbind /dev "${ROOTFS}/dev"
+    mount_chroot
+}
+
+# Prepara o chroot para uso: qemu + montagens. Idempotente, serve tanto para o
+# build do zero quanto para REUSE_ROOTFS=1 (onde o rootfs já existe, mas o qemu
+# foi removido no fim do build anterior e as montagens não existem mais).
+mount_chroot() {
+    install -Dm755 "$(qemu_static_path)" "${ROOTFS}/usr/bin/qemu-aarch64-static"
+    mountpoint -q "${ROOTFS}/proc" || mount -t proc none "${ROOTFS}/proc"
+    mountpoint -q "${ROOTFS}/sys"  || mount --rbind /sys "${ROOTFS}/sys"
+    mountpoint -q "${ROOTFS}/dev"  || mount --rbind /dev "${ROOTFS}/dev"
 }
 
 # Executa um comando dentro do rootfs (aarch64 via qemu/binfmt).
@@ -363,10 +371,15 @@ EOF
 main() {
     check_prereqs
     mkdir -p "${WORK_DIR}"
-    # REUSE_ROOTFS=1 reaproveita ${ROOTFS} já montado e pula download/apk/pip/smoke
-    # — útil para reiterar só a fase de imagem sem refazer o rootfs (~15 min).
+    # REUSE_ROOTFS=1 reaproveita os PACOTES já instalados em ${ROOTFS} (pula
+    # download/apk/pip, a fase lenta e pesada) mas RECOPIA o app e o overlay —
+    # senão a imagem sairia com uma versão antiga de software/. Use ao iterar no
+    # código do app sem mudar dependências.
     if [ "${REUSE_ROOTFS:-0}" = "1" ] && [ -d "${ROOTFS}/etc" ]; then
-        warn "REUSE_ROOTFS=1: reaproveitando ${ROOTFS} (pulando download/apk/pip/smoke)."
+        warn "REUSE_ROOTFS=1: reaproveitando pacotes de ${ROOTFS} (pulando download/apk/pip)."
+        mount_chroot
+        apply_overlay_and_app   # app/overlay sempre atualizados a partir do repo
+        smoke_tests
     else
         download_and_verify
         prepare_rootfs

@@ -62,6 +62,27 @@ Saída: `calculadora-alpine-3.24.1-aarch64.img` nesta pasta. O script:
    é aviso — áudio real só no hardware);
 5. empacota a imagem (boot FAT32 + root ext4 gravável).
 
+### Rebuild rápido ao mudar o código do app
+
+`CONTINUE=1` (ou `REUSE_ROOTFS=1`) reaproveita os **pacotes** já instalados em
+`.work/rootfs` — pula download/apk/pip, a fase lenta — mas **recopia `software/`
+e o overlay**, então a imagem sai sempre com o código atual do repositório:
+
+```bash
+make rpi-img-continue        # a partir da raiz do repo
+```
+
+Requer que `.work/` exista (de um build anterior). Se foi apagado, o build é
+completo de novo.
+
+### Qual front sobe no kiosk
+
+O kiosk roda `python3 -m software.app`, que escolhe a saída sozinho
+(`hw_platform/display.py`, PRD §7): monitor externo tem prioridade, senão o LCD,
+senão modo somente-áudio. A detecção ainda é **simulada** (`SimulatedHdmiPortReader`,
+padrão `lcd_present=True`) — na prática a imagem sobe hoje sempre o **front do LCD**.
+A detecção real de HDMI (RF-02/RF-09) continua em aberto.
+
 ### Fallback: build nativo no próprio Pi
 
 Se o cross-build (qemu/binfmt) der problema, dá para rodar os mesmos passos
