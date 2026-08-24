@@ -42,12 +42,12 @@
 
 ## 8. Validação automática no build (chroot) — executa ao rodar o script
 
-- [ ] 8.1 No chroot, rodar smoke de GUI: `python3 -c "import tkinter, ttkbootstrap"` sem erro (import de `_tkinter` em musl) — **gate obrigatório** (já embutido no script; falta executar o build).
-- [ ] 8.2 No chroot, validar init do TTS: `pyttsx3.init()` + enumeração de vozes (aviso, não gate — a reprodução real via `runAndWait` exige placa de som e é validada no hardware, 9.3). Embutido no script; falta executar o build.
+- [x] 8.1 No chroot, rodar smoke de GUI: `python3 -c "import tkinter, ttkbootstrap"` sem erro (import de `_tkinter` em musl) — **gate obrigatório**. Executado no build: "tkinter/ttkbootstrap OK".
+- [x] 8.2 No chroot, validar init do TTS: `pyttsx3.init()` + enumeração de vozes (aviso, não gate — a reprodução real via `runAndWait` exige placa de som e é validada no hardware, 9.3). Executado no build: 141 vozes.
 
 ## 9. Validação no hardware (Raspberry Pi 4B) — requer o aparelho
 
-- [ ] 9.1 Gravar o `.img` no cartão (Pi Imager/`dd`) e arrancar no Pi 4B; confirmar que sobe **direto na calculadora** (sem desktop/login/cursor).
+- [x] 9.1 Gravar o `.img` no cartão (Pi Imager/`dd`) e arrancar no Pi 4B; confirmar que sobe **direto na calculadora** (sem desktop/login/cursor). — OK em 2026-08-24, após corrigir o tipo MBR da partição de boot para `0x0c`.
 - [ ] 9.2 Confirmar a UI `ttkbootstrap` em **tela cheia** no LCD Waveshare 4,3" (800×480), legível.
 - [ ] 9.3 Confirmar **TTS pt-BR** anunciando entradas/resultados com a rede desconectada (offline).
 - [ ] 9.4 Matar o processo do app e confirmar **auto-restart** (volta a exibir a UI sem reiniciar o Pi).
