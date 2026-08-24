@@ -30,10 +30,19 @@ jobs:
           cache: "pip"
           cache-dependency-path: software/requirements.txt
 
+      - name: Install system dependencies
+        # Os testes de regressão do histórico (test_history_via_keyboard.py)
+        # instanciam janelas Tk reais, e o runner do GitHub é headless. O Xvfb
+        # dá um display virtual para eles rodarem de verdade, em vez de os
+        # desativarmos e perdermos a cobertura da regressão.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r software/requirements.txt
 
       - name: Run tests
-        run: python -m unittest discover -s software/tests -t . -v
+        run: xvfb-run -a python -m unittest discover -s software/tests -t . -v
