@@ -31,13 +31,16 @@ jobs:
           cache-dependency-path: software/requirements.txt
 
       - name: Install system dependencies
-        # Os testes de regressão do histórico (test_history_via_keyboard.py)
-        # instanciam janelas Tk reais, e o runner do GitHub é headless. O Xvfb
-        # dá um display virtual para eles rodarem de verdade, em vez de os
-        # desativarmos e perdermos a cobertura da regressão.
+        # Os testes de regressão do histórico (test_history_via_keyboard.py) e o
+        # dispatch do entrypoint instanciam/importam janelas Tk reais:
+        #   - xvfb      -> display virtual (o runner é headless);
+        #   - python3-tk -> libtk8.6.so/libtcl8.6.so, que o Python do
+        #     setup-python carrega em runtime. O runner do GitHub já as traz,
+        #     mas a imagem do `act` (execução local do workflow) não — sem isso
+        #     o import falha com "libtk8.6.so: cannot open shared object file".
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y xvfb python3-tk
 
       - name: Install dependencies
         run: |
