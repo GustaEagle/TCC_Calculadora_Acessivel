@@ -90,12 +90,12 @@ check_prereqs() {
     [ "$(id -u)" -eq 0 ] || die "Rode como root (sudo): o build usa loopback, mount e chroot."
 
     local missing=0
-    for t in qemu-aarch64-static losetup parted mkfs.vfat mkfs.ext4 sha256sum tar blkid curl; do
+    for t in qemu-aarch64-static losetup parted sfdisk mkfs.vfat mkfs.ext4 sha256sum tar blkid curl; do
         command -v "$t" >/dev/null 2>&1 || { warn "faltando: $t"; missing=1; }
     done
     if [ "$missing" -ne 0 ]; then
         die "Instale as dependências (Debian/derivados):
-  sudo apt install -y qemu-user-static binfmt-support parted dosfstools e2fsprogs curl
+  sudo apt install -y qemu-user-static binfmt-support parted util-linux dosfstools e2fsprogs curl
 Se o chroot aarch64 não executar, registre o binfmt:
   sudo update-binfmts --enable qemu-aarch64   (ou: docker run --privileged --rm tonistiigi/binfmt --install arm64)"
     fi
@@ -160,8 +160,20 @@ EOF
 mount_chroot() {
     install -Dm755 "$(qemu_static_path)" "${ROOTFS}/usr/bin/qemu-aarch64-static"
     mountpoint -q "${ROOTFS}/proc" || mount -t proc none "${ROOTFS}/proc"
-    mountpoint -q "${ROOTFS}/sys"  || mount --rbind /sys "${ROOTFS}/sys"
-    mountpoint -q "${ROOTFS}/dev"  || mount --rbind /dev "${ROOTFS}/dev"
+    # IMPORTANTE: /dev e /sys do host têm propagação "shared". Um rbind puro põe
+    # as cópias no MESMO peer group do original, então o umount da limpeza
+    # PROPAGA DE VOLTA e desmonta o /dev/shm e o /dev/pts do host — o que quebra
+    # todo app Electron/Chromium (VS Code, Chrome) da máquina de build até o
+    # próximo boot. O --make-rslave corta a propagação de volta (host -> chroot
+    # continua funcionando, chroot -> host não).
+    if ! mountpoint -q "${ROOTFS}/sys"; then
+        mount --rbind /sys "${ROOTFS}/sys"
+        mount --make-rslave "${ROOTFS}/sys"
+    fi
+    if ! mountpoint -q "${ROOTFS}/dev"; then
+        mount --rbind /dev "${ROOTFS}/dev"
+        mount --make-rslave "${ROOTFS}/dev"
+    fi
 }
 
 # Executa um comando dentro do rootfs (aarch64 via qemu/binfmt).
@@ -299,7 +311,14 @@ build_image() {
     parted -s "${OUT_IMG}" mklabel msdos
     parted -s "${OUT_IMG}" mkpart primary fat32 1MiB "$((BOOT_SIZE_MIB + 1))MiB"
     parted -s "${OUT_IMG}" set 1 lba on
+    parted -s "${OUT_IMG}" set 1 boot on
     parted -s "${OUT_IMG}" mkpart primary ext4 "$((BOOT_SIZE_MIB + 1))MiB" 100%
+
+    # O parted grava o ID de tipo do MBR a partir do sistema de arquivos que
+    # encontra na partição — e como ela ainda está vazia aqui, a p1 acaba com
+    # 0x83 (Linux) em vez de 0x0c (W95 FAT32 LBA). O bootloader da Pi 4 procura
+    # a partição de boot pelo tipo FAT no MBR, então forçamos 0x0c.
+    sfdisk --part-type "${OUT_IMG}" 1 0c
 
     LOOP_DEV="$(losetup -f --show -P "${OUT_IMG}")"
     log "Loop: ${LOOP_DEV}"
