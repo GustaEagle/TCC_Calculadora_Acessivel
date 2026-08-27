@@ -20,6 +20,7 @@ Calculadora científica com foco em **acessibilidade** (feedback por voz e opera
 | [docs/CONTEXT.md](docs/CONTEXT.md) | Memória curta entre sessões |
 | [cronograma/cronograma.md](cronograma/cronograma.md) | Linha do tempo académica |
 | [docs/README.md](docs/README.md) | Índice da pasta `docs/` (pinout, Waveshare, CAD, teclado) |
+| [docs/comandos-teclado.md](docs/comandos-teclado.md) | Comandos especiais do teclado (PC e teclado físico): Ctrl/Shift, histórico, última resposta |
 
 ---
 
@@ -41,6 +42,8 @@ python software/app.py --force-mode audio  # somente voz, sem janela
 ```
 
 **Histórico:** abre por **Ctrl + Ans** (no PC, a tecla `a` faz o papel do `Ans` da matriz 6x7). Não há botão de histórico — a entrada é sempre pelo teclado.
+
+Lista completa dos atalhos e funções secundárias: [docs/comandos-teclado.md](docs/comandos-teclado.md).
 
 Testes: `make check` (ou `python -m unittest discover -s software/tests -t .`).
 
