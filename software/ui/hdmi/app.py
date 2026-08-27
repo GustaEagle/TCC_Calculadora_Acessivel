@@ -89,7 +89,7 @@ class CalculatorApp:
         self.shift_var = ttk.StringVar(value="")
         # Teclado na tela começa oculto: a entrada real é o teclado físico
         # (RF-05) e a área livre vai para expressão/resultado/histórico.
-        self.controls_visible = False
+        self.controls_visible = True
 
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")

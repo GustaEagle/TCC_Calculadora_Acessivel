@@ -25,11 +25,20 @@
 #   make rpi-img-clean        # apaga só .work/ (preserva o .img)
 #   make rpi-img-distclean    # apaga .work/ E o .img gerado
 
+VENV := .venv
+
+# No Windows nao ha 'python3' (so o stub da Microsoft Store) e o venv guarda
+# os executaveis em Scripts/, nao bin/ - por isso os dois variam com $(OS),
+# a variavel de ambiente que o GNU Make para Windows sempre define.
+ifeq ($(OS),Windows_NT)
+PYTHON ?= python
+VENV_PY := $(VENV)/Scripts/python.exe
+else
 PYTHON ?= python3
+VENV_PY := $(VENV)/bin/python
+endif
 COMPOSE := docker compose
 IMAGE := calculadora-acessivel:local
-VENV := .venv
-VENV_PY := $(VENV)/bin/python
 
 # Imagem Alpine do Raspberry Pi (ver system/rpi-os/alpine/README.md).
 RPI_IMG_DIR := system/rpi-os/alpine
