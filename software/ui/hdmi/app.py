@@ -23,6 +23,7 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
@@ -37,6 +38,7 @@ from software.ui.shared.keypad import (
     spoken_token,
 )
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +103,9 @@ class CalculatorApp:
         self._bind_keyboard()
         self._set_initial_focus()
 
+        # RF-09: unplugging the monitor has to hand the UI back to the LCD.
+        self.video_watch = VideoOutputWatch(self.root, self.speech, DisplayMode.HDMI)
+
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
@@ -164,10 +169,13 @@ class CalculatorApp:
     # Layout
     # ------------------------------------------------------------------
 
-    def run(self) -> None:
+    def run(self) -> int:
+        """Run until closed; returns the exit code for the kiosk loop."""
         self.speech.say("Calculadora pronta. Saida no monitor.")
+        self.video_watch.start()
         self.root.mainloop()
         self.speech.stop()
+        return self.video_watch.exit_code
 
     def _build_layout(self) -> None:
         root_frame = ttk.Frame(self.root, padding=12)
@@ -524,9 +532,9 @@ class CalculatorApp:
         self.speech.interrupt_and_say(spoken_history(entries))
 
 
-def main() -> None:
-    CalculatorApp().run()
+def main() -> int:
+    return CalculatorApp().run()
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

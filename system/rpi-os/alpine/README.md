@@ -97,9 +97,39 @@ cd /opt/calculadora && python3 -m software.app --list-outputs
 Se os nomes forem outros, não é preciso mexer no código: defina as variáveis
 `CALC_LCD_CONNECTOR` e `CALC_MONITOR_CONNECTOR` em `overlay/home/kiosk/.xinitrc`.
 
-Ainda em aberto: **hotplug** (RF-09). O modo é resolvido uma vez no arranque, então
-conectar ou remover o monitor com o app já em execução só troca o front depois de
-reiniciá-lo (`pkill -f software.app` — o laço do `.xinitrc` sobe de novo).
+### Monitor ligado com a calculadora já em uso (RF-09)
+
+Este é o fluxo normal, não uma exceção: o LCD é interno e está sempre presente no
+boot, então o **monitor externo é sempre ligado depois**. O app cobre isso —
+`DisplayWatcher` relê as portas a cada 2 s e, ao detectar mudança, anuncia o
+**WRN-012** («Aviso 012. Saída de vídeo alterada.») e sai com o código **75**. O
+`.xinitrc` lê esse código e **derruba a sessão X inteira**, que o autologin
+reconstrói já no front correto.
+
+Reiniciar o X (e não só o app) é necessário porque o servidor X fixa a geometria da
+tela no arranque: um painel novo com outra resolução não seria usado no tamanho
+dele sem um X novo.
+
+**Isto depende do kernel atualizar o status do conector em tempo de execução.** Com
+`dtoverlay=vc4-kms-v3d` (o que está no `usercfg.txt`) o driver DRM faz isso; no
+caminho legado/firmware o modo é fixado no boot e **nenhum código em espaço de
+usuário** consegue ver um monitor que chegou depois. Confirme no hardware:
+
+```sh
+# Sem o monitor ligado:
+cat /sys/class/drm/card*-HDMI-A-2/status     # esperado: disconnected
+# Ligue o monitor no HDMI1, espere ~5 s, repita:
+cat /sys/class/drm/card*-HDMI-A-2/status     # tem de virar: connected
+```
+
+Se o valor **não mudar** sem reiniciar, o hotplug não chega ao kernel e as opções são:
+
+- Manter `vc4-kms-v3d` e investigar (é o caminho que suporta hotplug); ou
+- Aceitar a limitação: o monitor tem de estar ligado **no boot**, e trocar de tela
+  exige reiniciar a calculadora. Nesse caso o watcher fica inerte, sem prejuízo.
+- **Não** use `hdmi_force_hotplug` para "resolver": ele força a porta a reportar-se
+  sempre como conectada, o que faz o app achar que o monitor está sempre lá e nunca
+  usar o LCD.
 
 ### Fallback: build nativo no próprio Pi
 
@@ -128,7 +158,9 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
 - [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem
       a `HDMI-A-1` e `HDMI-A-2` — se não, ajustar as variáveis no `.xinitrc`.
-- [ ] Ligar um **monitor externo no HDMI1** e reiniciar o app → sobe o front do monitor.
+- [ ] Ligar um **monitor externo no HDMI1** com a calculadora **já ligada** → o
+      status em `/sys/class/drm` muda, a voz anuncia o **WRN-012** e a sessão volta
+      no front do monitor. Remover o monitor → volta para o LCD.
 - [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
       LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
       `connected`, o interruptor não corta o hotplug detect e a detecção do

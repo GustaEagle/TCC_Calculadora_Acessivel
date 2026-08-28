@@ -38,27 +38,30 @@ def resolve_mode(force_mode: str | None = None, selector: DisplaySelector | None
     return (selector or DisplaySelector()).current_mode()
 
 
-def run_mode(mode: DisplayMode) -> None:
-    """Start the single front-end matching `mode`.
+def run_mode(mode: DisplayMode) -> int:
+    """Start the single front-end matching `mode`, returning its exit code.
 
     UI modules are imported lazily so audio-only operation never needs a Tk
     runtime, and so a headless machine can still run the audio path.
+
+    The visual fronts return VIDEO_CHANGED_EXIT when the active output changed
+    under them (RF-09) — the kiosk loop restarts the session so the other front
+    comes up on the panel that is now there.
     """
     if mode == DisplayMode.HDMI:
         from software.ui.hdmi.app import CalculatorApp
 
-        CalculatorApp().run()
-        return
+        return CalculatorApp().run() or 0
 
     if mode == DisplayMode.LCD:
         from software.ui.lcd.app import CalculatorApp
 
-        CalculatorApp().run()
-        return
+        return CalculatorApp().run() or 0
 
     from software.audio_only import AudioOnlyCalculator
 
     AudioOnlyCalculator().run()
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -113,19 +116,19 @@ def print_outputs() -> None:
     print(f"Deteccao real disponivel: {'sim' if reader.available() else 'nao (usando simulacao)'}")
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     if args.list_outputs:
         print_outputs()
-        return
+        return 0
 
     selector = None
     if args.simulate_monitor:
         selector = DisplaySelector(SimulatedHdmiPortReader(monitor_present=True))
 
-    run_mode(resolve_mode(args.force_mode, selector))
+    return run_mode(resolve_mode(args.force_mode, selector))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

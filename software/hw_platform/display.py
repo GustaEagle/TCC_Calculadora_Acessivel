@@ -187,3 +187,35 @@ class DisplaySelector:
         if ports.lcd_connected:
             return DisplayMode.LCD
         return DisplayMode.AUDIO_ONLY
+
+
+class DisplayWatcher:
+    """Notice a video output change while the calculator is already running.
+
+    RF-09: the front must follow the video state without a manual restart, and
+    that is the product's normal flow — the LCD is built into the enclosure and
+    is always there at boot, so the external monitor is by definition plugged
+    in later, with the calculator already on.
+
+    This can only work if the kernel refreshes connector status at runtime.
+    Under `vc4-kms-v3d` the DRM driver does update sysfs on hotplug; on the
+    legacy firmware path the mode is fixed at boot and nothing in userspace can
+    see a monitor that arrived afterwards. The check to settle it on the
+    hardware is in system/rpi-os/alpine/README.md.
+    """
+
+    def __init__(
+        self,
+        selector: DisplaySelector | None = None,
+        mode: DisplayMode | None = None,
+    ) -> None:
+        self.selector = selector or DisplaySelector()
+        self.mode = mode if mode is not None else self.selector.current_mode()
+
+    def poll(self) -> DisplayMode | None:
+        """The new mode when the output changed, None while it is unchanged."""
+        current = self.selector.current_mode()
+        if current == self.mode:
+            return None
+        self.mode = current
+        return current
