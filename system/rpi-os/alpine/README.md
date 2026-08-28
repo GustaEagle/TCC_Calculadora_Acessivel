@@ -79,9 +79,27 @@ completo de novo.
 
 O kiosk roda `python3 -m software.app`, que escolhe a saída sozinho
 (`hw_platform/display.py`, PRD §7): monitor externo tem prioridade, senão o LCD,
-senão modo somente-áudio. A detecção ainda é **simulada** (`SimulatedHdmiPortReader`,
-padrão `lcd_present=True`) — na prática a imagem sobe hoje sempre o **front do LCD**.
-A detecção real de HDMI (RF-02/RF-09) continua em aberto.
+senão modo somente-áudio.
+
+A detecção lê o estado real das portas em `/sys/class/drm` (`SysfsHdmiPortReader`),
+usando a cablagem fixada no PRD §6: **HDMI0 = LCD**, **HDMI1 = monitor externo**.
+Fora do Pi (PC de desenvolvimento, CI) não há esses conectores e o código cai
+sozinho no `SimulatedHdmiPortReader`.
+
+**Confirmar no primeiro boot** quais nomes de conector o kernel dá a cada porta —
+o padrão assumido é `HDMI-A-1` para o HDMI0 e `HDMI-A-2` para o HDMI1, mas isso
+varia com kernel/driver (PRD §11):
+
+```sh
+cd /opt/calculadora && python3 -m software.app --list-outputs
+```
+
+Se os nomes forem outros, não é preciso mexer no código: defina as variáveis
+`CALC_LCD_CONNECTOR` e `CALC_MONITOR_CONNECTOR` em `overlay/home/kiosk/.xinitrc`.
+
+Ainda em aberto: **hotplug** (RF-09). O modo é resolvido uma vez no arranque, então
+conectar ou remover o monitor com o app já em execução só troca o front depois de
+reiniciá-lo (`pkill -f software.app` — o laço do `.xinitrc` sobe de novo).
 
 ### Fallback: build nativo no próprio Pi
 
@@ -108,6 +126,13 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 - [ ] **TTS pt-BR** anuncia entradas/resultados **sem rede** (offline).
 - [ ] Matar o app (`pkill -f software.app`) → ele **reinicia sozinho**.
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
+- [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem
+      a `HDMI-A-1` e `HDMI-A-2` — se não, ajustar as variáveis no `.xinitrc`.
+- [ ] Ligar um **monitor externo no HDMI1** e reiniciar o app → sobe o front do monitor.
+- [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
+      LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
+      `connected`, o interruptor não corta o hotplug detect e a detecção do
+      interruptor precisará de um GPIO próprio (ver `display.py`).
 
 ### Ajustes prováveis na 1ª vez
 

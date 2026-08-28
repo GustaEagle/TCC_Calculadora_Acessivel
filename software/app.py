@@ -20,6 +20,7 @@ from software.hw_platform.display import (
     DisplayMode,
     DisplaySelector,
     SimulatedHdmiPortReader,
+    SysfsHdmiPortReader,
 )
 
 # CLI names for --force-mode, kept short for demos and debugging sessions.
@@ -78,11 +79,46 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Simula um monitor externo reconhecido (sem hardware real).",
     )
+    parser.add_argument(
+        "--list-outputs",
+        action="store_true",
+        help=(
+            "Lista os conectores de video vistos pelo sistema e encerra "
+            "(usado no bring-up para confirmar quais nomes correspondem a "
+            "HDMI0/HDMI1)."
+        ),
+    )
     return parser
+
+
+def print_outputs() -> None:
+    """Diagnostic for the image bring-up (PRD §6/§11).
+
+    The cabling is fixed - HDMI0 is the LCD, HDMI1 the monitor - but the DRM
+    connector names the kernel gives those ports are not guaranteed, so print
+    what this machine actually exposes and which name each role is bound to.
+    """
+    reader = SysfsHdmiPortReader()
+    connectors = reader.list_connectors()
+
+    if not connectors:
+        print(f"Nenhum conector encontrado em {reader.drm_path} (maquina sem DRM?).")
+    else:
+        for name, status in connectors.items():
+            print(f"{name}: {status}")
+
+    print()
+    print(f"LCD (HDMI0)     -> {reader.lcd_connector}")
+    print(f"Monitor (HDMI1) -> {reader.monitor_connector}")
+    print(f"Deteccao real disponivel: {'sim' if reader.available() else 'nao (usando simulacao)'}")
 
 
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
+
+    if args.list_outputs:
+        print_outputs()
+        return
 
     selector = None
     if args.simulate_monitor:

@@ -13,6 +13,13 @@ if command -v unclutter >/dev/null 2>&1; then
     unclutter --timeout 0 >/dev/null 2>&1 &
 fi
 
+# Nomes dos conectores DRM de cada porta HDMI (PRD §6: HDMI0 = LCD, HDMI1 =
+# monitor externo). Os padroes do codigo sao HDMI-A-1/HDMI-A-2; descomente e
+# corrija aqui se "python3 -m software.app --list-outputs" mostrar outros nomes
+# neste kernel - assim nao e preciso alterar o codigo na imagem.
+#export CALC_LCD_CONNECTOR=HDMI-A-1
+#export CALC_MONITOR_CONNECTOR=HDMI-A-2
+
 # Executar a calculadora a partir da raiz do projeto (/opt/calculadora), de onde
 # "python3 -m software.app" resolve o pacote software/. O laço faz o papel de
 # Restart=always: se o app fechar ou cair, ele reinicia sozinho.
