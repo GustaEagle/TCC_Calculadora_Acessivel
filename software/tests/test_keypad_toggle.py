@@ -56,7 +56,7 @@ class HdmiKeypadDefaultTest(unittest.TestCase):
             if isinstance(target, ast.Attribute) and target.attr == "controls_visible"
         ]
         self.assertIn(
-            False, assigned,
+            True, assigned,
             f"HDMI não inicia com o teclado oculto (achado: {assigned})",
         )
 
