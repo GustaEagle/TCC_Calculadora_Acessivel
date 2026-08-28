@@ -20,23 +20,22 @@ fi
 #export CALC_LCD_CONNECTOR=HDMI-A-1
 #export CALC_MONITOR_CONNECTOR=HDMI-A-2
 
+# Nomes das MESMAS portas como o xrandr as chama (o app usa isto para acender o
+# painel certo ao trocar de tela). A conversao padrao e HDMI-A-1 -> HDMI-1;
+# confira com "xrandr --listmonitors" e descomente se for diferente.
+#export CALC_LCD_XRANDR_OUTPUT=HDMI-1
+#export CALC_MONITOR_XRANDR_OUTPUT=HDMI-2
+
 # Executar a calculadora a partir da raiz do projeto (/opt/calculadora), de onde
 # "python3 -m software.app" resolve o pacote software/. O laço faz o papel de
 # Restart=always: se o app fechar ou cair, ele reinicia sozinho.
+# Trocar de tela (monitor externo ligado/removido em uso, RF-09) NAO passa por
+# aqui: o proprio app troca de front no mesmo processo, preservando a conta em
+# andamento e o historico. Este laco cobre so o caso de falha - se o app cair,
+# ele volta.
 cd /opt/calculadora || exit 1
 while true; do
     python3 -m software.app
-    status=$?
-
-    # Codigo 75 = a saida de video mudou embaixo do app (monitor externo ligado
-    # ou removido com a calculadora ja em uso, RF-09). Nao basta reiniciar o
-    # app: o X fixa a geometria da tela no arranque, entao o painel novo so e
-    # usado na resolucao dele com um servidor X novo. Sair daqui derruba o X; o
-    # agetty refaz o autologin e o .profile sobe tudo de novo, ja no front certo.
-    if [ "$status" -eq 75 ]; then
-        exit 0
-    fi
-
     # Pequena pausa evita loop de reinício em CPU cheia caso o app falhe já no arranque.
     sleep 1
 done

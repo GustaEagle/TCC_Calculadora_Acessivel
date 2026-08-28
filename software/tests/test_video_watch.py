@@ -13,11 +13,7 @@ from software.hw_platform.display import (
     DisplayWatcher,
     SimulatedHdmiPortReader,
 )
-from software.ui.shared.video_watch import (
-    VIDEO_CHANGED_EXIT,
-    VideoOutputWatch,
-    video_changed_speech,
-)
+from software.ui.shared.video_watch import VideoOutputWatch, video_changed_speech
 
 
 class FakeRoot:
@@ -102,36 +98,32 @@ class VideoOutputWatchTest(unittest.TestCase):
 
         self.assertFalse(self.root.destroyed)
         self.assertEqual(self.speech.spoken, [])
-        self.assertEqual(self.watch.exit_code, 0)
+        self.assertIsNone(self.watch.changed_to)
 
-    def test_plugging_the_monitor_closes_the_front_with_the_restart_code(self) -> None:
+    def test_plugging_the_monitor_closes_the_front_and_names_the_successor(self) -> None:
         self.watch.start()
         self.reader.monitor_present = True
         self.root.run_pending()  # poll notices the change
 
         self.assertEqual(self.watch.changed_to, DisplayMode.HDMI)
-        self.assertEqual(self.watch.exit_code, VIDEO_CHANGED_EXIT)
+        self.assertTrue(self.root.destroyed)
 
-    def test_the_warning_is_spoken_before_the_window_is_destroyed(self) -> None:
-        """Closing the app stops the TTS, so the announcement must go first."""
+    def test_the_warning_is_announced_on_the_way_out(self) -> None:
         self.watch.start()
         self.reader.monitor_present = True
         self.root.run_pending()
 
         self.assertEqual(len(self.speech.spoken), 1)
-        self.assertFalse(self.root.destroyed)  # only after the grace delay
-
-        self.root.run_pending()
-        self.assertTrue(self.root.destroyed)
+        self.assertIn("Aviso 012", self.speech.spoken[0])
 
     def test_polling_stops_once_a_change_was_seen(self) -> None:
         self.watch.start()
         self.reader.monitor_present = True
         self.root.run_pending()
 
-        # The only thing left queued is the destroy, never another poll.
-        self.assertEqual(len(self.root.scheduled), 1)
-        self.assertEqual(self.root.scheduled[0][1], self.root.destroy)
+        # Nothing is rescheduled: the window is gone and the entry point takes
+        # over from here.
+        self.assertEqual(self.root.scheduled, [])
 
     def test_speech_names_the_panel_taking_over(self) -> None:
         """PRD §13 WRN-012 (P2): the user may not be looking at any screen."""

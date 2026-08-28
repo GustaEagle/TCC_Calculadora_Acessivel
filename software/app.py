@@ -10,13 +10,21 @@ Exactly one front is started per run.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from software.accessibility.speech import SpeechService
+from software.core import CalculatorState
+from software.hw_platform import video_output
 from software.hw_platform.display import (
+    DEFAULT_LCD_CONNECTOR,
+    DEFAULT_MONITOR_CONNECTOR,
+    LCD_CONNECTOR_ENV,
+    MONITOR_CONNECTOR_ENV,
     DisplayMode,
     DisplaySelector,
     SimulatedHdmiPortReader,
@@ -38,29 +46,73 @@ def resolve_mode(force_mode: str | None = None, selector: DisplaySelector | None
     return (selector or DisplaySelector()).current_mode()
 
 
-def run_mode(mode: DisplayMode) -> int:
-    """Start the single front-end matching `mode`, returning its exit code.
+def point_x_at(mode: DisplayMode) -> None:
+    """Enable the panel `mode` belongs to and switch the other one off.
+
+    X keeps driving whatever it configured at startup, so a monitor plugged in
+    later stays dark until xrandr enables it. Best effort: off the Pi there is
+    no X server and this is a no-op.
+    """
+    if mode == DisplayMode.AUDIO_ONLY:
+        return
+
+    lcd = video_output.output_name(
+        os.environ.get(LCD_CONNECTOR_ENV, DEFAULT_LCD_CONNECTOR),
+        video_output.LCD_OUTPUT_ENV,
+    )
+    monitor = video_output.output_name(
+        os.environ.get(MONITOR_CONNECTOR_ENV, DEFAULT_MONITOR_CONNECTOR),
+        video_output.MONITOR_OUTPUT_ENV,
+    )
+
+    target = monitor if mode == DisplayMode.HDMI else lcd
+    video_output.activate(target, disable=(lcd, monitor))
+
+
+def start_front(
+    mode: DisplayMode, state: CalculatorState, speech: SpeechService
+) -> DisplayMode | None:
+    """Run the single front matching `mode`; returns the mode taking over.
 
     UI modules are imported lazily so audio-only operation never needs a Tk
     runtime, and so a headless machine can still run the audio path.
-
-    The visual fronts return VIDEO_CHANGED_EXIT when the active output changed
-    under them (RF-09) — the kiosk loop restarts the session so the other front
-    comes up on the panel that is now there.
     """
     if mode == DisplayMode.HDMI:
         from software.ui.hdmi.app import CalculatorApp
 
-        return CalculatorApp().run() or 0
+        return CalculatorApp(state, speech).run()
 
     if mode == DisplayMode.LCD:
         from software.ui.lcd.app import CalculatorApp
 
-        return CalculatorApp().run() or 0
+        return CalculatorApp(state, speech).run()
 
     from software.audio_only import AudioOnlyCalculator
 
-    AudioOnlyCalculator().run()
+    AudioOnlyCalculator(state, speech).run()
+    return None
+
+
+def run_mode(
+    mode: DisplayMode,
+    state: CalculatorState | None = None,
+    speech: SpeechService | None = None,
+) -> int:
+    """Run fronts until the user quits, swapping when the video output changes.
+
+    RF-09: the monitor is always plugged in with the calculator already on, so
+    the swap has to be cheap. The whole point of the loop is that `state` is
+    built once and handed to whichever front comes next — the expression being
+    typed, the history and the angle mode survive; nothing restarts.
+    """
+    state = state or CalculatorState()
+    speech = speech or SpeechService()
+
+    next_mode: DisplayMode | None = mode
+    while next_mode is not None:
+        point_x_at(next_mode)
+        next_mode = start_front(next_mode, state, speech)
+
     return 0
 
 

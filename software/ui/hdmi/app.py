@@ -65,9 +65,16 @@ _HISTORY_VISIBLE_ROWS = 10
 class CalculatorApp:
     """Visual shell for the external monitor, sized from the active display."""
 
-    def __init__(self) -> None:
-        self.state = CalculatorState()
-        self.speech = SpeechService()
+    def __init__(
+        self,
+        state: CalculatorState | None = None,
+        speech: SpeechService | None = None,
+    ) -> None:
+        # Injected when the other front hands over (RF-09): reusing the same
+        # state keeps the expression, history and angle mode across the swap,
+        # and reusing the SpeechService avoids restarting the TTS worker.
+        self.state = state or CalculatorState()
+        self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
 
         self.root = ttk.Window(themename="darkly")
@@ -169,13 +176,19 @@ class CalculatorApp:
     # Layout
     # ------------------------------------------------------------------
 
-    def run(self) -> int:
-        """Run until closed; returns the exit code for the kiosk loop."""
+    def run(self) -> DisplayMode | None:
+        """Run until closed.
+
+        Returns the mode that should take over when the video output changed
+        under us, or None when the user simply quit.
+        """
         self.speech.say("Calculadora pronta. Saida no monitor.")
         self.video_watch.start()
         self.root.mainloop()
-        self.speech.stop()
-        return self.video_watch.exit_code
+
+        if self.video_watch.changed_to is None:
+            self.speech.stop()
+        return self.video_watch.changed_to
 
     def _build_layout(self) -> None:
         root_frame = ttk.Frame(self.root, padding=12)
@@ -532,9 +545,9 @@ class CalculatorApp:
         self.speech.interrupt_and_say(spoken_history(entries))
 
 
-def main() -> int:
-    return CalculatorApp().run()
+def main() -> None:
+    CalculatorApp().run()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

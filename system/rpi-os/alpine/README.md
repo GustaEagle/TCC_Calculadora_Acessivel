@@ -100,15 +100,33 @@ Se os nomes forem outros, não é preciso mexer no código: defina as variáveis
 ### Monitor ligado com a calculadora já em uso (RF-09)
 
 Este é o fluxo normal, não uma exceção: o LCD é interno e está sempre presente no
-boot, então o **monitor externo é sempre ligado depois**. O app cobre isso —
-`DisplayWatcher` relê as portas a cada 2 s e, ao detectar mudança, anuncia o
-**WRN-012** («Aviso 012. Saída de vídeo alterada.») e sai com o código **75**. O
-`.xinitrc` lê esse código e **derruba a sessão X inteira**, que o autologin
-reconstrói já no front correto.
+boot, então o **monitor externo é sempre ligado depois**.
 
-Reiniciar o X (e não só o app) é necessário porque o servidor X fixa a geometria da
-tela no arranque: um painel novo com outra resolução não seria usado no tamanho
-dele sem um X novo.
+A troca acontece **dentro do mesmo processo**, sem reiniciar o app nem o X:
+
+1. `DisplayWatcher` relê as portas a cada 2 s (`/sys/class/drm`).
+2. Ao detectar mudança, o front anuncia o **WRN-012** («Aviso 012. Saída de vídeo
+   alterada.») e fecha só a sua janela.
+3. O entrypoint chama o `xrandr` para ligar o painel novo e desligar o antigo.
+4. Constrói o outro front **em volta do mesmo `CalculatorState`**.
+
+Como o estado é o mesmo objeto, **a conta em andamento, o histórico e o modo
+angular sobrevivem à troca** — quem estava digitando continua de onde parou, em
+outra tela. A fala também não é cortada: o `SpeechService` não é derrubado.
+
+Os nomes de saída do `xrandr` não são os mesmos do sysfs: `HDMI-A-1` (sysfs) vira
+`HDMI-1` (driver `modesetting`). Se este kernel usar outra convenção, corrija com
+`CALC_LCD_XRANDR_OUTPUT` / `CALC_MONITOR_XRANDR_OUTPUT` no `.xinitrc`:
+
+```sh
+xrandr --listmonitors   # nomes que o X reconhece
+```
+
+Se o painel novo aparecer cortado ou numa resolução errada, é a geometria máxima
+do servidor X: acrescente um `Virtual` grande o bastante para os dois painéis em
+`/etc/X11/xorg.conf.d/10-virtual.conf`. Com `modesetting`/KMS o padrão normalmente
+já é suficiente, por isso não vai um `xorg.conf` na imagem — um arquivo errado aí
+deixa o aparelho sem UI nenhuma.
 
 **Isto depende do kernel atualizar o status do conector em tempo de execução.** Com
 `dtoverlay=vc4-kms-v3d` (o que está no `usercfg.txt`) o driver DRM faz isso; no
@@ -158,9 +176,10 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
 - [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem
       a `HDMI-A-1` e `HDMI-A-2` — se não, ajustar as variáveis no `.xinitrc`.
-- [ ] Ligar um **monitor externo no HDMI1** com a calculadora **já ligada** → o
-      status em `/sys/class/drm` muda, a voz anuncia o **WRN-012** e a sessão volta
-      no front do monitor. Remover o monitor → volta para o LCD.
+- [ ] Ligar um **monitor externo no HDMI1** com a calculadora **já ligada** → a voz
+      anuncia o **WRN-012** e a UI aparece no monitor **sem reiniciar** (a expressão
+      digitada continua lá). Remover o monitor → volta para o LCD do mesmo jeito.
+- [ ] Conferir os nomes do `xrandr --listmonitors` contra `HDMI-1`/`HDMI-2`.
 - [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
       LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
       `connected`, o interruptor não corta o hotplug detect e a detecção do

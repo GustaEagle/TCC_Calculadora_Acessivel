@@ -1,11 +1,11 @@
-"""Close the running front when the active video output changes (RF-09).
+"""Hand the UI over to the other front when the video output changes (RF-09).
 
-The external monitor is always plugged in with the calculator already on, so
-the front that is up at that moment has to give way to the other one. Rather
-than rebuilding the UI in place, the front simply exits with
-VIDEO_CHANGED_EXIT: the kiosk session restarts it (and restarts X, which is
-what actually lets a newly attached panel be used at its own resolution).
-See system/rpi-os/alpine/overlay/home/kiosk/.xinitrc.
+The external monitor is always plugged in with the calculator already running,
+so this is the normal flow and it has to be cheap: the front closes its window
+and returns the mode that should take over, in the SAME process. The entry
+point then builds the other front around the SAME CalculatorState, so the
+expression being typed, the history and the angle mode all survive the swap —
+nothing restarts, nothing is lost.
 
 Kept out of ui/lcd and ui/hdmi so both fronts share one behaviour, and so the
 polling logic stays testable with a fake widget instead of a real window.
@@ -19,17 +19,11 @@ from software.hw_platform.display import DisplayMode, DisplayWatcher
 
 logger = logging.getLogger(__name__)
 
-# Exit code the kiosk loop reads as "video changed, restart the session".
-# Distinct from 0 (user quit) and 1 (crash), which must not restart X.
-VIDEO_CHANGED_EXIT = 75
-
 POLL_INTERVAL_MS = 2000
-# The announcement must finish before the window goes away: closing the app
-# calls SpeechService.stop(), which terminates whatever is being spoken.
-ANNOUNCE_GRACE_MS = 3000
 
 # PRD §13, WRN-012 (P2): announced because the user may not be looking at any
-# screen — losing or gaining the monitor is otherwise invisible to them.
+# screen — losing or gaining the monitor is otherwise invisible to them. The
+# speech keeps playing across the swap: the SpeechService is not torn down.
 _SPOKEN_TARGET = {
     DisplayMode.HDMI: "Passando para o monitor externo.",
     DisplayMode.LCD: "Passando para a tela da calculadora.",
@@ -51,13 +45,11 @@ class VideoOutputWatch:
         mode: DisplayMode,
         watcher: DisplayWatcher | None = None,
         interval_ms: int = POLL_INTERVAL_MS,
-        grace_ms: int = ANNOUNCE_GRACE_MS,
     ) -> None:
         self.root = root
         self.speech = speech
         self.watcher = watcher or DisplayWatcher(mode=mode)
         self.interval_ms = interval_ms
-        self.grace_ms = grace_ms
         self.changed_to: DisplayMode | None = None
 
     def start(self) -> None:
@@ -69,13 +61,9 @@ class VideoOutputWatch:
             self.root.after(self.interval_ms, self.tick)
             return
 
-        logger.info("saida de video mudou para %s; encerrando o front", new_mode)
+        logger.info("saida de video mudou para %s; cedendo o front", new_mode)
         self.changed_to = new_mode
         self.speech.interrupt_and_say(video_changed_speech(new_mode))
-        # Let the warning be spoken before the window (and the process) go.
-        self.root.after(self.grace_ms, self.root.destroy)
-
-    @property
-    def exit_code(self) -> int:
-        """VIDEO_CHANGED_EXIT once a change closed the front, 0 otherwise."""
-        return VIDEO_CHANGED_EXIT if self.changed_to is not None else 0
+        # No grace delay needed: the process (and the TTS worker) live on, so
+        # the warning keeps playing while the other front is built.
+        self.root.destroy()
