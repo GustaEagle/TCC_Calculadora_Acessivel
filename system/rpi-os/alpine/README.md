@@ -97,6 +97,62 @@ cd /opt/calculadora && python3 -m software.app --list-outputs
 Se os nomes forem outros, não é preciso mexer no código: defina as variáveis
 `CALC_LCD_CONNECTOR` e `CALC_MONITOR_CONNECTOR` em `overlay/home/kiosk/.xinitrc`.
 
+### Dois HDMI ligados ao mesmo tempo
+
+O PRD §7.2 é explícito: com o monitor externo reconhecido, a interface aparece
+**apenas** nele e o LCD **não** mostra a mesma interface principal. Sem ajuda,
+não é isso que acontece.
+
+**Por que o X estende por omissão.** Com as duas portas conectadas no boot, o
+driver `modesetting` autoconfigura os dois CRTCs lado a lado — um único desktop
+estendido cobrindo as duas telas. Isso é decidido pelo servidor X **antes** de o
+Python arrancar, então nenhuma lógica dentro do app chega a tempo de impedir que
+apareça. Pior: como o kiosk não tem gerenciador de janelas, o X coloca a janela
+em (0,0), que nesse framebuffer combinado é o canto do **LCD**, não do monitor.
+
+**Como o `--apply-video-layout` corrige.** A sessão gráfica
+(`overlay/home/kiosk/.xinitrc`) chama, logo depois dos `xset` e **antes** do laço
+do app:
+
+```sh
+python3 -m software.app --apply-video-layout
+```
+
+Esse modo consulta o `DisplaySelector` (a mesma regra do §7, sem duplicá-la em
+shell), aplica por `xrandr` o layout exclusivo — a saída escolhida ligada e
+primária, a outra desligada — e encerra **sem abrir nenhuma janela**. Quando o
+app sobe logo a seguir, o framebuffer já é o de um painel só.
+
+Três detalhes que fazem a diferença entre isto funcionar e falhar em silêncio:
+
+- **Os nomes de saída são descobertos, não adivinhados.** A versão anterior
+  convertia `HDMI-A-2` → `HDMI-2` por convenção; num kernel que use outra grafia
+  o `xrandr` falhava, o layout estendido permanecia e ninguém via o erro. Agora a
+  ordem é: variável de ambiente → saída realmente presente em `xrandr --query` →
+  convenção. A comparação ignora hífens e maiúsculas, então `HDMI-A-2`, `HDMI-2`,
+  `HDMI2` e `hdmi-2` são reconhecidos como a mesma porta.
+- **O resultado é verificado.** O código de saída do `xrandr` diz que o comando
+  foi aceite, não que o CRTC mudou. Depois de aplicar, o estado é relido e só
+  então se reporta sucesso. Divergência vira **WRN-012** no log.
+- **É idempotente.** Se o layout já está correto, o `xrandr` não é chamado — é o
+  que evita um flash de reconfiguração a cada arranque, já que o app reaplica o
+  layout por dentro a cada troca de front.
+
+O `usercfg.txt` **não** muda: `max_framebuffers=2` tem de ficar, porque é ele que
+dá framebuffer à segunda porta e, com `vc4-kms-v3d`, o hotplug de que o RF-09
+depende. A exclusividade resolve-se no X, não castrando o firmware.
+
+**Diagnóstico.** O `--list-outputs` mostra numa só execução os conectores DRM, as
+saídas do `xrandr` com o seu estado, e o mapeamento efetivo de cada papel:
+
+```sh
+cd /opt/calculadora && python3 -m software.app --list-outputs
+```
+
+E o que o layout fez fica registado em `~/calculadora.log` (sobreponível por
+`CALC_LOG_FILE`) — no kiosk o tty1 fica coberto pelo X, então o ficheiro é a
+única forma de distinguir um `xrandr` que funcionou de um que falhou.
+
 ### Monitor ligado com a calculadora já em uso (RF-09)
 
 Este é o fluxo normal, não uma exceção: o LCD é interno e está sempre presente no
@@ -179,7 +235,23 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 - [ ] Ligar um **monitor externo no HDMI1** com a calculadora **já ligada** → a voz
       anuncia o **WRN-012** e a UI aparece no monitor **sem reiniciar** (a expressão
       digitada continua lá). Remover o monitor → volta para o LCD do mesmo jeito.
-- [ ] Conferir os nomes do `xrandr --listmonitors` contra `HDMI-1`/`HDMI-2`.
+- [ ] **Duas portas ligadas no boot** (LCD + monitor) → **só o monitor** acende; o
+      LCD fica **apagado**, sem mostrar área de trabalho nenhuma, e em nenhum
+      instante do arranque aparece um desktop estendido nas duas telas (PRD §7.2).
+- [ ] Registar aqui no README os **nomes reais** devolvidos por `xrandr --query`
+      (e não `--listmonitors`, que só lista as saídas **ativas** e por isso nunca
+      mostraria o painel que se quer ligar):
+
+      | Papel            | Conector DRM | Saída `xrandr` |
+      | ---------------- | ------------ | -------------- |
+      | LCD (HDMI0)      | _a preencher_ | _a preencher_ |
+      | Monitor (HDMI1)  | _a preencher_ | _a preencher_ |
+
+- [ ] Conferir em `~/calculadora.log` que o layout foi **aplicado e verificado**
+      (linha `layout de video aplicado e verificado: modo=... alvo=...`). Se
+      aparecer **WRN-012**, o log traz o modo pretendido e os nomes tentados —
+      compare-os com a tabela acima e, se divergirem, defina
+      `CALC_LCD_XRANDR_OUTPUT` / `CALC_MONITOR_XRANDR_OUTPUT` no `.xinitrc`.
 - [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
       LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
       `connected`, o interruptor não corta o hotplug detect e a detecção do

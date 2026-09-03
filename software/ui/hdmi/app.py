@@ -4,9 +4,11 @@ Sibling of ui/lcd/app.py, not an extension of it: the monitor gets its own
 composition (persistent history panel beside the keypad, PRD §8 "maior area,
 layout mais rico") instead of the 800x480 panel arrangement.
 
-Fixed-size window, in the style of the Windows Calculator: one reference
-resolution, non-resizable, with font sizes declared once. The layout is not
-recomputed at runtime - there is no resize path to get wrong.
+Non-resizable window with font sizes declared once, so the layout is never
+recomputed at runtime - there is no resize path to get wrong. The size itself
+comes from the active display rather than a fixed reference resolution: the
+kiosk has no window manager, so X places the window at (0,0) and a 1280x720
+window on a 1920x1080 monitor would sit in a corner.
 """
 
 from __future__ import annotations
@@ -42,10 +44,23 @@ from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
 
-# Janela de tamanho fixo (padrão Calculadora do Windows): não redimensionável,
-# então todo o layout é dimensionado uma vez para esta resolução.
+# Resolução de referência do layout. A janela adota o tamanho da tela ativa
+# (ver screen_geometry); estes valores permanecem como recurso final para um Tk
+# que não consiga informar um tamanho de tela utilizável.
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
+
+
+def screen_geometry(width: int, height: int) -> str:
+    """Tk geometry string for a screen of `width`x`height`.
+
+    A screen size Tk cannot report sensibly falls back to the reference
+    resolution: a zero-sized window would hide the calculator entirely, which
+    is worse than a window that does not fill the panel.
+    """
+    if width < 1 or height < 1:
+        return f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}"
+    return f"{width}x{height}"
 
 FONT_SIZES = {
     "expression": 34,
@@ -80,8 +95,11 @@ class CalculatorApp:
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")
 
-        # Tamanho fixo, não redimensionável (padrão Calculadora do Windows).
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        # A janela ocupa a tela ativa em vez de um tamanho fixo: sem gerenciador
+        # de janelas, o X coloca a janela em (0,0), que num framebuffer maior
+        # que 1280x720 a deixaria num canto. O layout de vídeo já foi aplicado
+        # por point_x_at() antes daqui, então a tela que o Tk vê é a certa.
+        self.root.geometry(self._screen_geometry())
         self.root.resizable(False, False)
 
         self.style = ttk.Style()
@@ -115,6 +133,16 @@ class CalculatorApp:
 
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
+
+    def _screen_geometry(self) -> str:
+        """`WxH` of the active display, read once at construction.
+
+        The window does not resize, so this is the one moment the real
+        resolution matters.
+        """
+        return screen_geometry(
+            self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        )
 
     def _configure_styles(self) -> None:
         """Fontes fixas: a janela não redimensiona, então isto roda uma só vez."""

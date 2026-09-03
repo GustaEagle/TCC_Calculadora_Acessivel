@@ -10,6 +10,7 @@ Exactly one front is started per run.
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
@@ -31,12 +32,47 @@ from software.hw_platform.display import (
     SysfsHdmiPortReader,
 )
 
+logger = logging.getLogger(__name__)
+
 # CLI names for --force-mode, kept short for demos and debugging sessions.
 _FORCED_MODES = {
     "lcd": DisplayMode.LCD,
     "hdmi": DisplayMode.HDMI,
     "audio": DisplayMode.AUDIO_ONLY,
 }
+
+LOG_FILE_ENV = "CALC_LOG_FILE"
+_LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+
+
+def default_log_path() -> Path:
+    """`$HOME/calculadora.log` - the kiosk user's home, created by the build.
+
+    Not /var/log: the rootfs is writable but `kiosk` is an ordinary user with
+    no guaranteed write permission there, and a boot must not depend on it.
+    """
+    return Path(os.path.expanduser("~")) / "calculadora.log"
+
+
+def configure_logging() -> None:
+    """Send the log somewhere readable on the image (D4).
+
+    On the kiosk, tty1 is covered by X, so a warning on stderr is invisible and
+    a failed xrandr is indistinguishable from a working one. Only the entry
+    point configures handlers; modules just call getLogger(__name__).
+    """
+    path = os.environ.get(LOG_FILE_ENV) or str(default_log_path())
+
+    handler: logging.Handler
+    try:
+        handler = logging.FileHandler(path, encoding="utf-8")
+    except OSError as exc:  # unwritable path must not stop the calculator
+        handler = logging.StreamHandler()
+        logging.basicConfig(level=logging.INFO, handlers=[handler], format=_LOG_FORMAT, force=True)
+        logger.warning("nao foi possivel abrir %s (%s); registrando em stderr", path, exc)
+        return
+
+    logging.basicConfig(level=logging.INFO, handlers=[handler], format=_LOG_FORMAT, force=True)
 
 
 def resolve_mode(force_mode: str | None = None, selector: DisplaySelector | None = None) -> DisplayMode:
@@ -46,27 +82,40 @@ def resolve_mode(force_mode: str | None = None, selector: DisplaySelector | None
     return (selector or DisplaySelector()).current_mode()
 
 
-def point_x_at(mode: DisplayMode) -> None:
-    """Enable the panel `mode` belongs to and switch the other one off.
+def resolve_output_names() -> tuple[str, str]:
+    """The xrandr names for the LCD and the monitor, in that order.
 
-    X keeps driving whatever it configured at startup, so a monitor plugged in
-    later stays dark until xrandr enables it. Best effort: off the Pi there is
-    no X server and this is a no-op.
+    The X outputs are read once and reused for both roles, so resolving the
+    pair costs a single `xrandr --query` instead of one per panel.
     """
-    if mode == DisplayMode.AUDIO_ONLY:
-        return
-
+    outputs = video_output.read_outputs()
     lcd = video_output.output_name(
         os.environ.get(LCD_CONNECTOR_ENV, DEFAULT_LCD_CONNECTOR),
         video_output.LCD_OUTPUT_ENV,
+        outputs,
     )
     monitor = video_output.output_name(
         os.environ.get(MONITOR_CONNECTOR_ENV, DEFAULT_MONITOR_CONNECTOR),
         video_output.MONITOR_OUTPUT_ENV,
+        outputs,
     )
+    return lcd, monitor
 
+
+def point_x_at(mode: DisplayMode) -> None:
+    """Enable the panel `mode` belongs to and switch the other one off.
+
+    X keeps driving whatever it configured at startup, so a monitor plugged in
+    later stays dark until xrandr enables it, and with both ports connected it
+    autoconfigures an extended desktop that PRD §7.2 forbids. Best effort: off
+    the Pi there is no X server and this is a no-op.
+    """
+    if mode == DisplayMode.AUDIO_ONLY:
+        return
+
+    lcd, monitor = resolve_output_names()
     target = monitor if mode == DisplayMode.HDMI else lcd
-    video_output.activate(target, disable=(lcd, monitor))
+    video_output.activate(target, disable=(lcd, monitor), mode=mode.value)
 
 
 def start_front(
@@ -143,34 +192,60 @@ def build_parser() -> argparse.ArgumentParser:
             "HDMI0/HDMI1)."
         ),
     )
+    parser.add_argument(
+        "--apply-video-layout",
+        action="store_true",
+        help=(
+            "Aplica o layout exclusivo de video (uma unica saida ativa) e "
+            "encerra, sem abrir nenhuma interface. Chamado pela sessao grafica "
+            "antes de subir o app, para que o desktop estendido que o X "
+            "autoconfigura nunca chegue a ficar visivel (PRD §7.2)."
+        ),
+    )
     return parser
 
 
 def print_outputs() -> None:
     """Diagnostic for the image bring-up (PRD §6/§11).
 
-    The cabling is fixed - HDMI0 is the LCD, HDMI1 the monitor - but the DRM
-    connector names the kernel gives those ports are not guaranteed, so print
-    what this machine actually exposes and which name each role is bound to.
+    The cabling is fixed - HDMI0 is the LCD, HDMI1 the monitor - but neither
+    the DRM connector names nor the xrandr output names are guaranteed, and a
+    mismatch between the two is what left both panels lit. Print both sides and
+    the mapping actually in use, so one command answers the whole checklist.
     """
     reader = SysfsHdmiPortReader()
     connectors = reader.list_connectors()
 
+    print("Conectores DRM (kernel):")
     if not connectors:
-        print(f"Nenhum conector encontrado em {reader.drm_path} (maquina sem DRM?).")
+        print(f"  nenhum encontrado em {reader.drm_path} (maquina sem DRM?)")
     else:
         for name, status in connectors.items():
-            print(f"{name}: {status}")
+            print(f"  {name}: {status}")
 
     print()
-    print(f"LCD (HDMI0)     -> {reader.lcd_connector}")
-    print(f"Monitor (HDMI1) -> {reader.monitor_connector}")
+    print("Saidas do servidor X (xrandr):")
+    outputs = video_output.read_outputs()
+    if not outputs:
+        print("  nenhuma (sem DISPLAY, sem xrandr, ou estado ilegivel)")
+    else:
+        for name, active in outputs.items():
+            print(f"  {name}: {'ativa' if active else 'inativa'}")
+
+    lcd_output, monitor_output = resolve_output_names()
+    print()
+    print("Mapeamento em uso (conector DRM -> saida X):")
+    print(f"  LCD (HDMI0)     -> {reader.lcd_connector} -> {lcd_output}")
+    print(f"  Monitor (HDMI1) -> {reader.monitor_connector} -> {monitor_output}")
     print(f"Deteccao real disponivel: {'sim' if reader.available() else 'nao (usando simulacao)'}")
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    configure_logging()
 
+    # Diagnostics first: --list-outputs only reports, so it stays useful even
+    # when combined with the flags that would otherwise change the screen.
     if args.list_outputs:
         print_outputs()
         return 0
@@ -179,7 +254,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.simulate_monitor:
         selector = DisplaySelector(SimulatedHdmiPortReader(monitor_present=True))
 
-    return run_mode(resolve_mode(args.force_mode, selector))
+    mode = resolve_mode(args.force_mode, selector)
+
+    if args.apply_video_layout:
+        # No front, no Tk import: the graphical session runs this before the
+        # app so the autoconfigured extended desktop is never drawn on.
+        point_x_at(mode)
+        return 0
+
+    return run_mode(mode)
 
 
 if __name__ == "__main__":

@@ -34,6 +34,15 @@ fi
 # andamento e o historico. Este laco cobre so o caso de falha - se o app cair,
 # ele volta.
 cd /opt/calculadora || exit 1
+
+# Com as duas portas HDMI ligadas, o driver modesetting autoconfigura os dois
+# CRTCs lado a lado: o desktop ESTENDIDO ja existe antes de o Python arrancar, e
+# apareceria nas duas telas por um instante, contra o PRD §7.2. Esta chamada
+# aplica o layout exclusivo (uma unica saida ativa) antes de existir qualquer
+# janela. Fica FORA do laco de propósito: o proprio app reaplica o layout a cada
+# troca de front (RF-09), e repetir aqui so causaria um flash a cada reinicio.
+python3 -m software.app --apply-video-layout
+
 while true; do
     python3 -m software.app
     # Pequena pausa evita loop de reinício em CPU cheia caso o app falhe já no arranque.
