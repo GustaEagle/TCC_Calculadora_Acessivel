@@ -34,6 +34,7 @@
 - [x] 6.1 Em `system/rpi-os/alpine/overlay/home/kiosk/.xinitrc`, invocar `python3 -m software.app --apply-video-layout` a partir de `/opt/calculadora`, depois dos `xset` e antes do laço `while true`, com comentário explicando que serve para o desktop estendido autoconfigurado nunca ficar visível; verificar por inspeção do ficheiro e com `sh -n` sobre ele.
 - [x] 6.2 Fazer o laço de reinício não repetir a aplicação do layout a cada volta (o `run_mode` já o faz por dentro), mantendo a chamada única antes do laço; verificar por inspeção de que a linha está fora do `while`.
 - [x] 6.3 Confirmar que `usercfg.txt` permanece inalterado, em particular `dtoverlay=vc4-kms-v3d` e `max_framebuffers=2`; verificar com `git diff --stat` mostrando o ficheiro fora do conjunto de alterações.
+- [x] 6.4 **(achado do bring-up de 2026-09-04)** Instalar o pacote `xrandr` em `system/rpi-os/alpine/packages`: o `xorg-server` não traz os clientes X e só o `xset` estava na lista, portanto `shutil.which("xrandr")` devolvia `None`, `available()` era `False` e **toda** a reconfiguração de saída era um no-op silencioso em nível DEBUG — a causa de as duas telas continuarem acesas. Registar a falta do binário como WRN-012 (não DEBUG) quando há `DISPLAY`, e sinalizá-la no `--list-outputs`; verificar com `test_image_packages.py` e com os testes de `missing_xrandr_on_x()`.
 
 ## 7. Geometria da janela (D6)
 

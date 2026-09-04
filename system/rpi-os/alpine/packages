@@ -27,6 +27,9 @@ py3-pip           # instala ttkbootstrap/pyttsx3 de software/requirements.txt
 xorg-server
 xinit             # fornece startx/xinit
 xset              # xset s off -dpms (não apagar a tela)
+xrandr            # OBRIGATÓRIO: é o que aplica a saída exclusiva (PRD §7.2).
+                  # Pacote separado do xorg-server; sem ele video_output.activate()
+                  # vira no-op silencioso e as duas telas ficam acesas.
 xf86-input-libinput
 mesa-dri-gallium  # driver KMS (vc4-kms-v3d) para o Pi 4
 xf86-video-fbdev  # driver de vídeo de reserva (plano B do LCD)

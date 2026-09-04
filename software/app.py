@@ -225,12 +225,19 @@ def print_outputs() -> None:
 
     print()
     print("Saidas do servidor X (xrandr):")
-    outputs = video_output.read_outputs()
-    if not outputs:
-        print("  nenhuma (sem DISPLAY, sem xrandr, ou estado ilegivel)")
+    if video_output.missing_xrandr_on_x():
+        # A saída exclusiva do §7.2 é aplicada por xrandr; sem o binário, tudo
+        # aqui vira no-op e as duas telas ficam acesas.
+        print("  ERRO: o X esta a correr mas o 'xrandr' NAO esta instalado.")
+        print("  Sem ele nenhuma reconfiguracao de saida acontece (PRD §7.2).")
+        print("  Corrija com: apk add xrandr   (e ver system/rpi-os/alpine/packages)")
     else:
-        for name, active in outputs.items():
-            print(f"  {name}: {'ativa' if active else 'inativa'}")
+        outputs = video_output.read_outputs()
+        if not outputs:
+            print("  nenhuma (sem DISPLAY, sem xrandr, ou estado ilegivel)")
+        else:
+            for name, active in outputs.items():
+                print(f"  {name}: {'ativa' if active else 'inativa'}")
 
     lcd_output, monitor_output = resolve_output_names()
     print()

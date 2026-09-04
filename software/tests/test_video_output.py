@@ -292,6 +292,57 @@ class ActivateVerificationTest(unittest.TestCase):
             self.assertFalse(video_output.activate("HDMI-2", disable=("HDMI-1",)))
 
 
+class MissingXrandrTest(unittest.TestCase):
+    """The real bug on the Pi: the image never installed the xrandr client.
+
+    `xorg-server` does not ship it - it is its own apk - so every call was a
+    silent no-op at debug level and both panels stayed lit. Indistinguishable,
+    in the log, from a developer machine with no X at all.
+    """
+
+    def test_an_x_server_without_xrandr_is_flagged(self) -> None:
+        with mock.patch.dict("os.environ", {"DISPLAY": ":0"}), \
+             mock.patch("shutil.which", return_value=None):
+            self.assertTrue(video_output.missing_xrandr_on_x())
+
+    def test_a_machine_without_x_is_not_flagged(self) -> None:
+        """A developer PC is behaving correctly and must stay quiet."""
+        with mock.patch.dict("os.environ", {}, clear=True), \
+             mock.patch("shutil.which", return_value=None):
+            self.assertFalse(video_output.missing_xrandr_on_x())
+
+    def test_a_working_setup_is_not_flagged(self) -> None:
+        with mock.patch.dict("os.environ", {"DISPLAY": ":0"}), \
+             mock.patch("shutil.which", return_value="/usr/bin/xrandr"):
+            self.assertFalse(video_output.missing_xrandr_on_x())
+
+    def test_the_missing_binary_is_logged_as_wrn_012_not_debug(self) -> None:
+        """One boot has to be enough to see this in ~/calculadora.log."""
+        with mock.patch.dict("os.environ", {"DISPLAY": ":0"}), \
+             mock.patch("shutil.which", return_value=None), \
+             mock.patch("subprocess.run") as run, \
+             self.assertLogs(video_output.logger, level="WARNING") as logs:
+            self.assertFalse(
+                video_output.activate("HDMI-2", disable=("HDMI-1",), mode="hdmi")
+            )
+
+        run.assert_not_called()
+        recorded = "\n".join(logs.output)
+        self.assertIn("WRN-012", recorded)
+        self.assertIn("xrandr", recorded)
+
+    def test_a_developer_machine_stays_silent(self) -> None:
+        """No DISPLAY is not a fault; it must not cry wolf in the CI log."""
+        with mock.patch.dict("os.environ", {}, clear=True), \
+             mock.patch("shutil.which", return_value=None), \
+             mock.patch("subprocess.run") as run:
+            with self.assertRaises(AssertionError):
+                with self.assertLogs(video_output.logger, level="WARNING"):
+                    video_output.activate("HDMI-2", disable=("HDMI-1",))
+
+        run.assert_not_called()
+
+
 class LayoutLoggingTest(unittest.TestCase):
     """3.2: a bring-up with no console must still be able to see what happened."""
 

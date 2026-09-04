@@ -62,6 +62,18 @@ def available() -> bool:
     return bool(os.environ.get("DISPLAY")) and shutil.which("xrandr") is not None
 
 
+def missing_xrandr_on_x() -> bool:
+    """An X server is running but the xrandr client is not installed.
+
+    The two ways of being unavailable are not equally interesting. No DISPLAY
+    is a developer machine doing exactly what it should. An X server with no
+    xrandr binary is a broken image: every reconfiguration silently does
+    nothing and both panels stay lit - precisely the failure this module exists
+    to prevent - so that one has to be loud.
+    """
+    return bool(os.environ.get("DISPLAY")) and shutil.which("xrandr") is None
+
+
 def read_outputs() -> dict[str, bool]:
     """Outputs the X server knows about, mapped to whether they are active.
 
@@ -73,6 +85,10 @@ def read_outputs() -> dict[str, bool]:
     `--query` rather than `--listmonitors`: the latter lists only *active*
     monitors, so it would never show the output we are trying to turn on.
     """
+    if missing_xrandr_on_x():
+        logger.warning("WRN-012 xrandr nao instalado; nao ha como ler as saidas do X")
+        return {}
+
     if not available():
         return {}
 
@@ -161,6 +177,10 @@ def activate(target: str, disable: tuple[str, ...] = (), mode: str | None = None
     (RF-04/RF-08).
     """
     others = tuple(other for other in disable if other != target)
+
+    if missing_xrandr_on_x():
+        _warn_layout(mode, target, others, "xrandr nao instalado (pacote ausente na imagem)")
+        return False
 
     if not available():
         logger.debug("xrandr indisponivel; nao reconfigurando as saidas")
