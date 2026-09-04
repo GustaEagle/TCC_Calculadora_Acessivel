@@ -30,6 +30,7 @@ from software.ui.shared.formatting import format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import HISTORY_TOKEN, spoken_token
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.tk_session import reset_ttkbootstrap_globals
 from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,10 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+
+        # RF-09: this may be the SECOND window this process builds (the monitor
+        # was unplugged and the UI is coming back here). See tk_session.
+        reset_ttkbootstrap_globals()
 
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")

@@ -40,6 +40,7 @@ from software.ui.shared.keypad import (
     spoken_token,
 )
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.tk_session import reset_ttkbootstrap_globals
 from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,12 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+
+        # RF-09: this may be the SECOND window this process builds. ttkbootstrap
+        # keeps its Style in a class-level singleton bound to the previous
+        # (destroyed) interpreter, and would hand it back unbuilt - the window
+        # would come up in Tk's default theme with none of the palette.
+        reset_ttkbootstrap_globals()
 
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")
