@@ -156,7 +156,7 @@ Funções descritas em níveis aninhados representam operações alternativas as
 | Identificação **Braille** | Peças em **PLA** (impressão **Bambu Lab A1**); notação **Braille português (BR)** segundo **normas oficiais** (rótulos no interruptor / teclas conforme desenho). |
 | PCI | **Fenolite**, **dupla face**, **15×15 cm**; esquemático e layout no **KiCad**; produção por corrosão com **percloreto de ferro**. |
 
-**Pendência de cablagem (vídeo):** qual **saída HDMI** do Raspberry Pi 4B liga ao **LCD** e qual ao **monitor externo** fica registada no **esquemático** / testes — o PRD assume **duas** saídas HDMI e detecção pelo SO.
+**Cablagem de vídeo (decidida):** o **HDMI0** do Raspberry Pi 4B (a porta junto ao conector de alimentação USB-C) liga **sempre** ao **LCD 4,3"**; o **HDMI1** liga **sempre** ao **monitor externo**. O mapeamento é fixo por montagem e fica registado no **esquemático**; a detecção pelo SO identifica cada painel pela **porta**, não pelo EDID. Os nomes de conector correspondentes no Linux (`HDMI-A-1` para HDMI0, `HDMI-A-2` para HDMI1, sob `vc4-kms-v3d`) devem ser **confirmados no hardware** antes de serem fixados em código (ver §11).
 
 ---
 
@@ -252,7 +252,7 @@ flowchart TD
 
 ## 11. Riscos e dependências
 
-- **Hotplug HDMI no Linux:** eventos de conexão e nomes de saídas (`HDMI-A-1`, `HDMI-A-2`) variam; pode exigir `udev`, `libdrm` ou camadas do compositor.
+- **Hotplug HDMI no Linux:** eventos de conexão e nomes de saídas (`HDMI-A-1`, `HDMI-A-2`) variam conforme kernel/driver; pode exigir `udev`, `libdrm` ou camadas do compositor. Como o papel de cada painel vem da **porta física** (§6: HDMI0 = LCD, HDMI1 = monitor), é a **correspondência porta ↔ nome de conector** que precisa de ser verificada no hardware; trocar os cabos de porta inverte os fronts.
 - **Driver e modo do LCD Waveshare:** seguir [docs/waveshare/4.3inch_HDMI_LCD_B.md](docs/waveshare/4.3inch_HDMI_LCD_B.md); alterações de SO podem exigir revisão de `config.txt` / firmware.
 - **Sincronização UI + áudio:** evitar anúncios duplicados ou fora de ordem ao trocar de modo.
 - **Fabricação em fenolite:** tolerâncias e corrosão caseira afetam confiabilidade da PCI; revisão de largura de trilha/isolamento no KiCad.
@@ -271,7 +271,7 @@ flowchart TD
 - **UPS HAT:** Utiliza barramento **I2C** (SDA/SCL padrão do Raspberry Pi).
 - **Limiares** de software: percentagem ou tensão mínima para **“bateria baixa”** (TTS) e tempos de **debounce** do teclado — calibrar com hardware real.
 
-**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **motor de cálculo em Python**; **TTS em português (Brasil)** via **`espeak-ng`** (o `espeak` clássico é incompatível com o `pyttsx3`); UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
+**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **HDMI0 = LCD** e **HDMI1 = monitor externo**; **motor de cálculo em Python**; **TTS em português (Brasil)** via **`espeak-ng`** (o `espeak` clássico é incompatível com o `pyttsx3`); UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
 
 ---
 

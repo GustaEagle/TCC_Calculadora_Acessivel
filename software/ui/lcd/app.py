@@ -23,12 +23,15 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import HISTORY_TOKEN, spoken_token
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
+from software.ui.shared.tk_session import reset_ttkbootstrap_globals
+from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +56,21 @@ _HISTORY_VISIBLE_ROWS = 6
 class CalculatorApp:
     """Display-only shell for the 4.3 inch 800x480 LCD."""
 
-    def __init__(self) -> None:
-        self.state = CalculatorState()
-        self.speech = SpeechService()
+    def __init__(
+        self,
+        state: CalculatorState | None = None,
+        speech: SpeechService | None = None,
+    ) -> None:
+        # Injected when the other front hands over (RF-09): reusing the same
+        # state keeps the expression, history and angle mode across the swap,
+        # and reusing the SpeechService avoids restarting the TTS worker.
+        self.state = state or CalculatorState()
+        self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+
+        # RF-09: this may be the SECOND window this process builds (the monitor
+        # was unplugged and the UI is coming back here). See tk_session.
+        reset_ttkbootstrap_globals()
 
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")
@@ -84,6 +98,10 @@ class CalculatorApp:
         self._bind_keyboard()
         self.root.focus_set()
 
+        # RF-09: the external monitor is always plugged in with the calculator
+        # already running, so this front has to notice it and step aside.
+        self.video_watch = VideoOutputWatch(self.root, self.speech, DisplayMode.LCD)
+
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
@@ -103,10 +121,19 @@ class CalculatorApp:
             "HistoryValue.TLabel", font=("Segoe UI", FONT_SIZES["history"], "bold"),
         )
 
-    def run(self) -> None:
+    def run(self) -> DisplayMode | None:
+        """Run until closed.
+
+        Returns the mode that should take over when the video output changed
+        under us, or None when the user simply quit.
+        """
         self.speech.say("Calculadora pronta")
+        self.video_watch.start()
         self.root.mainloop()
-        self.speech.stop()
+
+        if self.video_watch.changed_to is None:
+            self.speech.stop()
+        return self.video_watch.changed_to
 
     # ------------------------------------------------------------------
     # Layout
