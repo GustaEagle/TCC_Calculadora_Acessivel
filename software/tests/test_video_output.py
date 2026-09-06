@@ -7,6 +7,7 @@ accepted, not that the panel actually changed, which is how both screens stayed
 lit while the code reported success.
 """
 
+import contextlib
 import subprocess
 import unittest
 from unittest import mock
@@ -43,11 +44,29 @@ def fake_query(stdout: str):
     return mock.Mock(returncode=0, stdout=stdout, stderr="")
 
 
+@contextlib.contextmanager
+def xrandr_ready(available: bool = True):
+    """Pin BOTH environment probes, so these tests do not depend on the machine
+    running them actually having xrandr installed.
+
+    Patching `available` alone is not enough: read_outputs() and activate()
+    consult missing_xrandr_on_x() *first*. On a runner with a virtual display
+    but no xrandr package that probe is True, so the call returns early and
+    never reaches the patched `available` - every mocked-subprocess assertion
+    then fails for a reason that has nothing to do with what is under test.
+    The cases that deliberately exercise the missing-binary path patch
+    shutil.which themselves and do not use this helper.
+    """
+    with mock.patch.object(video_output, "available", return_value=available), \
+         mock.patch.object(video_output, "missing_xrandr_on_x", return_value=False):
+        yield
+
+
 class ReadOutputsTest(unittest.TestCase):
     """1.1/1.2: read the outputs X really has, and never raise doing it."""
 
     def read(self, stdout: str) -> dict[str, bool]:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch("subprocess.run", return_value=fake_query(stdout)):
             return video_output.read_outputs()
 
@@ -67,24 +86,24 @@ class ReadOutputsTest(unittest.TestCase):
         self.assertEqual(self.read(stdout), {"HDMI-1": True, "HDMI-2": False})
 
     def test_no_x_server_reads_as_unknown(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=False), \
+        with xrandr_ready(False), \
              mock.patch("subprocess.run") as run:
             self.assertEqual(video_output.read_outputs(), {})
 
         run.assert_not_called()
 
     def test_a_missing_xrandr_binary_reads_as_unknown(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch("subprocess.run", side_effect=FileNotFoundError):
             self.assertEqual(video_output.read_outputs(), {})
 
     def test_a_hung_xrandr_reads_as_unknown(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("xrandr", 10)):
             self.assertEqual(video_output.read_outputs(), {})
 
     def test_a_failing_xrandr_reads_as_unknown(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
             self.assertEqual(video_output.read_outputs(), {})
 
@@ -188,7 +207,7 @@ class LayoutMatchesTest(unittest.TestCase):
 class ActivateTest(unittest.TestCase):
     def test_does_nothing_without_an_x_server(self) -> None:
         """A developer machine has no DISPLAY and needs none of this."""
-        with mock.patch.object(video_output, "available", return_value=False), \
+        with xrandr_ready(False), \
              mock.patch("subprocess.run") as run:
             self.assertFalse(video_output.activate("HDMI-2"))
 
@@ -196,7 +215,7 @@ class ActivateTest(unittest.TestCase):
 
     def test_enables_the_target_and_disables_the_other_in_one_call(self) -> None:
         """One xrandr call, so the server reconfigures once instead of blanking."""
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(
                  video_output, "layout_matches", side_effect=[False, True]
              ), \
@@ -210,7 +229,7 @@ class ActivateTest(unittest.TestCase):
         self.assertEqual(argv[5:], ["--output", "HDMI-1", "--off"])
 
     def test_the_target_is_never_switched_off_by_its_own_call(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "layout_matches", side_effect=[False, True]), \
              mock.patch("subprocess.run") as run:
             video_output.activate("HDMI-1", disable=("HDMI-1", "HDMI-2"))
@@ -221,19 +240,19 @@ class ActivateTest(unittest.TestCase):
 
     def test_a_failing_xrandr_is_reported_not_raised(self) -> None:
         """The UI must come up even if the outputs could not be reconfigured."""
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "layout_matches", return_value=False), \
              mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
             self.assertFalse(video_output.activate("HDMI-2"))
 
     def test_a_hung_xrandr_does_not_hang_the_app(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "layout_matches", return_value=False), \
              mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("xrandr", 10)):
             self.assertFalse(video_output.activate("HDMI-2"))
 
     def test_a_missing_xrandr_binary_is_not_fatal(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "layout_matches", return_value=False), \
              mock.patch("subprocess.run", side_effect=FileNotFoundError):
             self.assertFalse(video_output.activate("HDMI-2"))
@@ -243,7 +262,7 @@ class ActivateIdempotenceTest(unittest.TestCase):
     """2.2: the boot-time call and the per-front call must not re-flash the screen."""
 
     def test_a_correct_layout_skips_xrandr_entirely(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                return_value={"HDMI-1": False, "HDMI-2": True}), \
              mock.patch("subprocess.run") as run:
@@ -252,7 +271,7 @@ class ActivateIdempotenceTest(unittest.TestCase):
         run.assert_not_called()
 
     def test_an_extended_desktop_is_reconfigured(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                side_effect=[{"HDMI-1": True, "HDMI-2": True},
                                             {"HDMI-1": False, "HDMI-2": True}]), \
@@ -266,7 +285,7 @@ class ActivateVerificationTest(unittest.TestCase):
     """2.3/2.4: exit code 0 is not proof that the CRTC changed."""
 
     def test_a_confirmed_layout_is_reported_as_success(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                side_effect=[{"HDMI-1": True, "HDMI-2": True},
                                             {"HDMI-1": False, "HDMI-2": True}]), \
@@ -275,7 +294,7 @@ class ActivateVerificationTest(unittest.TestCase):
 
     def test_xrandr_succeeding_while_the_lcd_stays_on_is_a_failure(self) -> None:
         """Exactly the observed bug: command accepted, both panels still lit."""
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                side_effect=[{"HDMI-1": True, "HDMI-2": True},
                                             {"HDMI-1": True, "HDMI-2": True}]), \
@@ -286,7 +305,7 @@ class ActivateVerificationTest(unittest.TestCase):
 
     def test_an_unverifiable_state_is_reported_but_does_not_raise(self) -> None:
         """The front still has to start; only the return value says "unproven"."""
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs", side_effect=[{}, {}]), \
              mock.patch("subprocess.run"):
             self.assertFalse(video_output.activate("HDMI-2", disable=("HDMI-1",)))
@@ -347,7 +366,7 @@ class LayoutLoggingTest(unittest.TestCase):
     """3.2: a bring-up with no console must still be able to see what happened."""
 
     def test_a_failure_logs_wrn_012_with_the_mode_and_the_names(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                side_effect=[{"HDMI-1": True, "HDMI-2": True},
                                             {"HDMI-1": True, "HDMI-2": True}]), \
@@ -362,7 +381,7 @@ class LayoutLoggingTest(unittest.TestCase):
         self.assertIn("HDMI-1", recorded)
 
     def test_a_success_is_logged_with_the_mode_and_the_names(self) -> None:
-        with mock.patch.object(video_output, "available", return_value=True), \
+        with xrandr_ready(True), \
              mock.patch.object(video_output, "read_outputs",
                                side_effect=[{"HDMI-1": True, "HDMI-2": True},
                                             {"HDMI-1": False, "HDMI-2": True}]), \
@@ -378,3 +397,46 @@ class LayoutLoggingTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScreenSizeTest(unittest.TestCase):
+    """O tamanho da tela vem do xrandr, nao do valor cacheado pelo Xlib.
+
+    Regressao real: com o monitor ligado depois do boot (RF-09, o caso normal),
+    o front HDMI subia no tamanho minimo. winfo_screenwidth() devolve a struct
+    Screen que o Xlib preencheu ao abrir a conexao e NAO e' atualizada quando o
+    RandR redimensiona a tela - entao o Tk ainda reportava os 800x480 do LCD.
+    """
+
+    def size(self, stdout: str):
+        with xrandr_ready(True), \
+             mock.patch("subprocess.run", return_value=fake_query(stdout)):
+            return video_output.screen_size()
+
+    def test_reads_the_current_screen_from_the_header(self) -> None:
+        self.assertEqual(self.size(QUERY_MONITOR_ONLY), (1920, 1080))
+
+    def test_reads_the_lcd_only_screen(self) -> None:
+        self.assertEqual(self.size(QUERY_LCD_ONLY), (800, 480))
+
+    def test_an_extended_desktop_reports_the_whole_screen(self) -> None:
+        """Estado que a exclusividade tem de eliminar; ainda assim, sem crash."""
+        self.assertEqual(self.size(QUERY_EXTENDED), (2720, 1080))
+
+    def test_output_without_the_header_is_unknown(self) -> None:
+        self.assertIsNone(self.size("HDMI-1 connected 800x480+0+0\n"))
+
+    def test_no_x_or_no_xrandr_is_unknown(self) -> None:
+        """Fora do Pi nao ha o que perguntar - quem chama cai no Tk."""
+        with xrandr_ready(False):
+            self.assertIsNone(video_output.screen_size())
+
+    def test_a_failing_xrandr_is_unknown_not_an_exception(self) -> None:
+        with xrandr_ready(True), \
+             mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
+            self.assertIsNone(video_output.screen_size())
+
+    def test_a_timeout_is_unknown_not_an_exception(self) -> None:
+        with xrandr_ready(True), \
+             mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("xrandr", 10)):
+            self.assertIsNone(video_output.screen_size())

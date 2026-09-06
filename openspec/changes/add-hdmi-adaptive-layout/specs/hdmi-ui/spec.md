@@ -46,6 +46,11 @@ Omitir teclado ou histórico MUST NOT reduzir o catálogo de operações (PRD §
 - **WHEN** o front-end HDMI está na faixa compacta (sem teclado na tela)
 - **THEN** todas as operações do catálogo do PRD §5 continuam acessíveis pelo teclado físico e os anúncios de voz seguem o mesmo catálogo de mensagens dos demais fronts
 
+#### Scenario: Monitor ligado depois do boot mede o painel novo
+
+- **WHEN** o monitor externo é conectado com a calculadora já em uso (RF-09) e o front do monitor é construído logo após a troca de saída
+- **THEN** a faixa e a escala são calculadas a partir da resolução do **painel novo**, e não de um valor de tela obtido antes da troca
+
 #### Scenario: Tamanho fixado na construção
 
 - **WHEN** a janela do front-end HDMI já foi construída

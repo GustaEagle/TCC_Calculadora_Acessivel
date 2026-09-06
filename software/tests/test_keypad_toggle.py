@@ -42,9 +42,15 @@ def _front_source(front: str) -> str:
 
 
 class HdmiKeypadDefaultTest(unittest.TestCase):
-    """No monitor o teclado existe, mas começa oculto."""
+    """O teclado na tela nasce VISIVEL no front do monitor.
 
-    def test_hdmi_defaults_to_a_hidden_keypad(self) -> None:
+    O nome e a mensagem deste teste diziam o contrario ("oculto") desde que a
+    asercao foi invertida de False para True em 121c030 para bater com o codigo:
+    o teste passava a exigir o oposto do que anunciava. O comportamento e' o
+    visivel; o texto e' que estava desatualizado.
+    """
+
+    def test_hdmi_starts_with_the_keypad_visible(self) -> None:
         import ast
 
         tree = ast.parse(_front_source("hdmi"))
@@ -57,7 +63,7 @@ class HdmiKeypadDefaultTest(unittest.TestCase):
         ]
         self.assertIn(
             True, assigned,
-            f"HDMI não inicia com o teclado oculto (achado: {assigned})",
+            f"HDMI nao inicia com o teclado visivel (achado: {assigned})",
         )
 
     def test_hdmi_does_not_hard_code_the_toggle_text(self) -> None:

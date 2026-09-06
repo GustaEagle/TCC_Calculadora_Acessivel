@@ -40,6 +40,48 @@ _TIMEOUT_S = 10
 # (`1920x1080+0+0`). "connected" only means a cable is in - a connected output
 # with no CRTC is exactly the panel we are trying to switch off.
 _ACTIVE_GEOMETRY = re.compile(r"\b\d+x\d+\+\d+\+\d+\b")
+# Cabecalho do `xrandr --query`: "Screen 0: minimum ..., current 1920 x 1080, ...".
+_SCREEN_CURRENT = re.compile(r"\bcurrent\s+(\d+)\s*x\s*(\d+)")
+
+
+def screen_size() -> tuple[int, int] | None:
+    """Current X screen size according to xrandr, or None when unknown.
+
+    Tk's winfo_screenwidth()/winfo_screenheight() come from Xlib's `Screen`
+    struct, which is filled when the display connection is opened and is NOT
+    refreshed when RandR resizes the screen. That is fine at boot and wrong in
+    the case that matters: the external monitor is always plugged in with the
+    calculator already running (RF-09), so the HDMI front is built moments
+    after xrandr switched panels - and Tk would still report the 800x480 of the
+    LCD, sizing the window (and choosing the layout tier) for the wrong panel.
+
+    Asking xrandr avoids the cache entirely. Returns None off the Pi (no X, no
+    xrandr, unparseable output), where the caller falls back to Tk.
+    """
+    if not available():
+        return None
+
+    try:
+        proc = subprocess.run(
+            ["xrandr", "--query"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=_TIMEOUT_S,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.warning("nao foi possivel ler o tamanho da tela do xrandr: %s", exc)
+        return None
+
+    match = _SCREEN_CURRENT.search(proc.stdout or "")
+    if match is None:
+        logger.warning("cabecalho 'Screen ... current WxH' ausente na saida do xrandr")
+        return None
+
+    width, height = int(match.group(1)), int(match.group(2))
+    if width < 1 or height < 1:
+        return None
+    return width, height
 
 
 def drm_to_xrandr(connector: str) -> str:

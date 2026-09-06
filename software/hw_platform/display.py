@@ -144,10 +144,22 @@ class SysfsHdmiPortReader:
         return found
 
     def available(self) -> bool:
-        """True when this machine actually exposes the configured connectors."""
+        """True when this machine exposes BOTH configured connectors.
+
+        Both, not either: the Pi 4B has two HDMI ports and always enumerates
+        both in sysfs (a disconnected one still shows up, with status
+        "disconnected"). A developer laptop has a single HDMI port, so
+        accepting either one made it look like a Pi - the reader then found the
+        second connector missing, reported no usable video, and the calculator
+        started in audio-only mode with no window at all.
+
+        Bring-up may find the ports under other DRM names (PRD §11); the
+        connector names stay overridable, so this stays a check about how many
+        of the CONFIGURED ports exist, not about their spelling.
+        """
         return (
             self.connector_status(self.lcd_connector) is not None
-            or self.connector_status(self.monitor_connector) is not None
+            and self.connector_status(self.monitor_connector) is not None
         )
 
     def read_ports(self) -> HdmiPorts:
@@ -160,9 +172,11 @@ class SysfsHdmiPortReader:
 def detect_port_reader() -> HdmiPortReader:
     """Sysfs reader on the Pi, simulated reader anywhere else.
 
-    Keeps a developer machine (and CI, which has no HDMI connectors) on the
-    deterministic stub without needing a flag, while the image gets real
-    detection with no extra configuration.
+    Keeps a developer machine on the deterministic stub without needing a
+    flag, while the image gets real detection with no extra configuration.
+    The test is "both configured connectors exist" rather than "any DRM
+    connector exists": a laptop with one HDMI port also has DRM connectors, and
+    assuming it was a Pi left the app in audio-only mode with no window.
     """
     sysfs = SysfsHdmiPortReader()
     if sysfs.available():

@@ -27,13 +27,25 @@ class ScreenGeometryTest(unittest.TestCase):
 
 
 class FrontGeometryTest(unittest.TestCase):
-    """7.1: the front asks Tk for the screen size, not for a constant."""
+    """7.1: the front measures the screen, it does not pick from a constant.
+
+    The measurement comes from xrandr, with Tk as the fallback. Tk alone is not
+    trustworthy here: winfo_screenwidth() reads Xlib's `Screen` struct, filled
+    when the connection opens and never refreshed after RandR resizes the
+    screen - and the external monitor is always plugged in with the calculator
+    already running (RF-09), so this front is built exactly when that value is
+    stale. Both sources are simulated together below.
+    """
 
     def build_on_screen(self, width: int, height: int):
         """Instantiate the real front against a simulated screen size."""
         import ttkbootstrap as ttk
 
-        with mock.patch.object(ttk.Window, "winfo_screenwidth", return_value=width), \
+        with mock.patch(
+                 "software.hw_platform.video_output.screen_size",
+                 return_value=(width, height),
+             ), \
+             mock.patch.object(ttk.Window, "winfo_screenwidth", return_value=width), \
              mock.patch.object(ttk.Window, "winfo_screenheight", return_value=height), \
              mock.patch.object(ttk.Window, "geometry") as geometry:
             from software.ui.hdmi.app import CalculatorApp
@@ -54,7 +66,11 @@ class FrontGeometryTest(unittest.TestCase):
     def test_the_window_stays_non_resizable(self) -> None:
         import ttkbootstrap as ttk
 
-        with mock.patch.object(ttk.Window, "winfo_screenwidth", return_value=1920), \
+        with mock.patch(
+                 "software.hw_platform.video_output.screen_size",
+                 return_value=(1920, 1080),
+             ), \
+             mock.patch.object(ttk.Window, "winfo_screenwidth", return_value=1920), \
              mock.patch.object(ttk.Window, "winfo_screenheight", return_value=1080), \
              mock.patch.object(ttk.Window, "resizable") as resizable:
             from software.ui.hdmi.app import CalculatorApp

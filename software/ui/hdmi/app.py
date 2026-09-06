@@ -4,11 +4,16 @@ Sibling of ui/lcd/app.py, not an extension of it: the monitor gets its own
 composition (persistent history panel beside the keypad, PRD §8 "maior area,
 layout mais rico") instead of the 800x480 panel arrangement.
 
-Non-resizable window with font sizes declared once, so the layout is never
-recomputed at runtime - there is no resize path to get wrong. The size itself
-comes from the active display rather than a fixed reference resolution: the
+Non-resizable window whose layout is derived once, at construction, from the
+active display - there is no resize path to get wrong. Both the size and the
+composition come from the real resolution rather than a fixed reference: the
 kiosk has no window manager, so X places the window at (0,0) and a 1280x720
 window on a 1920x1080 monitor would sit in a corner.
+
+What the resolution decides is in ui/shared/layout.py: the typographic scale
+and which panels fit. On a small monitor the keypad and the history panel are
+not built at all (the physical keyboard stays the real input, RF-05), the same
+way the Windows calculator drops panels as it narrows.
 """
 
 from __future__ import annotations
@@ -27,9 +32,17 @@ from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
 from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
+from software.hw_platform import video_output
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
+from software.ui.shared.layout import (
+    LayoutTier,
+    display_limits,
+    font_sizes,
+    scale_for,
+    tier_for,
+)
 from software.ui.shared.keypad import (
     HISTORY_TOKEN,
     LEFT_BUTTONS,
@@ -63,17 +76,10 @@ def screen_geometry(width: int, height: int) -> str:
         return f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}"
     return f"{width}x{height}"
 
-FONT_SIZES = {
-    "expression": 34,
-    "result": 58,
-    "button": 17,
-    "label": 13,
-    "history": 14,
-}
-
-# Truncamento do display: quantos caracteres cabem nas fontes acima.
-MAX_EXPRESSION_CHARS = 42
-MAX_RESULT_CHARS = 24
+# Tipografia e truncamento saem de ui/shared/layout.py, derivados da resolucao
+# ativa na construcao (self.fonts / self.max_expression_chars). A tabela-base
+# de 1280x720 vive la como BASE_FONT_SIZES, para escala 1.0 reproduzir
+# exatamente a aparencia que este front tinha quando era de tamanho fixo.
 
 _HISTORY_VISIBLE_ROWS = 10
 
@@ -102,18 +108,43 @@ class CalculatorApp:
         self.root = ttk.Window(themename="darkly")
         self.root.title("Calculadora Cientifica Acessivel")
 
-        # A janela ocupa a tela ativa em vez de um tamanho fixo: sem gerenciador
-        # de janelas, o X coloca a janela em (0,0), que num framebuffer maior
-        # que 1280x720 a deixaria num canto. O layout de vídeo já foi aplicado
-        # por point_x_at() antes daqui, então a tela que o Tk vê é a certa.
-        self.root.geometry(self._screen_geometry())
+        # Tela ativa lida UMA vez: alimenta tanto o tamanho da janela quanto a
+        # composicao do layout, e evita um segundo `xrandr --query` no arranque.
+        # Sem gerenciador de janelas o X coloca a janela em (0,0), entao ela
+        # precisa cobrir o painel inteiro. Numa troca de saida (RF-09) o front e'
+        # RECONSTRUIDO e a tela nova e' lida aqui de novo - nada disto vira
+        # estado de modulo.
+        self.screen_width, self.screen_height = self._active_screen_size()
+        self.screen_width = max(1, self.screen_width)
+        self.screen_height = max(1, self.screen_height)
+
+        self.root.geometry(screen_geometry(self.screen_width, self.screen_height))
         self.root.resizable(False, False)
+
+        screen_width, screen_height = self.screen_width, self.screen_height
+        self.tier = tier_for(screen_width, screen_height)
+        self.scale = scale_for(screen_width, screen_height)
+        self.fonts = font_sizes(self.scale)
+        self.max_expression_chars, self.max_result_chars = display_limits(
+            screen_width, self.scale
+        )
+        logger.info(
+            "Layout HDMI: %sx%s (tk dizia %sx%s) -> faixa %s, escala %.2f",
+            screen_width, screen_height,
+            self.root.winfo_screenwidth(), self.root.winfo_screenheight(),
+            self.tier.value, self.scale,
+        )
 
         self.style = ttk.Style()
 
         self.ctrl_active = False
         self.shift_active = False
+        # Widgets que so existem na sua faixa de layout (ver ui/shared/layout.py):
+        # ficam None nas faixas menores, e os metodos abaixo tratam esse caso.
         self.buttons: dict[str, ttk.Button] = {}
+        self.keypad_frame: ttk.Frame | None = None
+        self.toggle_btn: ttk.Button | None = None
+        self.history_frame: ttk.Frame | None = None
 
         self.expression_var = ttk.StringVar(value="")
         self.result_var = ttk.StringVar(value="Pronto")
@@ -121,8 +152,10 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
-        # Teclado na tela começa oculto: a entrada real é o teclado físico
-        # (RF-05) e a área livre vai para expressão/resultado/histórico.
+        # Teclado na tela começa VISÍVEL onde couber (faixas média/completa):
+        # a entrada real é o teclado físico (RF-05), mas mostrar as teclas ajuda
+        # quem enxerga parcialmente a localizar a operação. O botão do rodapé
+        # oculta a qualquer momento; na faixa compacta nem chega a ser montado.
         self.controls_visible = True
 
         self.expression_disp_var = ttk.StringVar(value="")
@@ -141,34 +174,48 @@ class CalculatorApp:
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
-    def _screen_geometry(self) -> str:
-        """`WxH` of the active display, read once at construction.
+    def _active_screen_size(self) -> tuple[int, int]:
+        """Real size of the panel this front is about to fill.
 
-        The window does not resize, so this is the one moment the real
-        resolution matters.
+        xrandr first, Tk second. winfo_screenwidth()/winfo_screenheight() read
+        Xlib's `Screen` struct, which is filled when the display connection
+        opens and is NOT refreshed when RandR resizes the screen - and the case
+        that matters is exactly that one: the monitor is always plugged in with
+        the calculator already running (RF-09), so this front is built moments
+        after xrandr switched panels, when Tk would still report the LCD's
+        800x480. Sizing from that stale value put the window - and the layout
+        tier - on the wrong panel.
+
+        Off the Pi (no X, no xrandr) screen_size() returns None and Tk's value
+        is both available and correct, since nothing resized anything.
         """
-        return screen_geometry(
-            self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        )
+        from_xrandr = video_output.screen_size()
+        if from_xrandr is not None:
+            return from_xrandr
+        return self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+
+    def _screen_geometry(self) -> str:
+        """`WxH` da tela ativa, a partir do tamanho ja lido na construcao."""
+        return screen_geometry(self.screen_width, self.screen_height)
 
     def _configure_styles(self) -> None:
         """Fontes fixas: a janela não redimensiona, então isto roda uma só vez."""
-        self.style.configure("TLabel", font=("Segoe UI", FONT_SIZES["label"]))
+        self.style.configure("TLabel", font=("Segoe UI", self.fonts["label"]))
         self.style.configure(
-            "Display.TLabel", font=("Segoe UI", FONT_SIZES["expression"]), padding=10,
+            "Display.TLabel", font=("Segoe UI", self.fonts["expression"]), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
         )
         self.style.configure(
-            "Result.TLabel", font=("Segoe UI", FONT_SIZES["result"], "bold"), padding=10,
+            "Result.TLabel", font=("Segoe UI", self.fonts["result"], "bold"), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
         )
-        self.style.configure("Indicator.TLabel", font=("Segoe UI", FONT_SIZES["label"], "bold"))
-        self.style.configure("History.TLabel", font=("Segoe UI", FONT_SIZES["history"]))
-        self.style.configure("HistoryValue.TLabel", font=("Segoe UI", FONT_SIZES["history"], "bold"))
+        self.style.configure("Indicator.TLabel", font=("Segoe UI", self.fonts["label"], "bold"))
+        self.style.configure("History.TLabel", font=("Segoe UI", self.fonts["history"]))
+        self.style.configure("HistoryValue.TLabel", font=("Segoe UI", self.fonts["history"], "bold"))
 
-        self.style.configure("TButton", font=("Segoe UI", FONT_SIZES["button"], "bold"))
+        self.style.configure("TButton", font=("Segoe UI", self.fonts["button"], "bold"))
         for category in BUTTON_PALETTE:
-            self.style.configure(f"{category}.TButton", font=("Segoe UI", FONT_SIZES["button"], "bold"))
+            self.style.configure(f"{category}.TButton", font=("Segoe UI", self.fonts["button"], "bold"))
 
     def _configure_palette(self) -> None:
         """Same WCAG-verified palette as the LCD front (ui/shared/palette.py):
@@ -194,8 +241,8 @@ class CalculatorApp:
         expr = format_expression_for_display(self.expression_var.get())
         res = self.result_var.get()
 
-        max_expr = MAX_EXPRESSION_CHARS
-        max_res = MAX_RESULT_CHARS
+        max_expr = self.max_expression_chars
+        max_res = self.max_result_chars
 
         if len(expr) > max_expr:
             self.expression_disp_var.set("..." + expr[-(max_expr - 3):])
@@ -245,13 +292,24 @@ class CalculatorApp:
         main.grid(row=1, column=0, sticky=NSEW)
         main.rowconfigure(0, weight=1)
         main.columnconfigure(0, weight=3, uniform="main")
-        main.columnconfigure(1, weight=1, uniform="main")
+        if self.tier.shows_history:
+            # So configurada quando o painel existe: uma coluna com peso e sem
+            # conteudo reservaria area vazia justamente na tela mais apertada.
+            main.columnconfigure(1, weight=1, uniform="main")
 
         calculator = ttk.Frame(main)
-        calculator.grid(row=0, column=0, sticky=NSEW, padx=(0, 10))
+        calculator.grid(
+            row=0, column=0, sticky=NSEW,
+            padx=(0, 10) if self.tier.shows_history else 0,
+        )
         calculator.columnconfigure(0, weight=1)
-        calculator.rowconfigure(0, weight=2)  # display
-        calculator.rowconfigure(1, weight=5)  # keypad
+        if self.tier.shows_keypad:
+            calculator.rowconfigure(0, weight=2)  # display
+            calculator.rowconfigure(1, weight=5)  # keypad
+        else:
+            # Sem teclado, o display fica com a altura toda em vez de deixar
+            # 5/7 da calculadora em branco.
+            calculator.rowconfigure(0, weight=1)
 
         display = ttk.Frame(calculator, bootstyle="secondary", padding=12)
         display.grid(row=0, column=0, sticky=NSEW, pady=(0, 10))
@@ -271,46 +329,55 @@ class CalculatorApp:
         )
         self.result_label.grid(row=1, column=0, sticky=NSEW)
 
-        self.keypad_frame = ttk.Frame(calculator)
-        self.keypad_frame.grid(row=1, column=0, sticky=NSEW)
-        self.keypad_frame.rowconfigure(0, weight=1)
-        self.keypad_frame.columnconfigure(0, weight=3, uniform="kp")
-        self.keypad_frame.columnconfigure(1, weight=4, uniform="kp")
+        # Teclado e historico NAO sao criados fora da sua faixa (em vez de
+        # criados e escondidos): um widget escondido continua no grid do pai e
+        # mantem o peso da coluna reservado. self.keypad_frame fica None para o
+        # resto da classe saber que nao ha teclado nesta execucao.
+        if self.tier.shows_keypad:
+            self.keypad_frame = ttk.Frame(calculator)
+            self.keypad_frame.grid(row=1, column=0, sticky=NSEW)
+            self.keypad_frame.rowconfigure(0, weight=1)
+            self.keypad_frame.columnconfigure(0, weight=3, uniform="kp")
+            self.keypad_frame.columnconfigure(1, weight=4, uniform="kp")
 
-        left_frame = ttk.Frame(self.keypad_frame)
-        left_frame.grid(row=0, column=0, sticky=NSEW, padx=(0, 8))
-        for i in range(6):
-            left_frame.rowconfigure(i, weight=1, uniform="row")
-        for i in range(3):
-            left_frame.columnconfigure(i, weight=1, uniform="col_left")
+            left_frame = ttk.Frame(self.keypad_frame)
+            left_frame.grid(row=0, column=0, sticky=NSEW, padx=(0, 8))
+            for i in range(6):
+                left_frame.rowconfigure(i, weight=1, uniform="row")
+            for i in range(3):
+                left_frame.columnconfigure(i, weight=1, uniform="col_left")
 
-        right_frame = ttk.Frame(self.keypad_frame)
-        right_frame.grid(row=0, column=1, sticky=NSEW)
-        for i in range(6):
-            right_frame.rowconfigure(i, weight=1, uniform="row")
-        for i in range(4):
-            right_frame.columnconfigure(i, weight=1, uniform="col_right")
+            right_frame = ttk.Frame(self.keypad_frame)
+            right_frame.grid(row=0, column=1, sticky=NSEW)
+            for i in range(6):
+                right_frame.rowconfigure(i, weight=1, uniform="row")
+            for i in range(4):
+                right_frame.columnconfigure(i, weight=1, uniform="col_right")
 
-        self._build_buttons(left_frame, LEFT_BUTTONS, is_left=True)
-        self._build_buttons(right_frame, RIGHT_BUTTONS, is_left=False)
+            self._build_buttons(left_frame, LEFT_BUTTONS, is_left=True)
+            self._build_buttons(right_frame, RIGHT_BUTTONS, is_left=False)
 
-        self._build_history_panel(main)
+        if self.tier.shows_history:
+            self._build_history_panel(main)
 
         # Rodapé só com o botão do teclado: nada de indicar qual saída de video
         # ou fonte de energia está em uso - isso é diagnóstico, não interface.
-        footer = ttk.Frame(root_frame, padding=(0, 6))
-        footer.grid(row=2, column=0, sticky=EW, pady=(8, 0))
-        # Discreto de propósito: estilo "link" (sem moldura) e fonte pequena,
-        # para não roubar área da tela. Continua focável por Tab e anunciado
-        # por voz.
-        self.toggle_btn = ttk.Button(
-            footer, text=keypad_toggle_label(self.controls_visible),
-            bootstyle="secondary-link", command=self._toggle_controls,
-        )
-        compact = f"Compact.{self.toggle_btn.cget('style')}"
-        self.style.configure(compact, font=("Segoe UI", FONT_SIZES["label"]), padding=(6, 2))
-        self.toggle_btn.configure(style=compact)
-        self.toggle_btn.pack(side=LEFT)
+        # Sem teclado nesta faixa o botao nao e' criado: oferecer uma acao sem
+        # efeito e' pior para quem navega por Tab ou ouve os anuncios.
+        if self.tier.shows_keypad:
+            footer = ttk.Frame(root_frame, padding=(0, 6))
+            footer.grid(row=2, column=0, sticky=EW, pady=(8, 0))
+            # Discreto de propósito: estilo "link" (sem moldura) e fonte pequena,
+            # para não roubar área da tela. Continua focável por Tab e anunciado
+            # por voz.
+            self.toggle_btn = ttk.Button(
+                footer, text=keypad_toggle_label(self.controls_visible),
+                bootstyle="secondary-link", command=self._toggle_controls,
+            )
+            compact = f"Compact.{self.toggle_btn.cget('style')}"
+            self.style.configure(compact, font=("Segoe UI", self.fonts["label"]), padding=(6, 2))
+            self.toggle_btn.configure(style=compact)
+            self.toggle_btn.pack(side=LEFT)
 
     def _build_buttons(self, container: ttk.Frame, rows: list, is_left: bool) -> None:
         for r, row in enumerate(rows):
@@ -359,6 +426,10 @@ class CalculatorApp:
         self._refresh_history()
 
     def _refresh_history(self) -> None:
+        # Faixas menores nao montam o painel; o historico continua no
+        # CalculatorState (e e' anunciado por voz), so nao tem onde ser pintado.
+        if self.history_frame is None:
+            return
         for child in self.history_frame.winfo_children():
             child.destroy()
 
@@ -383,25 +454,39 @@ class CalculatorApp:
             ).grid(row=1, column=0, sticky=EW)
 
     def _apply_controls_visibility(self) -> None:
-        """Sincroniza teclado e rótulo do botão com self.controls_visible."""
+        """Sincroniza teclado e rótulo do botão com self.controls_visible.
+
+        Na faixa compacta nao ha teclado nem botao para sincronizar: a escolha
+        do usuario so existe onde o teclado cabe.
+        """
+        if self.keypad_frame is None:
+            return
         if self.controls_visible:
             self.keypad_frame.grid()
         else:
             self.keypad_frame.grid_remove()
-        self.toggle_btn.configure(text=keypad_toggle_label(self.controls_visible))
+        if self.toggle_btn is not None:
+            self.toggle_btn.configure(text=keypad_toggle_label(self.controls_visible))
 
     def _set_initial_focus(self) -> None:
         """Give Tab traversal a predictable starting point.
 
-        Com o teclado oculto por padrão, o ponto de partida passa a ser o
-        próprio botão que o revela - senão o Tab começaria em algo invisível.
+        Com o teclado visível, começa no primeiro dígito. Se o usuário o
+        ocultou, o ponto de partida passa a ser o botão que o revela - senão o
+        Tab começaria em algo invisível. E na faixa compacta, onde nem teclado
+        nem botão existem, sobra a própria janela (a entrada é física, RF-05).
         """
         if self.controls_visible:
             first_digit = self.buttons.get("7_None")
             if first_digit is not None:
                 first_digit.focus_set()
                 return
-        self.toggle_btn.focus_set()
+        if self.toggle_btn is not None:
+            self.toggle_btn.focus_set()
+            return
+        # Faixa compacta: nao ha widget focavel na tela. A janela recebe o foco
+        # para que as teclas fisicas (RF-05, a entrada real) continuem chegando.
+        self.root.focus_set()
 
     def _toggle_controls(self) -> None:
         self.controls_visible = not self.controls_visible

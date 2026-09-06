@@ -126,7 +126,19 @@ class SysfsHdmiPortReaderTest(unittest.TestCase):
     def test_missing_connectors_make_the_reader_unavailable(self) -> None:
         self.assertFalse(self._reader().available())
 
-    def test_available_once_a_connector_exists(self) -> None:
+    def test_one_connector_alone_is_not_a_pi(self) -> None:
+        """Um notebook tem UMA porta HDMI - e nao pode passar por Raspberry Pi.
+
+        Aceitar "qualquer conector" fazia a maquina de desenvolvimento usar o
+        leitor real, que entao nao achava a segunda porta, reportava "sem video
+        utilizavel" e abria a calculadora em modo somente audio - sem janela.
+        """
+        self._connector("HDMI-A-1", "connected")
+        self.assertFalse(self._reader().available())
+
+    def test_available_once_both_connectors_exist(self) -> None:
+        """O Pi 4B enumera as duas portas HDMI mesmo com uma sem cabo."""
+        self._connector("HDMI-A-1", "connected")
         self._connector("HDMI-A-2", "disconnected")
         self.assertTrue(self._reader().available())
 

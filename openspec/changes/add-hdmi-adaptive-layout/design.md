@@ -51,7 +51,7 @@ class LayoutTier(str, Enum): COMPACT / MEDIUM / FULL
 def tier_for(width, height) -> LayoutTier
 def scale_for(width, height) -> float
 def font_sizes(scale) -> dict[str, int]
-def display_limits(scale) -> tuple[int, int]
+def display_limits(width, scale) -> tuple[int, int]
 ```
 
 - **Por quê:** é o que torna o comportamento testável **sem abrir janela** — o CI headless já custou uma correção (Xvfb + `python3-tk`); a regra nova não deve depender disso. Também atende à exigência do spec de limiares num ponto só.
@@ -78,7 +78,7 @@ São **pontos de partida calibrados pela composição atual**, a confirmar no ha
 - **Menor eixo:** escalar pela altura num monitor ultrawide agrandaria fontes que a largura não comporta (e vice-versa).
 - **Piso 0,75:** abaixo disso o texto deixaria de servir ao público com visão parcial (PRD §4) — melhor truncar mais do que encolher mais.
 - **Teto 2,0:** num 4K, escalar 3x deixaria 2 ou 3 botões por linha; 2x já dá tipografia confortável.
-- `font_sizes(scale)` multiplica a tabela atual (que passa a ser a *base* de 1280x720) e arredonda; `display_limits(scale)` ajusta `MAX_*_CHARS` **inversamente** à escala — fonte maior cabe menos caractere na mesma tela.
+- `font_sizes(scale)` multiplica a tabela atual (que passa a ser a *base* de 1280x720) e arredonda. Já `display_limits(width, scale)` precisa da **largura além da escala**: quantos caracteres cabem é (largura da janela)/(largura do caractere), e a largura do caractere acompanha a escala — logo o fator é `(width/1280)/scale`. Derivar só da escala erraria justamente no 4K, onde a janela cresce 3x enquanto a fonte para no teto de 2x: caberia *mais* texto (63 caracteres), não menos.
 
 ### D5 — Faixa omite o painel: não monta, não reserva
 
@@ -87,6 +87,15 @@ Nas faixas abaixo do limiar, os widgets **não são criados** (em vez de criados
 - **Por quê:** um widget escondido continua no `grid` do pai, ainda participa da travessia por Tab dependendo do estado, e mantém a coluna de histórico com peso reservado — o spec exige que nenhuma área vazia fique no lugar. Não criar é mais simples e mais barato.
 - **Efeito no toggle:** `controls_visible` só existe como escolha do usuário na faixa que tem teclado. Sem teclado, o rodapé não recebe o botão e `_set_initial_focus` cai no que existir.
 - **Cuidado:** `_update_keypad_labels()` e `_apply_controls_visibility()` iteram sobre `self.buttons`, que fica **vazio** na faixa compacta — os dois precisam tolerar isso sem erro.
+
+### D6 — Medir a tela pelo `xrandr`, não pelo valor que o Tk devolve
+
+`winfo_screenwidth()`/`winfo_screenheight()` leem a struct `Screen` do Xlib, preenchida **quando a conexão com o X é aberta** e **não** atualizada quando o RandR redimensiona a tela. O front passa a perguntar ao `xrandr` (`video_output.screen_size()`, que parseia `Screen 0: ... current W x H`) e só cai no Tk quando não há X/xrandr — fora do Pi, onde nada redimensionou e o valor do Tk está certo.
+
+- **Por quê:** é o caso normal do produto, não uma exceção. O monitor externo é **sempre** ligado com a calculadora já em uso (RF-09), então este front nasce logo depois de o `xrandr` trocar de painel — exatamente quando o valor do Tk ainda é o do LCD. Confiar nele fazia a janela subir com 800x480 e, portanto, na **faixa compacta**: sem teclado e sem histórico, num monitor grande.
+- **Sintoma que originou a decisão:** relatado no hardware — "iniciou no tamanho mínimo".
+- **Consequência de teste:** `test_window_geometry` codificava "o front pergunta ao Tk"; o contrato mudou de fonte (a intenção — medir em vez de assumir — continua), então os testes passam a simular as duas fontes.
+- **Custo:** um `xrandr --query` por construção de front. A leitura é feita **uma vez** e reaproveitada pela geometria e pelo layout.
 
 ## Risks / Trade-offs
 
