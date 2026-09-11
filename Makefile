@@ -18,12 +18,15 @@
 #   make run-lcd    # front do painel 4,3" (800x480)
 #   make run-audio  # somente voz, sem janela (RF-04)
 #
-# Imagem do PRODUTO (SD do Raspberry Pi, Alpine + kiosk) — pede sudo:
+# Imagem do PRODUTO (SD do Raspberry Pi, Alpine + kiosk) — no Linux pede sudo;
+# no Windows roda o mesmo build numa VM Debian do VirtualBox (sem WSL, sem
+# reiniciar), via system/rpi-os/alpine/build-alpine-img.ps1:
 #   make rpi-img              # gera a imagem do ZERO (baixa, apk, pip, empacota)
 #   make rpi-img CONTINUE=1   # reaproveita o rootfs de .work/ e refaz só o .img
 #   make rpi-img-continue     # atalho para o comando acima
 #   make rpi-img-clean        # apaga só .work/ (preserva o .img)
 #   make rpi-img-distclean    # apaga .work/ E o .img gerado
+#   make rpi-vm-remove        # (Windows) apaga a VM de build e libera o disco
 
 VENV := .venv
 
@@ -45,11 +48,13 @@ RPI_IMG_DIR := system/rpi-os/alpine
 RPI_IMG_SCRIPT := ./build-alpine-img.sh
 # CONTINUE=1 -> REUSE_ROOTFS=1 no script: pula download/apk/pip/smoke.
 CONTINUE ?= 0
+# No Windows o build roda numa VM do VirtualBox, orquestrada por este script.
+RPI_IMG_PS := powershell -NoProfile -ExecutionPolicy Bypass -File $(RPI_IMG_DIR)/build-alpine-img.ps1
 
 .DEFAULT_GOAL := check
 .PHONY: check check-docker install run run-hdmi run-lcd run-audio \
         build image up down clean help \
-        rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean
+        rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean rpi-vm-remove
 
 check: ## Roda toda a suíte de testes com unittest (igual ao CI)
 	$(PYTHON) -m unittest discover -s software/tests -t . -v
@@ -95,21 +100,41 @@ down: ## Encerra o app / container
 	$(COMPOSE) down
 
 rpi-img: ## Gera a imagem Alpine do Pi (CONTINUE=1 reaproveita o rootfs de .work/)
+ifeq ($(OS),Windows_NT)
+	@echo "==> Gerando imagem do Raspberry Pi pelo Windows (VM VirtualBox, CONTINUE=$(CONTINUE))."
+	$(RPI_IMG_PS) -Action $(if $(filter 1,$(CONTINUE)),continue,build)
+else
 	@echo "==> Gerando imagem do Raspberry Pi (CONTINUE=$(CONTINUE)) — vai pedir sudo."
 	@echo "    Dica: se a sessão gráfica cair, rode num TTY texto (Ctrl+Alt+F3)."
 	cd $(RPI_IMG_DIR) && sudo env REUSE_ROOTFS=$(CONTINUE) $(RPI_IMG_SCRIPT) 2>&1 | tee build.log
+endif
 
 rpi-img-continue: ## Atalho para `make rpi-img CONTINUE=1` (refaz só o .img)
 	@$(MAKE) rpi-img CONTINUE=1
 
 rpi-img-clean: ## Apaga só o diretório de trabalho (.work/) — PRESERVA o .img gerado
+ifeq ($(OS),Windows_NT)
+	$(RPI_IMG_PS) -Action clean
+else
 	sudo rm -rf $(RPI_IMG_DIR)/.work
 	@echo "OK: .work/ removido. O .img (se existir) foi preservado:"
 	@ls -lh $(RPI_IMG_DIR)/*.img 2>/dev/null || echo "  (nenhum .img nesta pasta)"
+endif
 
 rpi-img-distclean: ## Apaga .work/ E o .img gerado (perde a imagem — use com cuidado)
+ifeq ($(OS),Windows_NT)
+	$(RPI_IMG_PS) -Action distclean
+else
 	sudo rm -rf $(RPI_IMG_DIR)/.work
 	rm -f $(RPI_IMG_DIR)/*.img $(RPI_IMG_DIR)/build.log
+endif
+
+rpi-vm-remove: ## (Windows) Apaga a VM VirtualBox de build e libera o disco
+ifeq ($(OS),Windows_NT)
+	$(RPI_IMG_PS) -Action vm-remove
+else
+	@echo "Nada a fazer: a VM de build so existe no fluxo do Windows (build-alpine-img.ps1)."
+endif
 
 clean: ## Remove caches de bytecode
 	find . -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
