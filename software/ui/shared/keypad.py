@@ -19,7 +19,8 @@ LEFT_BUTTONS: list[KeypadRow] = [
     [("sen", "sen(", "asin(", None), ("cos", "cos(", "acos(", None), ("", "", None, None)],
     [("tan", "tan(", "atan(", None), ("log", "log(", "ln(", "logbase("), ("", "", None, None)],
     [("x⁻¹", "inv(", None, None), ("^", "^", None, None)],
-    [("?", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
+    # Posição vazia: a tecla "?" dos exports KLE não existe na matriz 6x7 real.
+    [("", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
     [("Ctrl", "Ctrl", None, None), ("exp", "exp(", None, None), ("Shift", "Shift", None, None)],
 ]
 
@@ -29,7 +30,7 @@ RIGHT_BUTTONS: list[KeypadRow] = [
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
     [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)],
-    [("Ans", "Ans", "HISTORY", None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", None, None), ("DEL", "DEL", None, None)],
+    [("Ans", "Ans", "HISTORY", None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", "BLACKOUT", None), ("DEL", "DEL", None, None)],
 ]
 
 SPOKEN_TOKEN_NAMES: dict[str, str] = {
@@ -41,6 +42,7 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "exponencial", "%": "porcento",
     "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto",
     "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
+    "BLACKOUT": "desligar ou religar as telas",
 }
 
 # O histórico abre por TECLADO (Ctrl + Ans), nunca por um botão dedicado.
@@ -48,6 +50,11 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
 # teclado físico, então o atalho é o mesmo no PC e no hardware do TCC.
 HISTORY_TOKEN = "HISTORY"
 HISTORY_SHORTCUT_LABEL = "Ctrl + Ans"
+
+# Apagar/religar as telas também é Ctrl + tecla existente (a matriz não tem
+# tecla livre): Ctrl + AC, que no PC é Ctrl e depois Esc. AC sozinho continua
+# limpando - e religa as telas, se estiverem apagadas (video-blackout D4/D5).
+BLACKOUT_SHORTCUT_LABEL = "Ctrl + AC"
 
 
 # O teclado na tela começa OCULTO nos dois fronts: a entrada real é o teclado

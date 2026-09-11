@@ -8,7 +8,11 @@ Permitir que o utilizador apague e religue, por comando de teclado, todas as sa�
 
 O sistema SHALL oferecer um comando de teclado, disponível tanto no teclado físico do produto como no teclado de PC, que desliga **todas** as saídas de vídeo atualmente reconhecidas. Quando o monitor externo estiver conectado, ele SHALL ser desligado junto com o LCD; quando não estiver, o comando SHALL desligar apenas o LCD e ainda assim ser considerado bem-sucedido.
 
-O comando SHALL usar uma tecla que não esteja atribuída a nenhuma função do catálogo matemático do PRD §5, para não deslocar operações existentes.
+O comando SHALL usar apenas teclas que existem na matriz 6x7 do produto e SHALL NOT deslocar nenhuma função do catálogo matemático do PRD §5. O comando é a combinação `Ctrl` + `AC` — a função secundária de `AC` —, idêntica no teclado de PC com `Ctrl` + `Esc`. Como toda a função secundária, SHALL substituir a função primária de `AC`: a expressão em curso SHALL NOT ser limpa pelo comando.
+
+#### Scenario: Atalho com as teclas da matriz
+- **WHEN** o utilizador pressiona `Ctrl` e em seguida `AC`, no teclado físico ou no de PC (`Esc`)
+- **THEN** o comando de vídeo é executado, o `Ctrl` é consumido, e a expressão em curso permanece intacta
 
 #### Scenario: LCD e monitor externo ambos conectados
 - **WHEN** o utilizador aciona o comando de vídeo e as duas saídas HDMI estão reconhecidas
@@ -18,9 +22,9 @@ O comando SHALL usar uma tecla que não esteja atribuída a nenhuma função do 
 - **WHEN** o utilizador aciona o comando de vídeo e apenas a saída do LCD está reconhecida
 - **THEN** a saída do LCD fica inativa e o comando é reportado como bem-sucedido, sem erro pela ausência do monitor
 
-#### Scenario: Tecla escolhida não colide com o catálogo matemático
+#### Scenario: Atalho escolhido não colide com o catálogo matemático
 - **WHEN** o catálogo de teclas do produto é consultado
-- **THEN** a tecla do comando de vídeo não produz nenhum token de operação, função científica, dígito ou separador definido no PRD §5
+- **THEN** o comando de vídeo não substitui nenhum token de operação, função científica, dígito ou separador definido no PRD §5, e nenhuma tecla inexistente na matriz é necessária para o acionar
 
 ### Requirement: Calculadora permanece operável com as telas apagadas
 

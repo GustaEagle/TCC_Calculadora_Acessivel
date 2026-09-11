@@ -7,7 +7,7 @@ O que já existe e condiciona a abordagem:
 - **`hw_platform/video_output.py`** já sabe falar com o `xrandr`: descobre os nomes reais das saídas (`read_outputs()`), aplica um layout exclusivo numa única chamada (`activate()`) e **relê o estado para confirmar** que o CRTC mudou, porque o código de saída do `xrandr` só diz que o comando foi aceite. Tudo é melhor-esforço: fora do Pi não há X e as chamadas reportam falha em vez de levantar exceção.
 - **`app.py:run_mode()`** é um laço: `point_x_at(mode)` → `start_front(mode, state, speech)`. O front devolve o modo que assume a seguir (ou `None` para sair). O `CalculatorState` é construído **uma vez** e atravessa todas as trocas de front — é assim que a expressão em curso sobrevive ao RF-09.
 - **`ui/shared/video_watch.py`** faz a entrega: sonda o *sysfs* de 2 em 2 segundos e, ao detetar mudança, destrói a janela para que o laço construa o outro front.
-- **`ui/shared/keypad.py`** tem a tecla `?` na matriz com token vazio (`("?", "", None, None)`) — reservada, sem função.
+- **`ui/shared/keypad.py`** listava uma tecla `?` com token vazio, mas **ela não existe na matriz 6x7 real** — não há tecla livre. `AC` e `Del` são as teclas de controlo sem função secundária com `Ctrl`, e o `Ctrl` + `Ans` do histórico já estabeleceu o modelo «comando = modificador + tecla existente».
 - Os dois fronts (`ui/lcd`, `ui/hdmi`) têm `_bind_keyboard()` e `_handle_token()` deliberadamente espelhados.
 
 Restrição decisiva: `xrandr --off` desativa o **CRTC**, não o conector. O *sysfs* continua a reportar `connected`, logo o `DisplayWatcher` **não** vê o blackout como mudança de vídeo e não dispara entrega de front. Isto é o que torna a funcionalidade possível sem tocar na máquina de estados do §7.4.
@@ -51,13 +51,17 @@ Consequência desejada: o reacendimento **não** precisa de recordar qual painel
 
 Os nomes das saídas vêm de `read_outputs()`/`output_name()`, que já resolvem a divergência `HDMI-A-1` (sysfs) vs `HDMI-1` (driver X) na ordem env var → saída presente no X → convenção. Nada de nomes adivinhados.
 
-### D4 — Tecla `?` na matriz, `v` no PC
+### D4 — `Ctrl` + `AC`, igual na matriz e no PC
 
-Na matriz 6x7, a tecla `?` já está reservada e sem função: passa a emitir o token `BLACKOUT`. Não desloca nenhuma operação do §5 e não exige alteração de PCB nem do ficheiro KLE.
+**Escolha:** `BLACKOUT` é a função secundária (`Ctrl`) da tecla `AC`. Na matriz: `Ctrl` e depois `AC`. No PC: `Ctrl` e depois `Esc` (o `Esc` já é o `AC`).
 
-No PC, `?` exige `Shift` em ABNT2 e US, e o front trata `Shift` como comando com indicador fixo — o utilizador ficaria com o indicador `SHIFT` aceso por efeito colateral, um incómodo já registado em `docs/comandos-teclado.md` §8. Por isso o PC ganha **`v`/`V`** em `KeyboardAdapter.KEY_MAP` (livre; as únicas letras usadas são `a`, `x`), e o keysym `<question>` fica **também** ligado, para quem tiver o `?` acessível. Dois caminhos, um só token.
+**Porquê `AC`:** é a tecla de «voltar ao estado neutro», e **sozinha** continua a ser a via de recuperação (D5). Quem apaga por engano recupera com a tecla ao lado do dedo, sem precisar de lembrar o modificador. Como toda a função secundária, `Ctrl` + `AC` **substitui** a primária — não limpa a expressão — e consome o `Ctrl`.
 
-**Nome falado:** o anúncio nomeia a tecla do **produto** (`?`), não a do PC — a matriz é o teclado real (RF-05); o mapeamento de PC existe para desenvolvimento.
+**Porquê não outra:** a matriz não tem tecla livre (a `?` do catálogo antigo não existe no hardware). `Ctrl` + `Del` funcionaria, mas separaria o atalho da via de recuperação em teclas diferentes; `Shift` + `AC` fica livre para o futuro. `Ctrl` + `Shift` + tecla está tomado pelo modo «o que faz esta tecla?», que continua a apenas **descrever** `AC` e as suas duas funções.
+
+**Teclado de PC:** o teclado chega ao `_handle_token()` sem o `secondary` da definição da tecla — o mesmo problema que o `Ans` já resolve atribuindo `HISTORY` quando vem vazio. `AC` recebe o mesmo tratamento. Não há atalho extra no PC (`v`, `<question>`): o comando é o mesmo nos dois teclados, como o do histórico. No Windows, `Ctrl`+`Esc` *em simultâneo* abre o menu Iniciar; como o `Ctrl` da calculadora é fixo, pressiona-se em sequência — o kiosk do Pi não tem esse conflito.
+
+**Nome falado:** o anúncio de desligamento nomeia **`AC`** como a tecla que religa (a mais curta das duas vias, e a mesma no PC como `Esc`).
 
 ### D5 — `AC` como via de recuperação, em código partilhado
 

@@ -257,6 +257,33 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
       `connected`, o interruptor não corta o hotplug detect e a detecção do
       interruptor precisará de um GPIO próprio (ver `display.py`).
 
+#### Apagar/religar as telas (`Ctrl` + `AC`, aviso WRN-013)
+
+O comando desliga os CRTC por `xrandr --off`; o conector continua `connected` no
+sysfs, por isso o watcher do RF-09 não o confunde com um monitor removido.
+Enquanto a matriz 6x7 não estiver ligada por GPIO, use um teclado USB: `Ctrl`, solte,
+e depois `Esc` (o `AC` do PC). O que só o hardware responde:
+
+- [ ] **Só o LCD ligado**, pressionar `Ctrl` e depois `AC` → o LCD apaga e ouve-se «Aviso 013. Telas
+      desligadas…». `xrandr --query` mostra a saída do LCD **sem geometria ativa**
+      e `~/calculadora.log` regista `telas desligadas e verificadas`.
+- [ ] **Hipótese crítica:** com as telas apagadas, digitar `2+2=` → o resultado é
+      **falado**. Prova que as teclas continuam a chegar à janela Tk sem CRTC
+      ativo. **Se falhar, parar** — nem o `Ctrl` + `AC` nem o `AC` religariam a tela; reabrir
+      o design da mudança `add-video-blackout-shortcut` antes de continuar.
+- [ ] O driver `modesetting` **aceita desligar o último CRTC**? Se recusar, confirmar
+      que a voz diz «Não foi possível desligar as telas», que a tela **continua acesa**,
+      e registar aqui o resultado: _a preencher_.
+- [ ] **LCD e monitor ligados**, pressionar `Ctrl` + `AC` → as duas saídas apagam.
+      Pressionar `Ctrl` + `AC` de novo → reacende **só o monitor** (`xrandr --query`).
+- [ ] Com as telas apagadas, pressionar **só `AC`** → a tela religa e a expressão é limpa.
+- [ ] Com as telas apagadas, **ligar o monitor externo** e esperar a troca de front
+      (~2 s, anúncio WRN-012) → **nenhum** painel acende. Pressionar `AC` → o monitor
+      reacende e a expressão fica limpa.
+- [ ] Encerrar a calculadora com as telas apagadas e reiniciá-la → **arranca acesa**.
+- [ ] O LCD Waveshare **sem sinal**: corta a retroiluminação ou mostra «sem sinal»
+      iluminado? (define se há ganho real de bateria) — _a preencher_.
+
 ### Ajustes prováveis na 1ª vez
 
 - **Vídeo do LCD:** começar por `dtoverlay=vc4-kms-v3d` (em `overlay/boot/usercfg.txt`);

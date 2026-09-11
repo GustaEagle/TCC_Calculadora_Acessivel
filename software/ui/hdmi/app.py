@@ -19,6 +19,7 @@ way the Windows calculator drops panels as it narrows.
 from __future__ import annotations
 
 import logging
+import os
 
 try:
     import ttkbootstrap as ttk
@@ -30,7 +31,11 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
-from software.hw_platform.display import DisplayMode
+from software.hw_platform.display import (
+    DEFAULT_MONITOR_CONNECTOR,
+    MONITOR_CONNECTOR_ENV,
+    DisplayMode,
+)
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform import video_output
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
@@ -54,6 +59,14 @@ from software.ui.shared.keypad import (
 )
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
+from software.ui.shared.video_blackout import (
+    BLACKOUT_TOKEN,
+    VideoApplier,
+    VideoBlackout,
+    no_video_control,
+    relight_on_ac,
+    toggle,
+)
 from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
@@ -91,6 +104,8 @@ class CalculatorApp:
         self,
         state: CalculatorState | None = None,
         speech: SpeechService | None = None,
+        blackout: VideoBlackout | None = None,
+        apply_video: VideoApplier | None = None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -98,6 +113,10 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+        # The blackout travels the same way, so a front built during it is born
+        # dark; apply_video is the entry point's single place that touches X.
+        self.blackout = blackout or VideoBlackout()
+        self.apply_video = apply_video or no_video_control
 
         # RF-09: this may be the SECOND window this process builds. ttkbootstrap
         # keeps its Style in a class-level singleton bound to the previous
@@ -188,7 +207,21 @@ class CalculatorApp:
 
         Off the Pi (no X, no xrandr) screen_size() returns None and Tk's value
         is both available and correct, since nothing resized anything.
+
+        During a blackout (a hotplug rebuilt this front with every CRTC off)
+        the X screen is whatever is left with no active output, so the size
+        comes from the monitor's preferred mode instead - the panel that will
+        relight - and only an unreadable answer falls back to the paths above.
         """
+        if self.blackout.active:
+            monitor = video_output.output_name(
+                os.environ.get(MONITOR_CONNECTOR_ENV, DEFAULT_MONITOR_CONNECTOR),
+                video_output.MONITOR_OUTPUT_ENV,
+            )
+            preferred = video_output.preferred_size(monitor)
+            if preferred is not None:
+                return preferred
+
         from_xrandr = video_output.screen_size()
         if from_xrandr is not None:
             return from_xrandr
@@ -519,6 +552,9 @@ class CalculatorApp:
         # do teclado físico não abriria o histórico - só o clique no botão.
         if primary == "Ans" and secondary is None:
             secondary = HISTORY_TOKEN
+        # Idem para o AC: Ctrl + AC (Ctrl e depois Esc no PC) apaga/religa as telas.
+        if primary == "AC" and secondary is None:
+            secondary = BLACKOUT_TOKEN
 
         if self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}:
             main_name = spoken_token(primary)
@@ -562,6 +598,19 @@ class CalculatorApp:
             self.ctrl_active = False
             self.ctrl_var.set("")
             self._update_keypad_labels()
+
+        # Função secundária: substitui o AC (não limpa a expressão) e já
+        # consumiu o Ctrl acima, como qualquer outra.
+        if token == BLACKOUT_TOKEN:
+            self.speech.interrupt_and_say(toggle(self.blackout, self.apply_video))
+            return
+
+        # AC sozinho sempre religa uma tela apagada - a saída para quem apagou
+        # por engano - e depois segue limpando a expressão como sempre.
+        if token == "AC":
+            relit = relight_on_ac(self.blackout, self.apply_video)
+            if relit is not None:
+                self.speech.interrupt_and_say(relit)
 
         if token == "RECALL":
             self._recall_last_answer()
@@ -614,7 +663,7 @@ class CalculatorApp:
         symbol_labels = {token: symbol.rstrip("(") for token, symbol in FUNCTION_DISPLAY_SYMBOLS.items()}
         ctrl_map = {
             **symbol_labels, "ln(": "ln", "nPr(": "nPr", "e": "e",
-            "RECALL": "Últ. resp.", HISTORY_TOKEN: "Histórico",
+            "RECALL": "Últ. resp.", HISTORY_TOKEN: "Histórico", BLACKOUT_TOKEN: "Telas",
         }
         shift_map = {
             "logbase(": symbol_labels["logbase("], ",": ",",

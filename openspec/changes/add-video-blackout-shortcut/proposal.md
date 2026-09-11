@@ -12,12 +12,12 @@ O RF-04 já prevê exatamente este estado — «operar em modo somente áudio qu
 
 - **Novo comando de teclado: apagar/religar as telas.** Um atalho alterna (*toggle*) entre `aceso` e `apagado`. Ao apagar, **todas** as saídas de vídeo do X são desligadas via `xrandr --off`: o LCD (HDMI0) e também o monitor externo (HDMI1) **quando estiver conectado**. Ao religar, a saída volta a ser escolhida pela regra de prioridade já existente do PRD §7.2 (monitor > LCD) — o comando não fixa painel nenhum.
 - **A calculadora continua a funcionar, inteira, com as telas apagadas.** O front (janela Tk) **não** é destruído: continua a receber teclas, a calcular e a anunciar por voz. Esta é a diferença essencial em relação ao `DisplayMode.AUDIO_ONLY`, que existe para *ausência de hardware de vídeo* e troca o front por um laço de linha de comando. Apagar a tela é uma **preferência do utilizador**, não uma mudança de modo — expressão em curso, `Ans`, histórico e o estado graus/radianos ficam intactos.
-- **Tecla dedicada, já reservada no layout.** A matriz 6x7 tem a tecla `?` registada em `software/ui/shared/keypad.py` **sem função atribuída** (documentado em `docs/comandos-teclado.md` §3). Passa a ser o comando de vídeo, sem competir com nenhuma função científica do §5 e sem exigir alteração de PCB nem de layout KLE. No teclado de PC o mesmo comando fica acessível para desenvolvimento e testes.
+- **Atalho `Ctrl` + `AC`, com teclas que já existem na matriz.** A matriz 6x7 real **não tem** tecla livre para o comando (a `?` que constava de `keypad.py` e dos ficheiros KLE não existe no teclado físico). O comando passa a ser a **função secundária de `AC`** com `Ctrl` — o mesmo modelo do `Ctrl` + `Ans` do histórico: não desloca nenhuma função científica do §5, não exige alteração de PCB, e é **o mesmo atalho no PC** (`Ctrl` e depois `Esc`). `AC` é a tecla de «voltar ao neutro», e sozinha continua a ser a via de recuperação (ver abaixo).
 - **Confirmação por voz obrigatória, em ambos os sentidos.** Com a tela apagada o utilizador não tem retorno visual nenhum: o anúncio é a **única** prova de que o comando funcionou e a única forma de descobrir como desfazer. O anúncio de desligamento inclui a tecla que religa.
 - **Anti-armadilha: `AC` sempre religa.** A tecla `AC` (`Esc` no PC), que já significa «volta ao estado neutro», passa a religar a tela quando ela está apagada. Sem isto, um utilizador vidente que acione o comando por engano fica perante um aparelho aparentemente morto — o modo mais grave de falha que esta mudança pode introduzir.
 - **A escolha sobrevive à troca de painel (RF-09).** Se um monitor for ligado ou desligado com as telas apagadas, o `VideoOutputWatch` continua a fazer a entrega entre fronts, mas o novo front **nasce apagado**: uma reconfiguração de hardware não deve cancelar em silêncio uma escolha explícita do utilizador.
 - **Novo código de aviso `WRN-013`** registado no PRD §13, como a própria secção exige para códigos novos. **Não** se reusa o `WRN-012`: ele já designa a *troca automática de saída* do RF-09, e dar duas leituras opostas à mesma frase quebraria a regra «mesmo código → mesmo significado» das convenções do projeto.
-- **Documentação:** `docs/comandos-teclado.md` deixa de listar `?` como reservada e passa a descrever o comando; o `README.md` da imagem Alpine ganha o caso na checklist de bring-up.
+- **Documentação:** `docs/comandos-teclado.md` deixa de listar `?` como tecla reservada (ela não existe na matriz) e passa a descrever o comando `Ctrl` + `AC`; o `README.md` da imagem Alpine ganha o caso na checklist de bring-up. Os ficheiros KLE não são alterados por esta mudança.
 
 ## Capabilities
 
@@ -29,7 +29,7 @@ O RF-04 já prevê exatamente este estado — «operar em modo somente áudio qu
 
 ## Impact
 
-- **Código alterado:** `software/hw_platform/video_output.py` (função para desligar todas as saídas e reler o estado para confirmar), `software/app.py` (`point_x_at` respeita o blackout; o estado acompanha o laço `run_mode`), `software/ui/hdmi/app.py` e `software/ui/lcd/app.py` (ligação da tecla e anúncio — mesmo comportamento nos dois fronts), `software/ui/shared/keypad.py` (a tecla `?` ganha token), `software/ui/shared/video_watch.py` (propagação do estado na entrega).
+- **Código alterado:** `software/hw_platform/video_output.py` (função para desligar todas as saídas e reler o estado para confirmar), `software/app.py` (`point_x_at` respeita o blackout; o estado acompanha o laço `run_mode`), `software/ui/hdmi/app.py` e `software/ui/lcd/app.py` (ligação da tecla e anúncio — mesmo comportamento nos dois fronts), `software/ui/shared/keypad.py` (`AC` ganha a função secundária `BLACKOUT`; a `?` inexistente sai do catálogo), `software/ui/shared/video_watch.py` (propagação do estado na entrega).
 - **Sem alteração:** `software/core/` — o motor de cálculo não sabe que existe tela, e continua assim (regra do projeto); `software/hw_platform/display.py`, cuja regra de prioridade do §7 já está correta; o catálogo matemático do PRD §5.
 - **Documentação alterada:** `PRD.md` §13 (registo do `WRN-013`), `docs/comandos-teclado.md`, `system/rpi-os/alpine/README.md`.
 - **Testes novos** em `software/tests/`, seguindo o padrão de `test_video_output.py`: o caminho `xrandr` é *mockado*, de modo que a suíte continua a correr sem servidor X no CI (Python 3.11).
@@ -38,7 +38,8 @@ O RF-04 já prevê exatamente este estado — «operar em modo somente áudio qu
 
 ## Não-objetivos
 
-- **Não** alterar o escopo matemático do PRD §5 nem o catálogo de funções: a tecla `?` estava reservada e não desloca nenhuma operação existente.
+- **Não** alterar o escopo matemático do PRD §5 nem o catálogo de funções: `AC` não tinha função com `Ctrl`, e o atalho não desloca nenhuma operação existente.
+- **Não** acrescentar teclas à matriz nem alterar a PCB ou os ficheiros KLE.
 - **Não** acoplar `software/core/` a `xrandr`, a Tk ou a qualquer noção de tela.
 - **Não** substituir nem replicar o interruptor físico do LCD (§7.0), que continua a ser a via de hardware e a ser lido como ausência de vídeo.
 - **Não** redefinir a prioridade monitor > LCD do §7.2, nem introduzir espelhamento ou uso simultâneo das duas telas.
