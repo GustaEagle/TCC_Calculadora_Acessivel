@@ -31,6 +31,14 @@ from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import HISTORY_TOKEN, spoken_token
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
+from software.ui.shared.video_blackout import (
+    BLACKOUT_TOKEN,
+    VideoApplier,
+    VideoBlackout,
+    no_video_control,
+    relight_on_ac,
+    toggle,
+)
 from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
@@ -60,6 +68,8 @@ class CalculatorApp:
         self,
         state: CalculatorState | None = None,
         speech: SpeechService | None = None,
+        blackout: VideoBlackout | None = None,
+        apply_video: VideoApplier | None = None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -67,6 +77,10 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+        # The blackout travels the same way, so a front built during it is born
+        # dark; apply_video is the entry point's single place that touches X.
+        self.blackout = blackout or VideoBlackout()
+        self.apply_video = apply_video or no_video_control
 
         # RF-09: this may be the SECOND window this process builds (the monitor
         # was unplugged and the UI is coming back here). See tk_session.
@@ -269,6 +283,9 @@ class CalculatorApp:
         # então o atalho é o mesmo no PC e na matriz 6x7.
         if primary == "Ans" and secondary is None:
             secondary = HISTORY_TOKEN
+        # Idem para o AC: Ctrl + AC (Ctrl e depois Esc no PC) apaga/religa as telas.
+        if primary == "AC" and secondary is None:
+            secondary = BLACKOUT_TOKEN
 
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
@@ -302,9 +319,22 @@ class CalculatorApp:
             self._toggle_history()
             return
 
+        # Função secundária: substitui o AC (não limpa a expressão) e já
+        # consumiu o Ctrl acima, como qualquer outra.
+        if token == BLACKOUT_TOKEN:
+            self.speech.interrupt_and_say(toggle(self.blackout, self.apply_video))
+            return
+
         # Qualquer outra tecla com o histórico aberto volta para o display.
         if self.history_open:
             self._close_history()
+
+        # AC sozinho sempre religa uma tela apagada - a saída para quem apagou
+        # por engano - e depois segue limpando a expressão como sempre.
+        if token == "AC":
+            relit = relight_on_ac(self.blackout, self.apply_video)
+            if relit is not None:
+                self.speech.interrupt_and_say(relit)
 
         if token == "RECALL":
             self._recall_last_answer()

@@ -10,6 +10,7 @@ from software.hw_platform.display import (
     DisplaySelector,
     SimulatedHdmiPortReader,
 )
+from software.ui.shared.video_blackout import VideoBlackout
 
 
 class FakeSpeech:
@@ -147,6 +148,164 @@ class FrontHandoverTest(unittest.TestCase):
             app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech())
 
         lcd.return_value.run.assert_called_once()
+
+
+@contextlib.contextmanager
+def fake_x(outputs=("HDMI-1", "HDMI-2")):
+    """The real point_x_at, with only the xrandr calls replaced."""
+    with mock.patch.object(app, "resolve_output_names", return_value=outputs), \
+         mock.patch("software.hw_platform.video_output.activate", return_value=True) as activate, \
+         mock.patch("software.hw_platform.video_output.all_off", return_value=True) as all_off:
+        yield activate, all_off
+
+
+class BlackoutSessionTest(unittest.TestCase):
+    """video-blackout 3.1: one session per run, shared by X and every front."""
+
+    def test_the_same_blackout_reaches_x_and_every_front(self) -> None:
+        with fake_fronts([DisplayMode.HDMI]) as (hdmi, lcd, _audio, point_x):
+            app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech())
+
+        blackout = lcd.call_args.kwargs["blackout"]
+        self.assertIsInstance(blackout, VideoBlackout)
+        self.assertIs(hdmi.call_args.kwargs["blackout"], blackout)
+        for call in point_x.call_args_list:
+            self.assertIs(call.args[1], blackout)
+
+    def test_every_run_starts_lit(self) -> None:
+        """Never persisted: a restart after a blackout comes up with a picture."""
+        with fake_fronts() as (_hdmi, lcd, _audio, _point_x):
+            app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech())
+
+        self.assertFalse(lcd.call_args.kwargs["blackout"].active)
+
+
+class PointXAtBlackoutTest(unittest.TestCase):
+    """video-blackout 3.2: one point applies video, lit or dark."""
+
+    def test_lit_session_keeps_the_exclusive_layout(self) -> None:
+        with fake_x() as (activate, all_off):
+            self.assertTrue(app.point_x_at(DisplayMode.HDMI, VideoBlackout(active=False)))
+
+        activate.assert_called_once()
+        self.assertEqual(activate.call_args.args[0], "HDMI-2")
+        all_off.assert_not_called()
+
+    def test_dark_session_switches_every_panel_off(self) -> None:
+        with fake_x() as (activate, all_off):
+            self.assertTrue(app.point_x_at(DisplayMode.LCD, VideoBlackout(active=True)))
+
+        all_off.assert_called_once()
+        self.assertEqual(all_off.call_args.args[0], ("HDMI-1", "HDMI-2"))
+        activate.assert_not_called()
+
+    def test_without_a_session_nothing_changes(self) -> None:
+        """--apply-video-layout runs before any front: always lit."""
+        with fake_x() as (activate, all_off):
+            app.point_x_at(DisplayMode.LCD)
+
+        activate.assert_called_once()
+        all_off.assert_not_called()
+
+    def test_audio_only_touches_no_output_even_in_a_blackout(self) -> None:
+        with fake_x() as (activate, all_off):
+            self.assertFalse(app.point_x_at(DisplayMode.AUDIO_ONLY, VideoBlackout(active=True)))
+
+        activate.assert_not_called()
+        all_off.assert_not_called()
+
+
+class RelightPriorityTest(unittest.TestCase):
+    """video-blackout 3.3: relighting re-runs §7.2 instead of remembering a panel."""
+
+    def test_a_monitor_plugged_in_during_the_blackout_is_the_one_that_relights(self) -> None:
+        reader = SimulatedHdmiPortReader(monitor_present=False)
+        blackout = VideoBlackout()
+        apply = app.make_video_applier(DisplayMode.LCD, blackout, DisplaySelector(reader))
+
+        with fake_x() as (activate, all_off):
+            blackout.active = True
+            self.assertIsNotNone(apply())
+            all_off.assert_called_once()
+
+            reader.monitor_present = True
+            blackout.active = False
+            self.assertEqual(apply(), DisplayMode.HDMI)
+
+        self.assertEqual(activate.call_args.args[0], "HDMI-2")
+
+    def test_a_monitor_removed_during_the_blackout_relights_the_lcd(self) -> None:
+        reader = SimulatedHdmiPortReader(monitor_present=True)
+        blackout = VideoBlackout(active=True)
+        apply = app.make_video_applier(DisplayMode.HDMI, blackout, DisplaySelector(reader))
+
+        with fake_x() as (activate, _all_off):
+            reader.monitor_present = False
+            blackout.active = False
+            self.assertEqual(apply(), DisplayMode.LCD)
+
+        self.assertEqual(activate.call_args.args[0], "HDMI-1")
+
+    def test_a_forced_mode_relights_its_own_panel(self) -> None:
+        """No selector (--force-mode): detection must not override the demo."""
+        blackout = VideoBlackout()
+        apply = app.make_video_applier(DisplayMode.LCD, blackout, None)
+
+        with fake_x() as (activate, _all_off):
+            self.assertEqual(apply(), DisplayMode.LCD)
+
+        self.assertEqual(activate.call_args.args[0], "HDMI-1")
+
+    def test_an_unconfirmed_change_reports_no_panel(self) -> None:
+        blackout = VideoBlackout(active=True)
+        apply = app.make_video_applier(DisplayMode.LCD, blackout, None)
+
+        with fake_x() as (_activate, all_off):
+            all_off.return_value = False
+            self.assertIsNone(apply())
+
+    def test_main_passes_a_selector_only_when_the_mode_is_detected(self) -> None:
+        with mock.patch.object(app, "configure_logging"), \
+             mock.patch.object(app, "run_mode", return_value=0) as run_mode:
+            app.main(["--force-mode", "lcd"])
+            self.assertIsNone(run_mode.call_args.kwargs["selector"])
+
+            app.main(["--simulate-monitor"])
+            self.assertIsInstance(run_mode.call_args.kwargs["selector"], DisplaySelector)
+
+
+class BlackoutSurvivesHandoverTest(unittest.TestCase):
+    """video-blackout 3.4: a hotplug during the blackout does not relight anything."""
+
+    def test_the_front_taking_over_is_born_dark(self) -> None:
+        def lcd_run():
+            # The user switches the screens off, then the monitor arrives.
+            lcd.call_args.kwargs["blackout"].active = True
+            return DisplayMode.HDMI
+
+        with fake_x() as (activate, all_off), \
+             mock.patch("software.ui.hdmi.app.CalculatorApp") as hdmi, \
+             mock.patch("software.ui.lcd.app.CalculatorApp") as lcd:
+            lcd.return_value.run.side_effect = lcd_run
+            hdmi.return_value.run.return_value = None
+            app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech())
+
+        activate.assert_called_once()          # boot: the LCD lit
+        self.assertEqual(activate.call_args.kwargs["mode"], DisplayMode.LCD.value)
+        all_off.assert_called_once()           # handover: the monitor stays dark
+        self.assertEqual(all_off.call_args.kwargs["mode"], DisplayMode.HDMI.value)
+        self.assertTrue(hdmi.call_args.kwargs["blackout"].active)
+
+
+class AudioOnlyIgnoresBlackoutTest(unittest.TestCase):
+    """video-blackout 3.5: no screen, nothing to switch off."""
+
+    def test_audio_front_is_built_without_the_blackout(self) -> None:
+        state, speech = CalculatorState(), FakeSpeech()
+        with fake_fronts() as (_hdmi, _lcd, audio, _point_x):
+            app.run_mode(DisplayMode.AUDIO_ONLY, state, speech)
+
+        audio.assert_called_once_with(state, speech)
 
 
 if __name__ == "__main__":

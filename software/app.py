@@ -31,6 +31,7 @@ from software.hw_platform.display import (
     SimulatedHdmiPortReader,
     SysfsHdmiPortReader,
 )
+from software.ui.shared.video_blackout import VideoApplier, VideoBlackout
 
 logger = logging.getLogger(__name__)
 
@@ -102,40 +103,85 @@ def resolve_output_names() -> tuple[str, str]:
     return lcd, monitor
 
 
-def point_x_at(mode: DisplayMode) -> None:
+def point_x_at(mode: DisplayMode, blackout: VideoBlackout | None = None) -> bool:
     """Enable the panel `mode` belongs to and switch the other one off.
 
     X keeps driving whatever it configured at startup, so a monitor plugged in
     later stays dark until xrandr enables it, and with both ports connected it
     autoconfigures an extended desktop that PRD §7.2 forbids. Best effort: off
     the Pi there is no X server and this is a no-op.
+
+    The single point that applies video (video-blackout D2): while the user has
+    the screens off, every output goes off instead - including for a front
+    rebuilt by RF-09, which is how the choice survives a hotplug. Returns
+    whether the X server was confirmed in the requested state.
     """
     if mode == DisplayMode.AUDIO_ONLY:
-        return
+        return False
 
     lcd, monitor = resolve_output_names()
+    if blackout is not None and blackout.active:
+        return video_output.all_off((lcd, monitor), mode=mode.value)
+
     target = monitor if mode == DisplayMode.HDMI else lcd
-    video_output.activate(target, disable=(lcd, monitor), mode=mode.value)
+    return video_output.activate(target, disable=(lcd, monitor), mode=mode.value)
+
+
+def make_video_applier(
+    front_mode: DisplayMode,
+    blackout: VideoBlackout,
+    selector: DisplaySelector | None = None,
+) -> VideoApplier:
+    """What a front calls after flipping `blackout.active` (video-blackout D2).
+
+    Relighting re-runs the PRD §7.2 priority through `selector` instead of
+    remembering which panel was lit, so a monitor plugged in or removed during
+    the blackout is honoured. Without a selector (--force-mode) the front's own
+    panel is relit, keeping the forced choice.
+    """
+
+    def apply() -> DisplayMode | None:
+        mode = front_mode
+        if not blackout.active and selector is not None:
+            detected = selector.current_mode()
+            if detected != DisplayMode.AUDIO_ONLY:
+                mode = detected
+        return mode if point_x_at(mode, blackout) else None
+
+    return apply
 
 
 def start_front(
-    mode: DisplayMode, state: CalculatorState, speech: SpeechService
+    mode: DisplayMode,
+    state: CalculatorState,
+    speech: SpeechService,
+    blackout: VideoBlackout | None = None,
+    selector: DisplaySelector | None = None,
 ) -> DisplayMode | None:
     """Run the single front matching `mode`; returns the mode taking over.
 
     UI modules are imported lazily so audio-only operation never needs a Tk
     runtime, and so a headless machine can still run the audio path.
     """
+    blackout = blackout or VideoBlackout()
+
     if mode == DisplayMode.HDMI:
         from software.ui.hdmi.app import CalculatorApp
 
-        return CalculatorApp(state, speech).run()
+        return CalculatorApp(
+            state, speech, blackout=blackout,
+            apply_video=make_video_applier(mode, blackout, selector),
+        ).run()
 
     if mode == DisplayMode.LCD:
         from software.ui.lcd.app import CalculatorApp
 
-        return CalculatorApp(state, speech).run()
+        return CalculatorApp(
+            state, speech, blackout=blackout,
+            apply_video=make_video_applier(mode, blackout, selector),
+        ).run()
 
+    # Audio-only has no screen to switch off: the blackout does not reach it.
     from software.audio_only import AudioOnlyCalculator
 
     AudioOnlyCalculator(state, speech).run()
@@ -146,6 +192,7 @@ def run_mode(
     mode: DisplayMode,
     state: CalculatorState | None = None,
     speech: SpeechService | None = None,
+    selector: DisplaySelector | None = None,
 ) -> int:
     """Run fronts until the user quits, swapping when the video output changes.
 
@@ -153,14 +200,19 @@ def run_mode(
     the swap has to be cheap. The whole point of the loop is that `state` is
     built once and handed to whichever front comes next — the expression being
     typed, the history and the angle mode survive; nothing restarts.
+
+    The blackout travels the same way (video-blackout D1): one per run, never
+    persisted, so a front taking over during it is born dark and a restart
+    always comes up lit.
     """
     state = state or CalculatorState()
     speech = speech or SpeechService()
+    blackout = VideoBlackout()
 
     next_mode: DisplayMode | None = mode
     while next_mode is not None:
-        point_x_at(next_mode)
-        next_mode = start_front(next_mode, state, speech)
+        point_x_at(next_mode, blackout)
+        next_mode = start_front(next_mode, state, speech, blackout, selector)
 
     return 0
 
@@ -269,7 +321,9 @@ def main(argv: list[str] | None = None) -> int:
         point_x_at(mode)
         return 0
 
-    return run_mode(mode)
+    # Relighting after a blackout re-runs detection, unless the mode was forced.
+    relight_selector = None if args.force_mode else (selector or DisplaySelector())
+    return run_mode(mode, selector=relight_selector)
 
 
 if __name__ == "__main__":

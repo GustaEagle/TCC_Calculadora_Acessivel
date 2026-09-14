@@ -265,6 +265,133 @@ def activate(target: str, disable: tuple[str, ...] = (), mode: str | None = None
     return True
 
 
+def all_off(outputs: tuple[str, ...], mode: str | None = None) -> bool:
+    """Switch every video output off: the user's blackout command.
+
+    `outputs` are the panels' names as resolved by output_name(). Names X does
+    not know are dropped - with only the LCD attached there is no monitor to
+    switch off, and that is still a success - while any other output X reports
+    as active is switched off too, because "screens off" means nothing lit.
+
+    One xrandr call for all of them, for the same reason as activate(); then a
+    re-read, and success only when no output is left active. `--off` releases
+    the CRTC but leaves the connector `connected` in sysfs, so the RF-09 watcher
+    does not mistake a blackout for a monitor being unplugged.
+
+    Failures are logged as WRN-013 and never raise (RF-04/RF-08).
+    """
+    if missing_xrandr_on_x():
+        _warn_blackout(mode, outputs, "xrandr nao instalado (pacote ausente na imagem)")
+        return False
+
+    if not available():
+        _warn_blackout(mode, outputs, "sem servidor X ou sem xrandr")
+        return False
+
+    current = read_outputs()
+    if not current:
+        _warn_blackout(mode, outputs, "estado das saidas ilegivel")
+        return False
+
+    names = [name for name in dict.fromkeys(outputs) if name in current]
+    names += [name for name, active in current.items() if active and name not in names]
+
+    if not any(current[name] for name in names):
+        logger.info("telas ja desligadas: modo=%s saidas=%s", mode, ",".join(names) or "-")
+        return True
+
+    argv = ["xrandr"]
+    for name in names:
+        argv += ["--output", name, "--off"]
+
+    try:
+        subprocess.run(argv, check=True, capture_output=True, timeout=_TIMEOUT_S)
+    except (subprocess.SubprocessError, OSError) as exc:
+        _warn_blackout(mode, tuple(names), f"xrandr falhou: {exc}")
+        return False
+
+    # The exit code says the command was accepted, not that the CRTCs let go.
+    after = read_outputs()
+    if not after:
+        _warn_blackout(mode, tuple(names), "estado das saidas nao verificavel")
+        return False
+    still_active = [name for name, active in after.items() if active]
+    if still_active:
+        _warn_blackout(
+            mode, tuple(names), f"xrandr aceitou mas continuam ativas: {','.join(still_active)}"
+        )
+        return False
+
+    logger.info("telas desligadas e verificadas: modo=%s saidas=%s", mode, ",".join(names))
+    return True
+
+
+# Linha de modo sob uma saida do `xrandr --query`: "   1920x1080     60.00 +  50.00".
+# O "+" depois de uma taxa marca o modo preferido; o "*", o modo em uso.
+_MODE_LINE = re.compile(r"^\s+(\d+)x(\d+)\S*\s+(.*)$")
+
+
+def preferred_size(output: str) -> tuple[int, int] | None:
+    """Preferred mode of `output` according to xrandr, or None when unknown.
+
+    What a front should size itself for while every CRTC is off: the screen X
+    reports then is whatever is left without an active output (often its
+    minimum), and sizing from it would pick the wrong layout tier for the panel
+    that will relight. A connected output keeps listing its modes when off, so
+    the answer is still there. Falls back to the first mode listed when none is
+    marked preferred; None off the Pi or when `output` is not listed.
+    """
+    if not available():
+        return None
+
+    try:
+        proc = subprocess.run(
+            ["xrandr", "--query"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=_TIMEOUT_S,
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.warning("nao foi possivel ler os modos de %s no xrandr: %s", output, exc)
+        return None
+
+    in_block = False
+    first: tuple[int, int] | None = None
+    for line in (proc.stdout or "").splitlines():
+        if line and not line[0].isspace():
+            if in_block:
+                break
+            in_block = line.split(maxsplit=1)[0] == output
+            continue
+        if not in_block:
+            continue
+        match = _MODE_LINE.match(line)
+        if match is None:
+            continue
+        size = int(match.group(1)), int(match.group(2))
+        if "+" in match.group(3):
+            return size
+        first = first or size
+
+    return first
+
+
+def _warn_blackout(mode: str | None, outputs: tuple[str, ...], reason: str) -> None:
+    """WRN-013 (PRD §13): screens switched off/on by the user's command.
+
+    Its own code rather than WRN-012: a deliberate command is not the automatic
+    swap of RF-09. The front speaks the matching WRN-013 sentence; this is the
+    log side, which is all a bring-up without a console can read.
+    """
+    logger.warning(
+        "WRN-013 telas nao desligadas: modo=%s saidas=%s (%s)",
+        mode,
+        ",".join(outputs) or "-",
+        reason,
+    )
+
+
 def _warn_layout(mode: str | None, target: str, others: tuple[str, ...], reason: str) -> None:
     """WRN-012 (PRD §13): video state change or temporary absence.
 

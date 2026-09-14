@@ -21,6 +21,7 @@ from software.ui.shared.layout import (
     scale_for,
     tier_for,
 )
+from software.ui.shared.video_blackout import VideoBlackout
 
 
 class HdmiLayoutWiringTest(unittest.TestCase):
@@ -144,6 +145,45 @@ class HdmiScreenSourceTest(unittest.TestCase):
             (app.screen_width, app.screen_height),
             (app.root.winfo_screenwidth(), app.root.winfo_screenheight()),
         )
+
+
+class HdmiBlackoutSizingTest(unittest.TestCase):
+    """video-blackout 5.1/5.2: a front rebuilt in the dark sizes for the monitor.
+
+    With every CRTC off the X screen falls to its minimum; sizing from it would
+    build the compact tier on a 1920x1080 monitor that is about to relight.
+    """
+
+    def build(self, active: bool, preferred=(1920, 1080), screen=(320, 200)):
+        with mock.patch(
+            "software.hw_platform.video_output.screen_size", return_value=screen
+        ), mock.patch(
+            "software.hw_platform.video_output.preferred_size", return_value=preferred
+        ) as preferred_size, mock.patch(
+            "software.hw_platform.video_output.output_name", return_value="HDMI-2"
+        ):
+            app = CalculatorApp(blackout=VideoBlackout(active=active))
+            self.addCleanup(app.root.destroy)
+        return app, preferred_size
+
+    def test_a_dark_front_sizes_for_the_monitors_preferred_mode(self) -> None:
+        app, preferred_size = self.build(active=True)
+
+        preferred_size.assert_called_once_with("HDMI-2")
+        self.assertEqual((app.screen_width, app.screen_height), (1920, 1080))
+        self.assertIs(app.tier, LayoutTier.FULL)
+
+    def test_an_unreadable_preferred_mode_falls_back_to_the_screen(self) -> None:
+        app, _preferred_size = self.build(active=True, preferred=None, screen=(1280, 720))
+
+        self.assertEqual((app.screen_width, app.screen_height), (1280, 720))
+
+    def test_a_lit_front_sizes_exactly_as_before(self) -> None:
+        """5.2: the blackout branch must not even be consulted with the screen on."""
+        app, preferred_size = self.build(active=False, screen=(1280, 720))
+
+        preferred_size.assert_not_called()
+        self.assertEqual((app.screen_width, app.screen_height), (1280, 720))
 
 
 if __name__ == "__main__":

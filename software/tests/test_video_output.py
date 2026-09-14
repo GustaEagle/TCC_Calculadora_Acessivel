@@ -440,3 +440,143 @@ class ScreenSizeTest(unittest.TestCase):
         with xrandr_ready(True), \
              mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("xrandr", 10)):
             self.assertIsNone(video_output.screen_size())
+
+
+class AllOffTest(unittest.TestCase):
+    """video-blackout 1.1-1.4: the user's command switches every panel off."""
+
+    def test_both_panels_go_off_in_a_single_call(self) -> None:
+        """1.1: one xrandr call, so the server reconfigures once."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               side_effect=[{"HDMI-1": True, "HDMI-2": True},
+                                            {"HDMI-1": False, "HDMI-2": False}]), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        run.assert_called_once()
+        self.assertEqual(
+            run.call_args.args[0],
+            ["xrandr", "--output", "HDMI-1", "--off", "--output", "HDMI-2", "--off"],
+        )
+
+    def test_an_output_left_active_by_the_reread_is_a_failure(self) -> None:
+        """1.2: accepted by xrandr is not the same as dark."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               side_effect=[{"HDMI-1": True, "HDMI-2": False},
+                                            {"HDMI-1": True, "HDMI-2": False}]), \
+             mock.patch("subprocess.run"), \
+             self.assertLogs(video_output.logger, level="WARNING") as logs:
+            self.assertFalse(video_output.all_off(("HDMI-1", "HDMI-2"), mode="lcd"))
+
+        recorded = "\n".join(logs.output)
+        self.assertIn("WRN-013", recorded)
+        self.assertIn("HDMI-1", recorded)
+
+    def test_an_unreadable_reread_is_a_failure(self) -> None:
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               side_effect=[{"HDMI-1": True}, {}]), \
+             mock.patch("subprocess.run"), \
+             self.assertLogs(video_output.logger, level="WARNING"):
+            self.assertFalse(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+    def test_a_failing_xrandr_is_reported_not_raised(self) -> None:
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs", return_value={"HDMI-1": True}), \
+             mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")), \
+             self.assertLogs(video_output.logger, level="WARNING"):
+            self.assertFalse(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+    def test_only_the_lcd_present_is_a_success(self) -> None:
+        """1.3: no monitor attached is not an error - there is nothing else to switch off."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               side_effect=[{"HDMI-1": True}, {"HDMI-1": False}]), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        self.assertEqual(run.call_args.args[0], ["xrandr", "--output", "HDMI-1", "--off"])
+
+    def test_an_unexpected_active_output_is_switched_off_too(self) -> None:
+        """"Screens off" means nothing lit, not just the two panels we named."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               side_effect=[{"HDMI-1": True, "Composite-1": True},
+                                            {"HDMI-1": False, "Composite-1": False}]), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        self.assertIn("Composite-1", run.call_args.args[0])
+
+    def test_panels_already_off_skip_xrandr(self) -> None:
+        """A front rebuilt during the blackout (RF-09) must not re-run xrandr."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "read_outputs",
+                               return_value={"HDMI-1": False, "HDMI-2": False}), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        run.assert_not_called()
+
+    def test_no_display_returns_false_logs_and_does_not_raise(self) -> None:
+        """1.4: the developer machine - the command is logged, nothing breaks."""
+        with mock.patch.dict("os.environ", {}, clear=True), \
+             mock.patch("subprocess.run") as run, \
+             self.assertLogs(video_output.logger, level="WARNING") as logs:
+            self.assertFalse(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        run.assert_not_called()
+        self.assertIn("WRN-013", "\n".join(logs.output))
+
+    def test_an_x_server_without_xrandr_returns_false(self) -> None:
+        with mock.patch.dict("os.environ", {"DISPLAY": ":0"}), \
+             mock.patch("shutil.which", return_value=None), \
+             mock.patch("subprocess.run") as run, \
+             self.assertLogs(video_output.logger, level="WARNING"):
+            self.assertFalse(video_output.all_off(("HDMI-1", "HDMI-2")))
+
+        run.assert_not_called()
+
+
+# Tudo desligado: o ecra X cai para o minimo, mas cada saida conectada continua a
+# listar os seus modos - e' dai que o front tira o tamanho durante o blackout.
+QUERY_ALL_OFF = """Screen 0: minimum 320 x 200, current 320 x 200, maximum 16384 x 16384
+HDMI-1 connected (normal left inverted right x axis y axis) 154mm x 86mm
+   800x480       59.90 +
+HDMI-2 connected (normal left inverted right x axis y axis) 598mm x 336mm
+   1280x720      60.00
+   1920x1080     60.00 +  50.00    59.94
+"""
+
+
+class PreferredSizeTest(unittest.TestCase):
+    """video-blackout 5.1: sizing for the panel that will relight, not the dark screen."""
+
+    def preferred(self, output: str, stdout: str = QUERY_ALL_OFF):
+        with xrandr_ready(True), \
+             mock.patch("subprocess.run", return_value=fake_query(stdout)):
+            return video_output.preferred_size(output)
+
+    def test_reads_the_mode_marked_preferred(self) -> None:
+        self.assertEqual(self.preferred("HDMI-2"), (1920, 1080))
+
+    def test_each_output_has_its_own_preferred_mode(self) -> None:
+        self.assertEqual(self.preferred("HDMI-1"), (800, 480))
+
+    def test_without_a_preferred_mark_the_first_mode_is_used(self) -> None:
+        stdout = "Screen 0: current 320 x 200\nHDMI-2 connected\n   1280x720      60.00\n"
+        self.assertEqual(self.preferred("HDMI-2", stdout), (1280, 720))
+
+    def test_an_output_x_does_not_list_is_unknown(self) -> None:
+        self.assertIsNone(self.preferred("DP-1"))
+
+    def test_no_x_is_unknown(self) -> None:
+        with xrandr_ready(False):
+            self.assertIsNone(video_output.preferred_size("HDMI-2"))
+
+    def test_a_failing_xrandr_is_unknown_not_an_exception(self) -> None:
+        with xrandr_ready(True), \
+             mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
+            self.assertIsNone(video_output.preferred_size("HDMI-2"))
