@@ -130,7 +130,72 @@ Os pinos **27** e **28** estão ligados ao bus de **identificação de HAT** (EE
 
 ---
 
-## 6. Diagrama visual
+## 6. Matriz do teclado 6×7 — atribuição de GPIO
+
+Teclado **Cherry MX hotswap** ligado **direto ao GPIO** por cabo flat, **sem** microcontrolador (PRD §6). O esquemático KiCad (`hardware/pcb/`) nomeia apenas as nets **`Row0…Row5`** e **`Col0…Col6`**; a correspondência com os pinos do J8 é a tabela abaixo.
+
+**Fonte única de verdade em código:** [`software/hw_platform/keypad_pinout.py`](../../software/hw_platform/keypad_pinout.py) — o módulo valida na importação que cada GPIO existe no J8, que BCM e pino físico batem com a tabela do §3 e que nenhuma linha está repetida. [`software/tests/test_keypad_pinout.py`](../../software/tests/test_keypad_pinout.py) trava estes valores no CI.
+
+> **Numeração:** o chicote é rotulado **1-based** (L1…L6, C1…C7) e as nets do esquemático são **0-based** (Row0…, Col0…). **L1 = Row0** e **C1 = Col0**.
+
+### 6.1 Colunas
+
+| Rótulo | Net (KiCad) | Cor do fio | BCM | Pin | Função alternativa do pino |
+| ------ | ----------- | ---------- | --- | --- | -------------------------- |
+| **C1** | Col0 | Roxo | 26 | 37 | — |
+| **C2** | Col1 | Branco | 19 | 35 | SPI1 MISO (ALT) |
+| **C3** | Col2 | Verde | 13 | 33 | PWM1 |
+| **C4** | Col3 | Preto/Azul | 21 | 40 | PCM_DOUT (ALT) |
+| **C5** | Col4 | Vermelho | 20 | 38 | SPI1 MOSI (ALT) |
+| **C6** | Col5 | Marrom | 15 | 10 | **UART0 RXD** |
+| **C7** | Col6 | Laranja | 14 | 8 | **UART0 TXD** |
+
+### 6.2 Linhas
+
+| Rótulo | Net (KiCad) | Cor do fio | BCM | Pin | Função alternativa do pino |
+| ------ | ----------- | ---------- | --- | --- | -------------------------- |
+| **L1** | Row0 | Verde | 11 | 23 | **SPI0 SCLK** |
+| **L2** | Row1 | Amarelo | 9 | 21 | **SPI0 MISO** |
+| **L3** | Row2 | Roxo | 10 | 19 | **SPI0 MOSI** |
+| **L4** | Row3 | Laranja | 22 | 15 | — |
+| **L5** | Row4 | Marrom | 27 | 13 | — |
+| **L6** | Row5 | Azul | 17 | 11 | SPI1 CE1 (ALT, só com overlay) |
+
+13 condutores no total (6 linhas + 7 colunas), sem repetição de GPIO nem de pino físico. A grelha 6×7 dá **42** posições para os **38** switches (`SW1…SW38`) da PCB.
+
+### 6.3 Conflitos de função — o que tem de ficar desligado no boot
+
+Cinco das treze linhas ocupam pinos com periférico associado. Elas só se comportam como **GPIO comum** enquanto o firmware **não** ativar esse periférico — ver [`system/rpi-os/alpine/overlay/boot/usercfg.txt`](../../system/rpi-os/alpine/overlay/boot/usercfg.txt):
+
+| Periférico | Pinos da matriz | Condição para a matriz funcionar |
+| ---------- | --------------- | -------------------------------- |
+| **UART0** | C7 (GPIO14), C6 (GPIO15) | `enable_uart=0` e **sem** `console=serial0` no `cmdline.txt` (a imagem usa `console=tty1`). **Custo:** sem consola série para depurar o boot; resta o HDMI/tty1. |
+| **SPI0** | L1 (GPIO11), L2 (GPIO9), L3 (GPIO10) | **não** ligar `dtparam=spi=on`. O LCD Waveshare é HDMI, não SPI — nada no produto quer o SPI0. |
+| **SPI1** (ALT) | L6 (GPIO17 = CE1) | **não** carregar overlay `spi1-*cs`. Sem overlay, SPI1 nem existe — conflito apenas teórico. |
+
+**I2C1 (GPIO2/GPIO3, pinos 3 e 5) fica FORA da matriz de propósito.** É o barramento onde o UPS HAT lê tensão/corrente/capacidade no endereço **0x42** ([UPS_HAT.md](../waveshare/UPS_HAT.md), RF-06/RF-14): mantendo-o livre, a leitura de bateria usa o I2C **de hardware** (`dtparam=i2c_arm=on`, `/dev/i2c-1`), sem overlay `i2c-gpio` nem código fora do padrão da Waveshare.
+
+> **Porque L4…L6 saíram de GPIO4/3/2 (pinos 7/5/3).** Além do UPS, **GPIO2 e GPIO3 são os únicos pinos do header com pull-ups de 1,8 kΩ para 3,3 V soldados na placa do Pi** — existem sempre, mesmo com o I2C desligado, e nenhuma configuração os remove. Como linha de matriz isso obriga a lógica invertida forçada e faz a coluna que as drena afundar ≈1,8 mA a mais que nas outras; como I2C, são exatamente os pull-ups que o barramento quer. Os pinos **11/13/15** (GPIO17/27/22) não têm periférico ativo nenhum e continuam a ser três **ímpares contíguos**, ou seja, o flat mantém a geometria.
+
+> **O UPS HAT não é empilhável neste projeto.** O header dele é de 40 pinos **sem passagem** e o header do Pi está ocupado pelo flat do teclado, portanto a HAT liga-se **por fios** (5 V, GND, SDA no pino 3, SCL no pino 5) — ou alimenta o Pi pela saída USB 5 V dela. Confirmar no esquemático do lote antes de soldar.
+
+Os pinos **27/28** (GPIO0/GPIO1, EEPROM de HAT — §5) **não** são usados pela matriz e não entram na lista de livres.
+
+### 6.4 GPIO livres depois desta atribuição
+
+**BCM:** 4, 5, 6, 7, 8, 12, 16, 18, 23, 24, 25 · **Pinos:** 7, 29, 31, 26, 24, 32, 36, 12, 16, 18, 22.
+
+GPIO2/GPIO3 (pinos 3/5) **não** entram aqui: estão reservados ao I2C1 do UPS HAT (§6.3).
+
+### 6.5 Por confirmar no bring-up
+
+- **Sentido da varredura.** A PCB tem diodos **1N4148** (`D1…D38`), logo há um sentido único: ou se aciona linha e lê coluna, ou o inverso. Conferir a orientação do díodo no esquemático **antes** de escrever o scanner — invertido, a matriz lê sempre zero.
+- **Pull-ups/pull-downs e debounce.** Limiares de debounce ficam por calibrar com hardware real (PRD §12).
+- **Mapa tecla ↔ (linha, coluna).** As nets Row/Col existem, mas a posição de cada `SW` na grelha ainda não está registada no repositório; é o que falta para ligar a matriz aos tokens de [`software/ui/shared/keypad.py`](../../software/ui/shared/keypad.py).
+
+---
+
+## 7. Diagrama visual
 
 A imagem `Pinout.png` serve como **referência gráfica**. Pode corresponder a outro modelo no silkscreen (ex.: Pi 3 B+); a **numeração 1…40** e as **funções da tabela acima** aplicam-se ao **Pi 4 Model B** neste projeto.
 
@@ -138,7 +203,7 @@ A imagem `Pinout.png` serve como **referência gráfica**. Pode corresponder a o
 
 ---
 
-## 7. Artefactos relacionados no repositório
+## 8. Artefactos relacionados no repositório
 
 - [README.md](README.md) — índice da pasta (datasheet, CAD, links).
 - Modelo 3D: [`../cad/raspberry-pi-4-model-b/`](../cad/raspberry-pi-4-model-b/)
