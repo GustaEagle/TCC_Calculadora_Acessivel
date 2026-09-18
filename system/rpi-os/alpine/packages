@@ -41,3 +41,12 @@ espeak-ng         # motor TTS offline (voz pt-BR definida por speech.py)
 alsa-lib
 alsa-utils        # aplay/alsactl/amixer (saída HDMI ou jack; ver asound.conf)
 alsa-plugins
+
+# --- GPIO do teclado matricial 6x7 + I2C do UPS HAT ---
+# O Alpine é distribuição genérica: ao contrário do Raspberry Pi OS, não traz
+# NADA de GPIO pré-instalado. Sem estes pacotes nada no sistema sabe abrir
+# /dev/gpiochip0 — o nó existe (kernel com CONFIG_GPIO_CDEV=y), mas fica sem
+# quem o use. Ver docs/raspberry-pi-4b/pinout.md §6.
+libgpiod          # libgpiod 2.2.4 + CLI (gpiodetect/gpioinfo/gpioget/gpioset)
+py3-libgpiod      # bindings Python da MESMA versão: API v2 (gpiod.request_lines)
+i2c-tools         # i2cdetect: confirma o UPS HAT em 0x42 no bring-up (RF-06/RF-14)

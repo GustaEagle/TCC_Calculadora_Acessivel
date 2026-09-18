@@ -1,0 +1,16 @@
+# Dono e permissão dos nós de GPIO e I2C.
+#
+# O devtmpfs cria /dev/gpiochip0 como root:root 0600, e o Alpine não traz regra
+# nenhuma para ele — o Raspberry Pi OS traz (99-com.rules), que é por isso que
+# "funciona lá e não aqui". Sem este ficheiro, o app (que roda como o usuário
+# kiosk) leva "Permission denied" ao abrir a matriz do teclado, mesmo com o
+# py3-libgpiod instalado.
+#
+# Os grupos gpio e i2c também não existem no Alpine base: são criados em
+# build-alpine-img.sh (configure_system), que também põe o kiosk neles. Se o
+# grupo não existir, o udev ignora a regra em silêncio.
+SUBSYSTEM=="gpio", KERNEL=="gpiochip[0-9]*", GROUP="gpio", MODE="0660"
+
+# I2C1 do UPS HAT (0x42, PRD §12, RF-06/RF-14). Depende de dtparam=i2c_arm=on
+# em usercfg.txt — sem o overlay ligado, /dev/i2c-1 nem chega a existir.
+SUBSYSTEM=="i2c-dev", GROUP="i2c", MODE="0660"

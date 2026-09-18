@@ -37,9 +37,9 @@ class MatrixLine:
 # Colunas: C1..C3 saem em pinos ímpares contíguos (37/35/33), C4/C5 no canto
 # par (40/38) e C6/C7 nos pares baixos (10/8), que é como o flat chega à placa.
 COL_LINES: tuple[MatrixLine, ...] = (
-    MatrixLine("C1", "Col0", 26, 37, "roxo"),
-    MatrixLine("C2", "Col1", 19, 35, "branco"),
-    MatrixLine("C3", "Col2", 13, 33, "verde"),
+    MatrixLine("C1", "Col0", 26, 37, "laranja"),
+    MatrixLine("C2", "Col1", 19, 35, "marrom"),
+    MatrixLine("C3", "Col2", 13, 33, "azul"),
     MatrixLine("C4", "Col3", 21, 40, "preto/azul"),
     MatrixLine("C5", "Col4", 20, 38, "vermelho"),
     MatrixLine("C6", "Col5", 15, 10, "marrom"),
@@ -55,9 +55,9 @@ ROW_LINES: tuple[MatrixLine, ...] = (
     MatrixLine("L1", "Row0", 11, 23, "verde"),
     MatrixLine("L2", "Row1", 9, 21, "amarelo"),
     MatrixLine("L3", "Row2", 10, 19, "roxo"),
-    MatrixLine("L4", "Row3", 22, 15, "laranja"),
-    MatrixLine("L5", "Row4", 27, 13, "marrom"),
-    MatrixLine("L6", "Row5", 17, 11, "azul"),
+    MatrixLine("L4", "Row3", 22, 15, "roxo"),
+    MatrixLine("L5", "Row4", 27, 13, "branco"),
+    MatrixLine("L6", "Row5", 17, 11, "verde"),
 )
 
 ROW_BCM_PINS: tuple[int, ...] = tuple(line.bcm for line in ROW_LINES)

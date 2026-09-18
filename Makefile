@@ -27,6 +27,12 @@
 #   make rpi-img-clean        # apaga só .work/ (preserva o .img)
 #   make rpi-img-distclean    # apaga .work/ E o .img gerado
 #   make rpi-vm-remove        # (Windows) apaga a VM de build e libera o disco
+#
+# Bring-up do TECLADO físico 6x7 — estes alvos rodam NO Raspberry Pi (por SSH),
+# não no PC de desenvolvimento, porque precisam dos GPIO reais do header J8:
+#   make keypad-pins           # imprime a pinagem esperada (roda em qualquer lugar)
+#   make keypad-scan           # varre a matriz: cada tecla premida aparece na consola
+#   make keypad-toggle LINE=C3 # pisca um condutor para o achar no flat com multímetro
 
 VENV := .venv
 
@@ -43,6 +49,15 @@ endif
 COMPOSE := docker compose
 IMAGE := calculadora-acessivel:local
 
+# Bring-up do teclado (software/tools/keypad_bringup.py). Sem venv de propósito:
+# no Pi a biblioteca de GPIO é pacote de sistema (sudo apt install python3-lgpio)
+# e o .venv deste repositório nem existe lá.
+KEYPAD_TOOL := software/tools/keypad_bringup.py
+# Condutor que `keypad-toggle` pisca (L1..L6 = linhas, C1..C7 = colunas).
+LINE ?= L1
+# gpiochip do SoC: 0 no Pi 4B (o alvo deste TCC), 4 no Pi 5.
+CHIP ?= 0
+
 # Imagem Alpine do Raspberry Pi (ver system/rpi-os/alpine/README.md).
 RPI_IMG_DIR := system/rpi-os/alpine
 RPI_IMG_SCRIPT := ./build-alpine-img.sh
@@ -54,7 +69,8 @@ RPI_IMG_PS := powershell -NoProfile -ExecutionPolicy Bypass -File $(RPI_IMG_DIR)
 .DEFAULT_GOAL := check
 .PHONY: check check-docker install run run-hdmi run-lcd run-audio \
         build image up down clean help \
-        rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean rpi-vm-remove
+        rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean rpi-vm-remove \
+        keypad-pins keypad-scan keypad-toggle
 
 check: ## Roda toda a suíte de testes com unittest (igual ao CI)
 	$(PYTHON) -m unittest discover -s software/tests -t . -v
@@ -135,6 +151,15 @@ ifeq ($(OS),Windows_NT)
 else
 	@echo "Nada a fazer: a VM de build so existe no fluxo do Windows (build-alpine-img.ps1)."
 endif
+
+keypad-pins: ## Pinagem esperada do chicote do teclado (não toca no hardware)
+	$(PYTHON) $(KEYPAD_TOOL) --list
+
+keypad-scan: ## (no Pi) Varre a matriz 6x7; prima as teclas, Ctrl-C imprime o mapa
+	$(PYTHON) $(KEYPAD_TOOL) --chip $(CHIP)
+
+keypad-toggle: ## (no Pi) Pisca um condutor p/ o achar no flat: make keypad-toggle LINE=C3
+	$(PYTHON) $(KEYPAD_TOOL) --chip $(CHIP) --toggle $(LINE)
 
 clean: ## Remove caches de bytecode
 	find . -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true

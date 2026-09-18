@@ -228,7 +228,14 @@ EOF
 
     # Usuário kiosk (sem senha; o autologin não pede senha) e grupos de hardware.
     in_chroot "adduser -D -s /bin/sh ${KIOSK_USER} || true"
-    for g in video audio input tty; do
+    # video/audio/input/tty já existem no Alpine base. gpio e i2c NÃO existem —
+    # são convenção do Raspberry Pi OS, não do Alpine — então é preciso criá-los
+    # aqui: a regra overlay/etc/udev/rules.d/99-gpio.rules refere-se a eles e o
+    # udev ignora em silêncio uma regra cujo grupo não existe, deixando o
+    # /dev/gpiochip0 em root:root 0600 e o teclado morto por falta de permissão.
+    in_chroot "addgroup -S gpio 2>/dev/null || true"
+    in_chroot "addgroup -S i2c 2>/dev/null || true"
+    for g in video audio input tty gpio i2c; do
         in_chroot "addgroup ${KIOSK_USER} ${g} 2>/dev/null || true"
     done
 
