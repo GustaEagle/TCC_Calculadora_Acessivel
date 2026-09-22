@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import signal
 import sys
 from pathlib import Path
 
@@ -31,6 +32,7 @@ from software.hw_platform.display import (
     SimulatedHdmiPortReader,
     SysfsHdmiPortReader,
 )
+from software.hw_platform.keypad_matrix import MatrixKeyboard
 from software.ui.shared.video_blackout import VideoApplier, VideoBlackout
 
 logger = logging.getLogger(__name__)
@@ -41,6 +43,10 @@ _FORCED_MODES = {
     "hdmi": DisplayMode.HDMI,
     "audio": DisplayMode.AUDIO_ONLY,
 }
+
+# --keypad-matrix: "auto" liga a matriz quando o gpiochip0 do Pi 4 existe e
+# segue só com o teclado de PC quando não (PC, CI); "off" nunca toca em GPIO.
+KEYPAD_MATRIX_CHOICES = ("auto", "off")
 
 LOG_FILE_ENV = "CALC_LOG_FILE"
 _LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -157,6 +163,7 @@ def start_front(
     speech: SpeechService,
     blackout: VideoBlackout | None = None,
     selector: DisplaySelector | None = None,
+    keypad_matrix: MatrixKeyboard | None = None,
 ) -> DisplayMode | None:
     """Run the single front matching `mode`; returns the mode taking over.
 
@@ -171,6 +178,7 @@ def start_front(
         return CalculatorApp(
             state, speech, blackout=blackout,
             apply_video=make_video_applier(mode, blackout, selector),
+            keypad_matrix=keypad_matrix,
         ).run()
 
     if mode == DisplayMode.LCD:
@@ -179,9 +187,14 @@ def start_front(
         return CalculatorApp(
             state, speech, blackout=blackout,
             apply_video=make_video_applier(mode, blackout, selector),
+            keypad_matrix=keypad_matrix,
         ).run()
 
     # Audio-only has no screen to switch off: the blackout does not reach it.
+    # Nor does the matrix: this loop reads whole lines from stdin, and the key
+    # handling (Ctrl/Shift, history) lives in the Tk fronts. Known limitation
+    # of keypad-matrix; the scanner stays open, unattached, for the video to
+    # come back.
     from software.audio_only import AudioOnlyCalculator
 
     AudioOnlyCalculator(state, speech).run()
@@ -193,6 +206,7 @@ def run_mode(
     state: CalculatorState | None = None,
     speech: SpeechService | None = None,
     selector: DisplaySelector | None = None,
+    keypad_matrix: str = "off",
 ) -> int:
     """Run fronts until the user quits, swapping when the video output changes.
 
@@ -204,17 +218,55 @@ def run_mode(
     The blackout travels the same way (video-blackout D1): one per run, never
     persisted, so a front taking over during it is born dark and a restart
     always comes up lit.
+
+    So does the keypad matrix (keypad-matrix D8): its GPIO lines are requested
+    once here and released here, whatever ends the run. `keypad_matrix` is the
+    --keypad-matrix choice; it defaults to "off" so that calling this function
+    directly (tests) never touches the hardware.
     """
     state = state or CalculatorState()
     speech = speech or SpeechService()
     blackout = VideoBlackout()
 
-    next_mode: DisplayMode | None = mode
-    while next_mode is not None:
-        point_x_at(next_mode, blackout)
-        next_mode = start_front(next_mode, state, speech, blackout, selector)
+    matrix = open_keypad_matrix(keypad_matrix)
+    try:
+        next_mode: DisplayMode | None = mode
+        while next_mode is not None:
+            point_x_at(next_mode, blackout)
+            next_mode = start_front(next_mode, state, speech, blackout, selector, matrix)
+    finally:
+        # Todas as 13 GPIOs de volta a entrada sem bias, também em exceção,
+        # Ctrl+C ou SIGTERM/SIGHUP (install_exit_signals).
+        if matrix is not None:
+            matrix.close()
 
     return 0
+
+
+def open_keypad_matrix(choice: str) -> MatrixKeyboard | None:
+    """The running matrix scanner, or None (choice "off", or no hardware)."""
+    if choice == "off":
+        logger.info("matriz do teclado desligada (--keypad-matrix off)")
+        return None
+    return MatrixKeyboard.open()
+
+
+def install_exit_signals() -> None:
+    """SIGTERM/SIGHUP end the run through the normal `finally` blocks.
+
+    The graphical session stops the app with a signal, and Python's default
+    for SIGTERM is to die without unwinding — which would leave the keypad
+    matrix lines configured. SystemExit crosses Tk's mainloop (tkinter
+    re-raises it from callbacks), and the matrix pump's 10 ms tick gives the
+    handler a chance to run promptly.
+    """
+    def _exit(signum, _frame) -> None:
+        raise SystemExit(128 + signum)
+
+    for name in ("SIGTERM", "SIGHUP"):  # SIGHUP não existe no Windows
+        sig = getattr(signal, name, None)
+        if sig is not None:
+            signal.signal(sig, _exit)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -242,6 +294,16 @@ def build_parser() -> argparse.ArgumentParser:
             "Lista os conectores de video vistos pelo sistema e encerra "
             "(usado no bring-up para confirmar quais nomes correspondem a "
             "HDMI0/HDMI1)."
+        ),
+    )
+    parser.add_argument(
+        "--keypad-matrix",
+        choices=KEYPAD_MATRIX_CHOICES,
+        default="auto",
+        help=(
+            "Teclado fisico (matriz 6x7 por GPIO): auto = usa quando o "
+            "gpiochip0 do Raspberry Pi 4 estiver disponivel, off = nunca "
+            "toca em GPIO. Padrao: auto."
         ),
     )
     parser.add_argument(
@@ -323,7 +385,8 @@ def main(argv: list[str] | None = None) -> int:
 
     # Relighting after a blackout re-runs detection, unless the mode was forced.
     relight_selector = None if args.force_mode else (selector or DisplaySelector())
-    return run_mode(mode, selector=relight_selector)
+    install_exit_signals()
+    return run_mode(mode, selector=relight_selector, keypad_matrix=args.keypad_matrix)
 
 
 if __name__ == "__main__":

@@ -266,6 +266,7 @@ class RelightPriorityTest(unittest.TestCase):
 
     def test_main_passes_a_selector_only_when_the_mode_is_detected(self) -> None:
         with mock.patch.object(app, "configure_logging"), \
+             mock.patch.object(app, "install_exit_signals"), \
              mock.patch.object(app, "run_mode", return_value=0) as run_mode:
             app.main(["--force-mode", "lcd"])
             self.assertIsNone(run_mode.call_args.kwargs["selector"])
@@ -306,6 +307,81 @@ class AudioOnlyIgnoresBlackoutTest(unittest.TestCase):
             app.run_mode(DisplayMode.AUDIO_ONLY, state, speech)
 
         audio.assert_called_once_with(state, speech)
+
+
+class KeypadMatrixOwnershipTest(unittest.TestCase):
+    """keypad-matrix D8: one GPIO request per run, shared by every front."""
+
+    def run_with_matrix(self, choice="auto", hands_over_to=(), mode=DisplayMode.LCD):
+        matrix = mock.MagicMock(name="MatrixKeyboard")
+        with fake_fronts(hands_over_to) as fronts, \
+             mock.patch.object(app.MatrixKeyboard, "open", return_value=matrix) as opener:
+            app.run_mode(mode, CalculatorState(), FakeSpeech(), keypad_matrix=choice)
+        return matrix, opener, fronts
+
+    def test_off_never_touches_the_gpio(self) -> None:
+        _matrix, opener, _fronts = self.run_with_matrix("off")
+        opener.assert_not_called()
+
+    def test_direct_calls_default_to_off(self) -> None:
+        """Tests (and anything else) calling run_mode never grab real pins."""
+        with fake_fronts(), mock.patch.object(app.MatrixKeyboard, "open") as opener:
+            app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech())
+        opener.assert_not_called()
+
+    def test_the_same_scanner_reaches_both_fronts_and_is_closed_once(self) -> None:
+        matrix, opener, (hdmi, lcd, _audio, _point_x) = self.run_with_matrix(
+            hands_over_to=[DisplayMode.HDMI]
+        )
+        opener.assert_called_once()
+        self.assertIs(lcd.call_args.kwargs["keypad_matrix"], matrix)
+        self.assertIs(hdmi.call_args.kwargs["keypad_matrix"], matrix)
+        matrix.close.assert_called_once()
+
+    def test_scanner_is_closed_when_a_front_raises(self) -> None:
+        matrix = mock.MagicMock(name="MatrixKeyboard")
+        with fake_fronts() as (_hdmi, lcd, _audio, _point_x), \
+             mock.patch.object(app.MatrixKeyboard, "open", return_value=matrix):
+            lcd.return_value.run.side_effect = KeyboardInterrupt
+            with self.assertRaises(KeyboardInterrupt):
+                app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech(), keypad_matrix="auto")
+        matrix.close.assert_called_once()
+
+    def test_audio_only_does_not_receive_the_scanner(self) -> None:
+        matrix, _opener, (_hdmi, _lcd, audio, _point_x) = self.run_with_matrix(
+            mode=DisplayMode.AUDIO_ONLY
+        )
+        audio.assert_called_once()
+        self.assertNotIn("keypad_matrix", audio.call_args.kwargs)
+        matrix.close.assert_called_once()
+
+    def test_no_hardware_means_no_scanner_and_a_normal_run(self) -> None:
+        with fake_fronts() as (_hdmi, lcd, _audio, _point_x), \
+             mock.patch.object(app.MatrixKeyboard, "open", return_value=None):
+            self.assertEqual(
+                app.run_mode(DisplayMode.LCD, CalculatorState(), FakeSpeech(), keypad_matrix="auto"),
+                0,
+            )
+        self.assertIsNone(lcd.call_args.kwargs["keypad_matrix"])
+
+    def test_main_uses_auto_by_default_and_honours_off(self) -> None:
+        with mock.patch.object(app, "configure_logging"), \
+             mock.patch.object(app, "install_exit_signals") as signals, \
+             mock.patch.object(app, "run_mode", return_value=0) as run_mode:
+            app.main(["--force-mode", "lcd"])
+            self.assertEqual(run_mode.call_args.kwargs["keypad_matrix"], "auto")
+            signals.assert_called()
+
+            app.main(["--force-mode", "lcd", "--keypad-matrix", "off"])
+            self.assertEqual(run_mode.call_args.kwargs["keypad_matrix"], "off")
+
+    def test_sigterm_and_sighup_unwind_through_finally(self) -> None:
+        installed = {}
+        with mock.patch.object(app.signal, "signal", side_effect=installed.__setitem__):
+            app.install_exit_signals()
+        self.assertIn(app.signal.SIGTERM, installed)
+        with self.assertRaises(SystemExit):
+            installed[app.signal.SIGTERM](app.signal.SIGTERM, None)
 
 
 if __name__ == "__main__":

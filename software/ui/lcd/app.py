@@ -25,10 +25,11 @@ from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
 from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
+from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
-from software.ui.shared.keypad import HISTORY_TOKEN, spoken_token
+from software.ui.shared.keypad import HISTORY_TOKEN, NO_FUNCTION_SPEECH, spoken_token
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
 from software.ui.shared.video_blackout import (
@@ -39,6 +40,7 @@ from software.ui.shared.video_blackout import (
     relight_on_ac,
     toggle,
 )
+from software.ui.shared.matrix_input import MatrixInputPump
 from software.ui.shared.video_watch import VideoOutputWatch
 
 logger = logging.getLogger(__name__)
@@ -70,6 +72,7 @@ class CalculatorApp:
         speech: SpeechService | None = None,
         blackout: VideoBlackout | None = None,
         apply_video: VideoApplier | None = None,
+        keypad_matrix: MatrixKeyboard | None = None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -116,6 +119,16 @@ class CalculatorApp:
         # already running, so this front has to notice it and step aside.
         self.video_watch = VideoOutputWatch(self.root, self.speech, DisplayMode.LCD)
 
+        # RF-05: the physical keypad. The scanner belongs to the entry point
+        # (one GPIO request per run, kept across front swaps); this front only
+        # plugs its token handler in while its window exists.
+        self.matrix_input: MatrixInputPump | None = None
+        if keypad_matrix is not None:
+            self.matrix_input = MatrixInputPump(
+                self.root, keypad_matrix,
+                on_press=self._handle_token, on_unmapped=self._on_unmapped_key,
+            )
+
         self.expression_var.trace_add("write", lambda *_: self._update_display())
         self.result_var.trace_add("write", lambda *_: self._update_display())
 
@@ -143,7 +156,13 @@ class CalculatorApp:
         """
         self.speech.say("Calculadora pronta")
         self.video_watch.start()
-        self.root.mainloop()
+        if self.matrix_input is not None:
+            self.matrix_input.start()
+        try:
+            self.root.mainloop()
+        finally:
+            if self.matrix_input is not None:
+                self.matrix_input.stop()
 
         if self.video_watch.changed_to is None:
             self.speech.stop()
@@ -277,6 +296,12 @@ class CalculatorApp:
         if token:
             logger.debug("key event: char=%r -> token=%r", char, token)
             self._handle_token(token, None, None)
+
+    def _on_unmapped_key(self, event: KeyEvent) -> None:
+        # A "?" da matriz: lida, mas sem função no catálogo. Sem este anúncio,
+        # quem não vê a tela acharia que a tecla está avariada.
+        logger.info("tecla sem função: %s %s %r", event.switch, event.coord, event.keycap)
+        self.speech.say(NO_FUNCTION_SPEECH)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
         # A tecla Ans carrega o histórico como função de Ctrl (ver ui/shared/keypad.py),

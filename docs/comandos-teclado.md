@@ -2,7 +2,7 @@
 
 Referência dos **comandos que não são apenas "digitar um símbolo"**: modificadores (`Ctrl` / `Shift`), histórico, última resposta, limpar/apagar, alternância graus/radianos e apagar/religar as telas — tanto no **teclado comum de PC** (desenvolvimento e testes) como no **teclado físico** da calculadora (matriz 6x7 do TCC).
 
-Fonte da verdade no código: [software/ui/shared/keypad.py](../software/ui/shared/keypad.py) (catálogo de teclas e funções secundárias), [software/hw_platform/keyboard.py](../software/hw_platform/keyboard.py) (mapa PC → token) e os `_bind_keyboard()` dos dois fronts ([lcd](../software/ui/lcd/app.py), [hdmi](../software/ui/hdmi/app.py)).
+Fonte da verdade no código: [software/ui/shared/keypad.py](../software/ui/shared/keypad.py) (catálogo de teclas e funções secundárias, e a tradução keycap → catálogo), [software/hw_platform/keypad_pinout.py](../software/hw_platform/keypad_pinout.py) (mapa `SW#` / `C#L#` / keycap da matriz), [software/hw_platform/keypad_matrix.py](../software/hw_platform/keypad_matrix.py) (leitura da matriz por GPIO), [software/hw_platform/keyboard.py](../software/hw_platform/keyboard.py) (mapa PC → token) e os `_bind_keyboard()` dos dois fronts ([lcd](../software/ui/lcd/app.py), [hdmi](../software/ui/hdmi/app.py)).
 
 ---
 
@@ -52,14 +52,16 @@ Válido ao rodar `python software/app.py --force-mode hdmi` ou `--force-mode lcd
 
 ## 3. Comandos especiais — teclado físico
 
-O teclado do TCC tem as teclas dedicadas que faltam no PC. Layout visual: [docs/keyboard-layout](keyboard-layout/README.md) (ficheiro KLE).
+O teclado do TCC tem as teclas dedicadas que faltam no PC. Layout visual: [docs/keyboard-layout](keyboard-layout/README.md) (ficheiro KLE); posição elétrica de cada tecla (`SW#`, `C#L#`, GPIOs): [pinout.md §6.5](raspberry-pi-4b/pinout.md).
+
+A matriz é lida por GPIO e cada tecla entra **pelo mesmo caminho** do teclado de PC — os modificadores, o histórico, as telas e os anúncios de voz funcionam igual. A diferença é que, na matriz, **toda** tecla traz as suas funções com `Ctrl` e `Shift` (no PC só `a`/`Ans` e `Esc`/`AC` as têm). Cada tecla conta **ao pressionar**; soltar não faz nada.
 
 | Tecla | Sozinha | Com `Ctrl` | Com `Shift` |
 | ----- | ------- | ---------- | ----------- |
 | `Ans` | resposta anterior | **Histórico** | — |
 | `=` | calcula | **Última resposta** (repete o resultado completo, sem recalcular) | **Última resposta** |
 | `/` | divisão | — | **RAD/DEG** (alterna graus ↔ radianos) |
-| `.` | ponto decimal | — | `,` (vírgula) |
+| `,` (na tela: `.`) | separador decimal | — | `,` — separador de argumentos (`nCr(5,2)`) |
 | `AC` | limpa tudo (e **religa** as telas, se estiverem apagadas) | **Apaga / religa todas as telas** (não limpa a expressão) | — |
 | `Del` | apaga o último item | — | — |
 | `Ctrl` | liga/desliga `CTRL` | — | — |
@@ -74,13 +76,13 @@ O teclado do TCC tem as teclas dedicadas que faltam no PC. Layout visual: [docs/
 | `sen` | `sen(` | `asin(` — arco seno |
 | `cos` | `cos(` | `acos(` — arco cosseno |
 | `tan` | `tan(` | `atan(` — arco tangente |
-| `log` | `log(` — log decimal | `ln(` — log natural |
+| `log` | `log(` — log decimal | `ln(` — log natural (com `Shift`: `logbase(`) |
 | `nCr` | `nCr(` — combinação | `nPr(` — permutação |
 | `AC` | limpa tudo | **Apaga / religa as telas** |
 
 Sem função secundária: `x!`, `x⁻¹`, `^`, `√`, `exp`, `(`, `)`, `%`, `e`, `Del`, dígitos e `+ - *`.
 
-> Os exports KLE do layout ainda mostram uma tecla `?`; ela **não existe** na matriz 6x7 real e não tem função no software.
+> A tecla `?` **existe** na matriz (SW25, `C0L4`), mas **não tem função** no software: ao ser pressionada, a voz diz «Tecla sem função» e nada entra na expressão. Na tela, a posição dela fica vazia.
 
 ### Apagar e religar as telas (`Ctrl` + `AC`)
 
@@ -163,7 +165,8 @@ O mesmo mapa de símbolos do PC vale aqui (`x` → `*`, `a` → `Ans`, …).
 
 ## 8. Observações e limitações conhecidas
 
-- **O teclado físico ainda não está ligado ao software.** [KeyboardAdapter](../software/hw_platform/keyboard.py) é hoje um adaptador do teclado de PC; a leitura da matriz por GPIO está pendente. As teclas, tokens e atalhos desta página já estão fixados para que essa ligação não mude o comportamento.
+- **A matriz é ligada automaticamente** quando o app corre no Raspberry Pi 4 com `gpiod` (libgpiod v2) instalado; noutro computador o app segue só com o teclado de PC. `python -m software.app --keypad-matrix off` desliga a matriz de propósito. Para testar as teclas sem abrir o app: `python3 software/tools/keypad_bringup.py` (pare o app antes — ele segura as mesmas GPIOs).
+- **No modo somente áudio a matriz não funciona.** Esse modo (sem nenhuma tela reconhecida) ainda lê linhas digitadas num teclado de PC. Para usar a calculadora sem olhar para a tela, apague as telas com `Ctrl` + `AC`: o front continua ativo e a matriz também.
 - **No PC, `Ctrl` + tecla só funciona com `a` (`Ans`) e `Esc` (`AC`).** As demais funções secundárias dependem de teclas que só existem na matriz física — no HDMI, use os botões na tela com o `CTRL` ligado (os rótulos mudam para a função secundária).
 - **`Ctrl` + `Enter` não faz "última resposta"** no PC: `Enter` entra como `=` puro, sem função secundária. Use o botão `=` na tela com o `CTRL` ligado.
 - **Símbolos que exigem `Shift` no PC** (por exemplo `(`, `)`, `*`, `^` em teclados ABNT/US) acendem o indicador `SHIFT`, porque o front trata `Shift` como comando. O símbolo é inserido normalmente, mas o indicador pode ficar aceso — pressione `Shift` uma vez para o desligar.

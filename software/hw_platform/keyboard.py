@@ -1,4 +1,9 @@
-"""Keyboard adapter placeholder for the future GPIO 7x7 matrix."""
+"""PC keyboard adapter, for development and tests.
+
+The product's own keyboard is the 6x7 matrix read over GPIO
+(hw_platform/keypad_matrix.py); both feed the same token handling in the
+fronts.
+"""
 
 from __future__ import annotations
 

@@ -19,7 +19,8 @@ LEFT_BUTTONS: list[KeypadRow] = [
     [("sen", "sen(", "asin(", None), ("cos", "cos(", "acos(", None), ("", "", None, None)],
     [("tan", "tan(", "atan(", None), ("log", "log(", "ln(", "logbase("), ("", "", None, None)],
     [("x⁻¹", "inv(", None, None), ("^", "^", None, None)],
-    # Posição vazia: a tecla "?" dos exports KLE não existe na matriz 6x7 real.
+    # Posição vazia na tela: a tecla "?" existe na matriz (SW25, C0L4), mas não
+    # tem função no catálogo do PRD §5 - ver NO_FUNCTION_SPEECH.
     [("", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
     [("Ctrl", "Ctrl", None, None), ("exp", "exp(", None, None), ("Shift", "Shift", None, None)],
 ]
@@ -55,6 +56,31 @@ HISTORY_SHORTCUT_LABEL = "Ctrl + Ans"
 # tecla livre): Ctrl + AC, que no PC é Ctrl e depois Esc. AC sozinho continua
 # limpando - e religa as telas, se estiverem apagadas (video-blackout D4/D5).
 BLACKOUT_SHORTCUT_LABEL = "Ctrl + AC"
+
+
+# Teclado físico (matriz 6x7): o keycap é o texto impresso na tecla
+# (hw_platform/keypad_pinout.py). Quase todos coincidem com o rótulo do botão
+# na tela; estes três não. A tecla "," da matriz é a mesma posição do "." na
+# tela: o motor usa "." como separador decimal e "," entre argumentos
+# (nCr(5,2)), e é Shift que dá a vírgula - tal como no botão.
+_KEYCAP_TO_LABEL: dict[str, str] = {"x^-1": "x⁻¹", "Del": "DEL", ",": "."}
+
+# A "?" é lida mas não faz nada; sem retorno, quem não vê a tela acharia que
+# a tecla está avariada.
+NO_FUNCTION_SPEECH = "Tecla sem função"
+
+
+def entry_for_keycap(keycap: str) -> tuple[str, str | None, str | None] | None:
+    """(primary, ctrl_secondary, shift_alternative) for a physical key.
+
+    None for a key with no function in the catalogue (the "?").
+    """
+    label = _KEYCAP_TO_LABEL.get(keycap, keycap)
+    for row in LEFT_BUTTONS + RIGHT_BUTTONS:
+        for button_label, primary, secondary, shifted in row:
+            if button_label and button_label == label:
+                return primary, secondary, shifted
+    return None
 
 
 # O teclado na tela começa OCULTO nos dois fronts: a entrada real é o teclado
