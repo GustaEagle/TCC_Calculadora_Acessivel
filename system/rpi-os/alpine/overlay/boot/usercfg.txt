@@ -7,6 +7,11 @@
 # troque para o bloco fbdev/HDMI custom comentado no fim.
 
 # Driver gráfico KMS do Pi 4 (usado pelo Xorg via modesetting/mesa-dri-gallium).
+# Também é o que dá hotplug de HDMI: o KMS atualiza /sys/class/drm em tempo de
+# execução, que é como o app percebe o monitor externo ligado com a calculadora
+# já em uso (RF-09). No caminho legado/firmware o modo é fixado no boot e essa
+# detecção deixa de funcionar — ver README.md, "Monitor ligado com a calculadora
+# já em uso".
 dtoverlay=vc4-kms-v3d
 max_framebuffers=2
 
@@ -17,8 +22,19 @@ disable_overscan=1
 # final em /etc/asound.conf conforme `aplay -l`.
 dtparam=audio=on
 
+# I2C1 nos pinos 3/5 (GPIO2 SDA, GPIO3 SCL): é o barramento onde o UPS HAT lê
+# tensão/corrente/capacidade no endereço 0x42 (PRD §12, RF-06/RF-14). Sem isto
+# /dev/i2c-1 não existe e a leitura de bateria não tem por onde acontecer.
+# NÃO conflita com o teclado: pinout.md §6.3 mantém GPIO2/GPIO3 fora da matriz
+# justamente para este barramento. Confira no hardware com `i2cdetect -y 1`.
+dtparam=i2c_arm=on
+
 # --- Plano B: LCD Waveshare 4,3" via HDMI custom (descomente se o KMS não pegar) ---
-# Remova o dtoverlay=vc4-kms-v3d acima e use o modo custom 800x480 do painel:
+# Remova o dtoverlay=vc4-kms-v3d acima e use o modo custom 800x480 do painel.
+# ATENÇÃO: hdmi_force_hotplug=1 faz a porta reportar-se SEMPRE como conectada.
+# Isso serve para o LCD sincronizar, mas quebra a detecção do §7 se aplicado à
+# porta do monitor (o app passaria a achar que há sempre monitor externo). Use
+# só no HDMI0/LCD; para o HDMI1 a variante é hdmi_force_hotplug:1=1 — não a ligue.
 #hdmi_force_hotplug=1
 #hdmi_group=2
 #hdmi_mode=87

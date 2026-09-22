@@ -1,7 +1,7 @@
 # Documento de requisitos de produto (PRD)
 
 **Projeto:** calculadora científica acessível (hardware + software embarcado)  
-**Versão do documento:** 1.4
+**Versão do documento:** 1.5
 **Status:** rascunho iterativo — evoluir junto ao TCC e à implementação  
 **Referências:** [TCC.txt](TCC.txt) (texto legado de materiais/métodos e escopo de funções); [prompt-prd-raspberry.md](prompt-prd-raspberry.md) (briefing; cópia em [promptspassados/prompt-prd-raspberry.md](promptspassados/prompt-prd-raspberry.md)); [promptspassados/](promptspassados/) (prompts arquivados); planejamento temporal em [Cronograma/cronograma.md](Cronograma/cronograma.md); fluxo Git e equipe em [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md); backlog operacional em [Sprints.md](Sprints.md); memória de sessão em [docs/CONTEXT.md](docs/CONTEXT.md); índice de documentação em [docs/README.md](docs/README.md); mapa de pastas do repositório em [docs/REPO_STRUCTURE.md](docs/REPO_STRUCTURE.md); Waveshare (notas + CAD) em [docs/waveshare/README.md](docs/waveshare/README.md); GPIO do Pi 4 em [docs/raspberry-pi-4b/README.md](docs/raspberry-pi-4b/README.md).
 
@@ -156,7 +156,7 @@ Funções descritas em níveis aninhados representam operações alternativas as
 | Identificação **Braille** | Peças em **PLA** (impressão **Bambu Lab A1**); notação **Braille português (BR)** segundo **normas oficiais** (rótulos no interruptor / teclas conforme desenho). |
 | PCI | **Fenolite**, **dupla face**, **15×15 cm**; esquemático e layout no **KiCad**; produção por corrosão com **percloreto de ferro**. |
 
-**Pendência de cablagem (vídeo):** qual **saída HDMI** do Raspberry Pi 4B liga ao **LCD** e qual ao **monitor externo** fica registada no **esquemático** / testes — o PRD assume **duas** saídas HDMI e detecção pelo SO.
+**Cablagem de vídeo (decidida):** o **HDMI0** do Raspberry Pi 4B (a porta junto ao conector de alimentação USB-C) liga **sempre** ao **LCD 4,3"**; o **HDMI1** liga **sempre** ao **monitor externo**. O mapeamento é fixo por montagem e fica registado no **esquemático**; a detecção pelo SO identifica cada painel pela **porta**, não pelo EDID. Os nomes de conector correspondentes no Linux (`HDMI-A-1` para HDMI0, `HDMI-A-2` para HDMI1, sob `vc4-kms-v3d`) devem ser **confirmados no hardware** antes de serem fixados em código (ver §11).
 
 ---
 
@@ -252,7 +252,7 @@ flowchart TD
 
 ## 11. Riscos e dependências
 
-- **Hotplug HDMI no Linux:** eventos de conexão e nomes de saídas (`HDMI-A-1`, `HDMI-A-2`) variam; pode exigir `udev`, `libdrm` ou camadas do compositor.
+- **Hotplug HDMI no Linux:** eventos de conexão e nomes de saídas (`HDMI-A-1`, `HDMI-A-2`) variam conforme kernel/driver; pode exigir `udev`, `libdrm` ou camadas do compositor. Como o papel de cada painel vem da **porta física** (§6: HDMI0 = LCD, HDMI1 = monitor), é a **correspondência porta ↔ nome de conector** que precisa de ser verificada no hardware; trocar os cabos de porta inverte os fronts.
 - **Driver e modo do LCD Waveshare:** seguir [docs/waveshare/4.3inch_HDMI_LCD_B.md](docs/waveshare/4.3inch_HDMI_LCD_B.md); alterações de SO podem exigir revisão de `config.txt` / firmware.
 - **Sincronização UI + áudio:** evitar anúncios duplicados ou fora de ordem ao trocar de modo.
 - **Fabricação em fenolite:** tolerâncias e corrosão caseira afetam confiabilidade da PCI; revisão de largura de trilha/isolamento no KiCad.
@@ -271,7 +271,7 @@ flowchart TD
 - **UPS HAT:** Utiliza barramento **I2C** (SDA/SCL padrão do Raspberry Pi).
 - **Limiares** de software: percentagem ou tensão mínima para **“bateria baixa”** (TTS) e tempos de **debounce** do teclado — calibrar com hardware real.
 
-**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **motor de cálculo em Python**; **TTS em português (Brasil)** via **`espeak-ng`** (o `espeak` clássico é incompatível com o `pyttsx3`); UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
+**Decisões já registadas (não reabrir aqui):** modelo LCD **4,3" HDMI (B)** Waveshare em `docs/waveshare/`; **interruptor físico** do LCD com **Braille** no encapsulamento; **Braille PT-BR** em **PLA** (Bambu Lab A1); teclado **Cherry MX Red** + **hotswap** + **flat** para GPIO **sem** MCU intermédio; **HDMI0 = LCD** e **HDMI1 = monitor externo**; **motor de cálculo em Python**; **TTS em português (Brasil)** via **`espeak-ng`** (o `espeak` clássico é incompatível com o `pyttsx3`); UPS com **aviso de carga**, **sem** persistência obrigatória de sessão.
 
 ---
 
@@ -309,6 +309,7 @@ Categorias abrangem **cálculo**, **entrada**, **sistema** e **energia**. Textos
 | **WRN-010** | **Ans** indisponível (ex.: primeira operação da sessão) | P2 | Mensagem curta «Sem resposta anterior» | «Aviso 010. Não há resposta anterior.» |
 | **WRN-011** | Motor TTS indisponível ou falha pontual | P2 | Ícone ou texto «Áudio indisponível» | *Silêncio ou beep opcional*; log do sistema; **não** bloquear entrada (ver **RF-08**). |
 | **WRN-012** | HDMI / vídeo: mudança de estado ou ausência temporária | P2 | *N/A* se só áudio | «Aviso 012. Saída de vídeo alterada.» — apenas se política de produto exigir anúncio. |
+| **WRN-013** | Vídeo: **telas desligadas/religadas por comando** do utilizador (`Ctrl` + `AC` na matriz; `Ctrl` e depois `Esc` no PC; `AC` sozinho religa) — preferência da sessão, **não** é ausência de vídeo (§7.4) | P2 | *N/A* com as telas apagadas; ao religar, a UI volta no painel escolhido pela prioridade da §7.2 | Apagar: «Aviso 013. Telas desligadas. Para religar, pressione AC.» Religar: «Aviso 013. Tela religada no monitor externo.» (ou «na tela da calculadora»). Falha: «Aviso 013. Não foi possível desligar as telas.» / «… religar a tela.» |
 | **WRN-020** | Bateria **baixa** (UPS, quando integrado) | P2 | Indicador de bateria + mensagem «Bateria baixa» | «Aviso 020. Bateria baixa. Ligue à corrente quando possível.» (alinhado a **RF-06** / **RF-14**). |
 | **WRN-021** | Alimentação na **bateria** (informativo, opcional) | P2 | Indicador «Na bateria» | *Opcional:* «Usando alimentação por bateria.» |
 
@@ -327,3 +328,4 @@ Novos códigos **ERR-0xx** / **WRN-0xx** livres devem ser **registrados nesta se
 | 1.2 | 2026-04-17 | Secção 9: novos RF-07 a RF-14 (erros, TTS vs entrada, reconexão HDMI, modo só áudio, debounce, legibilidade, Ans/persistência, indicação externa/bateria UPS). Secção 10: RNF-05 (persistência segura). Versão do documento atualizada para 1.2. |
 | 1.3 | 2026-04-17 | Secção 6–8: LCD (B) documentado, interruptor HDMI/standby + Braille, teclado MX Red/flat/GPIO, motor Python, TTS pt-BR; §7.0 interruptor; RF-06/13/14 e RNF-05 alinhados a “sem persistência” + aviso UPS; RNF-06 boot rápido; §12 reduzida (SO/boot, stack UI, GPIO list, limiares); `promptspassados/` com prompts arquivados. Versão 1.3. |
 | 1.4 | 2026-04-18 | §5.1 orientação sobre detalhamento sem expandir escopo; §13 nova: padronização de erros (códigos ERR/WRN, prioridade P1/P2, visual, TTS, fila); tabela baseline; RF-07 e requisito da §5 apontam para §13; histórico em §14. Versão 1.4. |
+| 1.5 | 2026-09-10 | §13.2: novo **WRN-013** (P2) — telas desligadas/religadas por comando do utilizador (`Ctrl` + `AC`, função secundária de `AC` — a matriz 6x7 não tem tecla livre; `AC` sozinho religa), distinto do WRN-012 (troca automática de saída, RF-09). Sem alteração do catálogo da §5. Versão 1.5. |

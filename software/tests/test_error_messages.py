@@ -1,7 +1,7 @@
 import unittest
 
 from software.core import CalculationEngine
-from software.ui_lcd.error_messages import ERROR_MESSAGES, friendly_message, spoken_priority_prefix
+from software.ui.shared.error_messages import ERROR_MESSAGES, friendly_message, spoken_priority_prefix
 
 
 class ErrorMessagesTest(unittest.TestCase):

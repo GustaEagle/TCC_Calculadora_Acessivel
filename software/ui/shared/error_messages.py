@@ -1,6 +1,6 @@
 """User-facing error/warning text, keyed by the PRD §13 code catalogue.
 
-Kept separate from ui_lcd/app.py (which depends on tkinter/ttkbootstrap) so
+Kept separate from ui/lcd/app.py (which depends on tkinter/ttkbootstrap) so
 the mapping and priority-prefix logic are testable without a GUI runtime.
 """
 

@@ -18,6 +18,10 @@ O KLE usa um **array de linhas**; cada linha é um array de teclas. Cada tecla p
 
 Documentação informal da sintaxe: painel **Raw data** do próprio site e [repositório do projeto no GitHub](https://github.com/ijprest/keyboard-layout-editor) (licença e código).
 
+## Pinagem (GPIO)
+
+A ligação da matriz **6×7** aos pinos do Raspberry Pi está em [raspberry-pi-4b/pinout.md §6](../raspberry-pi-4b/pinout.md#6-matriz-do-teclado-67--atribuição-de-gpio) (linhas, colunas, cor de fio e conflitos de periférico), com a fonte em código em [`software/hw_platform/keypad_pinout.py`](../../software/hw_platform/keypad_pinout.py). Este layout KLE descreve as **legendas**; o pinout descreve os **fios**.
+
 ## Relação com o projeto
 
 Este layout descreve a **grelha de teclas da calculadora científica** (funções tipo `sen`, `cos`, `tan`, `log`, `π`, `Ans`, `Shift`, etc.) para:

@@ -20,12 +20,38 @@ Calculadora científica com foco em **acessibilidade** (feedback por voz e opera
 | [docs/CONTEXT.md](docs/CONTEXT.md) | Memória curta entre sessões |
 | [cronograma/cronograma.md](cronograma/cronograma.md) | Linha do tempo académica |
 | [docs/README.md](docs/README.md) | Índice da pasta `docs/` (pinout, Waveshare, CAD, teclado) |
+| [docs/comandos-teclado.md](docs/comandos-teclado.md) | Comandos especiais do teclado (PC e teclado físico): Ctrl/Shift, histórico, última resposta |
+
+---
+
+## Executar
+
+```bash
+python -m pip install -r software/requirements.txt
+python software/app.py
+```
+
+`software/app.py` deteta a saída de vídeo ativa e abre **um** front (PRD §7): monitor HDMI externo quando reconhecido, senão o LCD 4,3", e **modo somente áudio** quando não há vídeo utilizável.
+
+Para desenvolvimento e demonstrações a saída pode ser forçada:
+
+```bash
+python software/app.py --force-mode hdmi   # front do monitor externo
+python software/app.py --force-mode lcd    # front do painel 4,3"
+python software/app.py --force-mode audio  # somente voz, sem janela
+```
+
+**Histórico:** abre por **Ctrl + Ans** (no PC, a tecla `a` faz o papel do `Ans` da matriz 6x7). Não há botão de histórico — a entrada é sempre pelo teclado.
+
+Lista completa dos atalhos e funções secundárias: [docs/comandos-teclado.md](docs/comandos-teclado.md).
+
+Testes: `make check` (ou `python -m unittest discover -s software/tests -t .`).
 
 ---
 
 ## Estrutura do repositório (resumo)
 
-- **`software/`** — Motor de cálculo, UI (LCD / HDMI), acessibilidade (áudio/TTS), plataforma (GPIO, integração)
+- **`software/`** — Motor de cálculo, UI (LCD / HDMI / partilhada), acessibilidade (áudio/TTS), plataforma (GPIO, integração), ponto de entrada `app.py`
 - **`hardware/`** — PCB (KiCad), snapshots de export para marcos
 - **`system/`** — Imagem SO, arranque e scripts (evolução conforme o PRD)
 - **`docs/`** — Datasheets, CAD, layout de teclado, notas Waveshare / Pi 4

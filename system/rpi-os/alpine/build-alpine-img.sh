@@ -90,12 +90,12 @@ check_prereqs() {
     [ "$(id -u)" -eq 0 ] || die "Rode como root (sudo): o build usa loopback, mount e chroot."
 
     local missing=0
-    for t in qemu-aarch64-static losetup parted mkfs.vfat mkfs.ext4 sha256sum tar blkid curl; do
+    for t in qemu-aarch64-static losetup parted sfdisk mkfs.vfat mkfs.ext4 sha256sum tar blkid curl; do
         command -v "$t" >/dev/null 2>&1 || { warn "faltando: $t"; missing=1; }
     done
     if [ "$missing" -ne 0 ]; then
         die "Instale as dependências (Debian/derivados):
-  sudo apt install -y qemu-user-static binfmt-support parted dosfstools e2fsprogs curl
+  sudo apt install -y qemu-user-static binfmt-support parted util-linux dosfstools e2fsprogs curl
 Se o chroot aarch64 não executar, registre o binfmt:
   sudo update-binfmts --enable qemu-aarch64   (ou: docker run --privileged --rm tonistiigi/binfmt --install arm64)"
     fi
@@ -151,9 +151,29 @@ ${MIRROR}/${ALPINE_BRANCH}/main
 ${MIRROR}/${ALPINE_BRANCH}/community
 EOF
 
-    mount -t proc none "${ROOTFS}/proc"
-    mount --rbind /sys "${ROOTFS}/sys"
-    mount --rbind /dev "${ROOTFS}/dev"
+    mount_chroot
+}
+
+# Prepara o chroot para uso: qemu + montagens. Idempotente, serve tanto para o
+# build do zero quanto para REUSE_ROOTFS=1 (onde o rootfs já existe, mas o qemu
+# foi removido no fim do build anterior e as montagens não existem mais).
+mount_chroot() {
+    install -Dm755 "$(qemu_static_path)" "${ROOTFS}/usr/bin/qemu-aarch64-static"
+    mountpoint -q "${ROOTFS}/proc" || mount -t proc none "${ROOTFS}/proc"
+    # IMPORTANTE: /dev e /sys do host têm propagação "shared". Um rbind puro põe
+    # as cópias no MESMO peer group do original, então o umount da limpeza
+    # PROPAGA DE VOLTA e desmonta o /dev/shm e o /dev/pts do host — o que quebra
+    # todo app Electron/Chromium (VS Code, Chrome) da máquina de build até o
+    # próximo boot. O --make-rslave corta a propagação de volta (host -> chroot
+    # continua funcionando, chroot -> host não).
+    if ! mountpoint -q "${ROOTFS}/sys"; then
+        mount --rbind /sys "${ROOTFS}/sys"
+        mount --make-rslave "${ROOTFS}/sys"
+    fi
+    if ! mountpoint -q "${ROOTFS}/dev"; then
+        mount --rbind /dev "${ROOTFS}/dev"
+        mount --make-rslave "${ROOTFS}/dev"
+    fi
 }
 
 # Executa um comando dentro do rootfs (aarch64 via qemu/binfmt).
@@ -208,7 +228,14 @@ EOF
 
     # Usuário kiosk (sem senha; o autologin não pede senha) e grupos de hardware.
     in_chroot "adduser -D -s /bin/sh ${KIOSK_USER} || true"
-    for g in video audio input tty; do
+    # video/audio/input/tty já existem no Alpine base. gpio e i2c NÃO existem —
+    # são convenção do Raspberry Pi OS, não do Alpine — então é preciso criá-los
+    # aqui: a regra overlay/etc/udev/rules.d/99-gpio.rules refere-se a eles e o
+    # udev ignora em silêncio uma regra cujo grupo não existe, deixando o
+    # /dev/gpiochip0 em root:root 0600 e o teclado morto por falta de permissão.
+    in_chroot "addgroup -S gpio 2>/dev/null || true"
+    in_chroot "addgroup -S i2c 2>/dev/null || true"
+    for g in video audio input tty gpio i2c; do
         in_chroot "addgroup ${KIOSK_USER} ${g} 2>/dev/null || true"
     done
 
@@ -291,7 +318,14 @@ build_image() {
     parted -s "${OUT_IMG}" mklabel msdos
     parted -s "${OUT_IMG}" mkpart primary fat32 1MiB "$((BOOT_SIZE_MIB + 1))MiB"
     parted -s "${OUT_IMG}" set 1 lba on
+    parted -s "${OUT_IMG}" set 1 boot on
     parted -s "${OUT_IMG}" mkpart primary ext4 "$((BOOT_SIZE_MIB + 1))MiB" 100%
+
+    # O parted grava o ID de tipo do MBR a partir do sistema de arquivos que
+    # encontra na partição — e como ela ainda está vazia aqui, a p1 acaba com
+    # 0x83 (Linux) em vez de 0x0c (W95 FAT32 LBA). O bootloader da Pi 4 procura
+    # a partição de boot pelo tipo FAT no MBR, então forçamos 0x0c.
+    sfdisk --part-type "${OUT_IMG}" 1 0c
 
     LOOP_DEV="$(losetup -f --show -P "${OUT_IMG}")"
     log "Loop: ${LOOP_DEV}"
@@ -363,10 +397,15 @@ EOF
 main() {
     check_prereqs
     mkdir -p "${WORK_DIR}"
-    # REUSE_ROOTFS=1 reaproveita ${ROOTFS} já montado e pula download/apk/pip/smoke
-    # — útil para reiterar só a fase de imagem sem refazer o rootfs (~15 min).
+    # REUSE_ROOTFS=1 reaproveita os PACOTES já instalados em ${ROOTFS} (pula
+    # download/apk/pip, a fase lenta e pesada) mas RECOPIA o app e o overlay —
+    # senão a imagem sairia com uma versão antiga de software/. Use ao iterar no
+    # código do app sem mudar dependências.
     if [ "${REUSE_ROOTFS:-0}" = "1" ] && [ -d "${ROOTFS}/etc" ]; then
-        warn "REUSE_ROOTFS=1: reaproveitando ${ROOTFS} (pulando download/apk/pip/smoke)."
+        warn "REUSE_ROOTFS=1: reaproveitando pacotes de ${ROOTFS} (pulando download/apk/pip)."
+        mount_chroot
+        apply_overlay_and_app   # app/overlay sempre atualizados a partir do repo
+        smoke_tests
     else
         download_and_verify
         prepare_rootfs
