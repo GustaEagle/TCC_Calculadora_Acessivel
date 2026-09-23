@@ -25,7 +25,7 @@ Não substitui PRD, casos de uso, requisitos nem demais artefatos de engenharia 
 
 ## Datas importantes (equipe / instituição)
 
-Estas datas **complementam** o export bruto em [`Cronograma_raw.txt`](Cronograma_raw.txt) e deixam explícitos compromissos já combinados com orientação.
+Estas datas **complementam** o export bruto em [`cronograma_raw.txt`](cronograma_raw.txt) e deixam explícitos compromissos já combinados com orientação.
 
 | Data | Significado |
 | ---- | ----------- |
@@ -188,7 +188,7 @@ Do **21/06/2026** em diante, o consolidado não traz novos intervalos além da *
 
 ## Referência: intervalos e datas do consolidado original
 
-Tabela de conferência alinhada ao export [`Cronograma_raw.txt`](Cronograma_raw.txt) (Google Calendar), mais as **datas importantes** da equipe.  
+Tabela de conferência alinhada ao export [`cronograma_raw.txt`](cronograma_raw.txt) (Google Calendar), mais as **datas importantes** da equipe.  
 _Notas:_ no raw aparece um evento “Encapsulamento finalizado” em **25/04** junto de “Aquisição da bateria”; isso **conflita** com o intervalo de encapsulamento até **10/06**. Aqui mantém-se **10/06** como encerramento do encapsulamento; **25/04** figura só como aquisição da bateria.
 
 | Período / data        | Descrição |
@@ -230,5 +230,5 @@ _Notas:_ no raw aparece um evento “Encapsulamento finalizado” em **25/04** j
 ## Observações finais
 
 - O detalhamento de **PRD**, **casos de uso**, **requisitos** e demais documentos de software fica fora deste arquivo, conforme seu planejamento acadêmico.
-- O ficheiro **bruto** [`Cronograma_raw.txt`](Cronograma_raw.txt) pode conter redundâncias do export; esta `cronograma.md` é a versão **curada** para o repositório.
+- O ficheiro **bruto** [`cronograma_raw.txt`](cronograma_raw.txt) pode conter redundâncias do export; esta `cronograma.md` é a versão **curada** para o repositório.
 - Se a banca ou o calendário da instituição fixar uma data de entrega **antes** de setembro, basta **recortar** o bloco final (banner e semanas correspondentes) para refletir a realidade da disciplina.

@@ -3,7 +3,7 @@
 **Contexto:** change `accessibility-improvements` (`openspec/changes/accessibility-improvements/`).
 **Objetivo:** validar com usuários reais o que a implementação e os testes automatizados não conseguem confirmar sozinhos — clareza do áudio, contraste percebido, navegação sem mouse e ausência de fricção nos fluxos.
 
-Este documento é um roteiro a ser **executado pela equipe** com usuários reais (idealmente incluindo pessoas com cegueira total e com baixa visão, conforme as personas do [PRD.md](../../PRD.md) §4). Os achados devem ser registrados na seção final e realimentar novas propostas/specs.
+Este documento é um roteiro a ser **executado pela equipe** com usuários reais (idealmente incluindo pessoas com cegueira total e com baixa visão, conforme as personas do [PRD.md](../produto/PRD.md) §4). Os achados devem ser registrados na seção final e realimentar novas propostas/specs.
 
 ---
 

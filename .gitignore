@@ -31,6 +31,7 @@ system/rpi-os/alpine/.work/
 
 # Logs temporários
 *.log
+data/
 
 # Cópia local da partição boot (firmware/binários Raspberry Pi); regenerar a partir da imagem oficial ou de system/
 bootfoverlay/

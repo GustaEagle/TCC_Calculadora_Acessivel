@@ -6,7 +6,7 @@ context: |
   ## Produto
   Calculadora científica com foco em ACESSIBILIDADE (feedback por voz + operação
   sem depender exclusivamente da tela). TCC — equipe: Gustavo, João, Yuri.
-  Referência normativa: PRD.md (v1.4). Documentação de apoio em docs/.
+  Referência normativa: docs/produto/PRD.md (v1.4). Documentação de apoio em docs/.
 
   ## Arquitetura física (pasta hardware/)
   - SBC principal: Raspberry Pi 4B (SO, app, áudio, vídeo).

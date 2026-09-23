@@ -4,7 +4,7 @@ Gera uma imagem **Alpine Linux 3.24.1 (aarch64)** bootável que faz o Raspberry
 Pi 4B **arrancar direto na calculadora** (modo kiosk): sem desktop, sem login
 visível, sem cursor. É a via de empacotamento do **produto final** — enxuta e
 gerada por script — alternativa mais leve ao Buildroot descrito em
-[../../../docs/build-img-linux.md](../../../docs/build-img-linux.md).
+[../../../docs/guias/build-img-linux.md](../../../docs/guias/build-img-linux.md).
 
 > A aplicação (`software/`) **não** é alterada; aqui só a empacotamos e
 > configuramos o arranque. Ver o plano em
@@ -20,7 +20,7 @@ gerada por script — alternativa mais leve ao Buildroot descrito em
 | `.work/` | Diretório de trabalho do build (rootfs/downloads/mount). **Ignorado pelo git.** |
 
 O `.img` gerado e o `.work/` **nunca** são versionados (regra do
-[../README.md](../README.md); ver `.gitignore`).
+[../../README.md](../../README.md); ver `.gitignore`).
 
 ## Como a imagem arranca (kiosk)
 

@@ -8,14 +8,14 @@ Este agente **nao substitui** o professor nem decisoes da equipe; organiza infor
 
 ## Leitura obrigatoria (nesta ordem)
 
-1. `Cronograma/cronograma.md` — semana **anterior** (fechada), **atual** e **proxima**; marcos de data unica no intervalo.
-2. `Sprints.md` — todas as sprints visiveis; status agregado; tasks atrasadas implicitamente (`todo` antigo com alta relevancia).
-3. `docs/CONTEXT.md` — pendencias, riscos, ultima acao.
-4. `docs/sessoes/semana-NN.md` da semana que passou e da atual — registo agregado das sessoes da equipa (se existir).
-5. `PRD.md` — **secao 1 (resumo)** e mais qualquer secao que `CONTEXT.md` ou `Sprints.md` indicarem como foco.
+1. `cronograma/cronograma.md` — semana **anterior** (fechada), **atual** e **proxima**; marcos de data unica no intervalo.
+2. `docs/desenvolvimento/Sprints.md` — todas as sprints visiveis; status agregado; tasks atrasadas implicitamente (`todo` antigo com alta relevancia).
+3. `docs/desenvolvimento/CONTEXT.md` — pendencias, riscos, ultima acao.
+4. `docs/desenvolvimento/sessoes/semana-NN.md` da semana que passou e da atual — registo agregado das sessoes da equipa (se existir).
+5. `docs/produto/PRD.md` — **secao 1 (resumo)** e mais qualquer secao que `CONTEXT.md` ou `docs/desenvolvimento/Sprints.md` indicarem como foco.
 6. Opcional: ultimos commits na branch principal — **somente se** o usuario autorizar comandos Git (`git log --oneline -20` na branch que indicarem); se nao houver permissao, peca um resumo humano ou omita.
 
-Opcional: abrir `Cronograma/cronograma.html` no navegador (Gantt, marcos, linha "hoje").
+Opcional: abrir `cronograma/cronograma.html` no navegador (Gantt, marcos, linha "hoje").
 
 ---
 
@@ -34,11 +34,11 @@ Opcional: abrir `Cronograma/cronograma.html` no navegador (Gantt, marcos, linha 
 - Riscos para a banca ou para nota (prazo, escopo, hardware).
 
 ### 4. Proxima semana — prioridades (maximo 5)
-Ordenadas: P1…P5, cada uma ligada a **task ID** em `Sprints.md` ou a **marco** em `Cronograma/cronograma.md`.
-- Cada item: dono sugerido (Gustavo / Joao / Yuri / todos) **se** estiver obvio pelo `Sprints.md`; senao "a definir".
+Ordenadas: P1…P5, cada uma ligada a **task ID** em `docs/desenvolvimento/Sprints.md` ou a **marco** em `cronograma/cronograma.md`.
+- Cada item: dono sugerido (Gustavo / Joao / Yuri / todos) **se** estiver obvio pelo `docs/desenvolvimento/Sprints.md`; senao "a definir".
 
 ### 5. Ajustes sugeridos nos artefatos (sem aplicar sozinho)
-- Lista de **edits** opcionais: o que atualizar em `docs/CONTEXT.md` (ex.: novo risco), o que clarificar em `Sprints.md` (ex.: status, nova sub-task).
+- Lista de **edits** opcionais: o que atualizar em `docs/desenvolvimento/CONTEXT.md` (ex.: novo risco), o que clarificar em `docs/desenvolvimento/Sprints.md` (ex.: status, nova sub-task).
 - **Nao** editar arquivos ate o usuario pedir; fornecer texto pronto para colar.
 
 ### 6. Checklist para a proxima sessao de trabalho

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Sessão gráfica do kiosk: nenhuma barra, menu ou gerenciador de janelas — apenas
 # a janela da calculadora ocupando a tela. Espelha o padrão já validado para
-# Pi OS em docs/build-img-linux.md, adaptado ao Alpine (OpenRC/BusyBox).
+# Pi OS em docs/guias/build-img-linux.md, adaptado ao Alpine (OpenRC/BusyBox).
 
 # Nunca apagar/desligar a tela (appliance sempre visível).
 xset s off

@@ -1,7 +1,7 @@
 # Rodar a calculadora como sistema embarcado (kiosk) no Raspberry Pi 4B
 
 Objetivo: ao **ligar o Pi, ele arranca direto no aplicativo** da calculadora —
-sem mostrar o SO, desktop ou terminal. Referência: [PRD.md](../../PRD.md) §12
+sem mostrar o SO, desktop ou terminal. Referência: [PRD.md](../produto/PRD.md) §12
 (SO/arranque) e RNF-06 (boot rápido).
 
 ---
@@ -177,7 +177,7 @@ embutidos. Fica mais enxuta que o Pi OS e é bem mais rápida de montar que o
 Buildroot (usa pacotes prontos: `python3`, `py3-tkinter`, `espeak-ng`, X mínimo).
 Base fixada e reprodutível; roda no PC via `qemu-user`/binfmt (ou nativo no Pi).
 
-Tudo vive em [../system/rpi-os/alpine/](../system/rpi-os/alpine/):
+Tudo vive em [../system/rpi-os/alpine/](../../system/rpi-os/alpine/):
 
 ```bash
 cd system/rpi-os/alpine
@@ -188,7 +188,7 @@ O script baixa+verifica o minirootfs oficial, instala os pacotes de `packages` +
 kernel/firmware do Pi + as libs Python de `software/requirements.txt`, configura
 o autologin/kiosk (mesmo padrão `~/.xinitrc` desta doc, adaptado ao OpenRC/BusyBox
 do Alpine) e empacota a imagem. Detalhes de gravação e a **checklist de validação
-no hardware** estão no [README da pasta](../system/rpi-os/alpine/README.md).
+no hardware** estão no [README da pasta](../../system/rpi-os/alpine/README.md).
 
 > Como nas demais vias: versione só os scripts/config de `system/rpi-os/alpine/`,
 > **nunca** o `.img`.
@@ -198,7 +198,7 @@ no hardware** estão no [README da pasta](../system/rpi-os/alpine/README.md).
 Constrói um sistema mínimo só com o necessário para o app. Boot em segundos, mas
 é a via mais trabalhosa — Tkinter, X e TTS precisam ser habilitados manualmente e
 alguns pacotes Python não existem prontos no Buildroot. Os artefatos reutilizáveis
-(defconfig, overlay) ficam em [system/buildroot/](../buildroot/).
+(defconfig, overlay) ficam em [system/buildroot/](../../system/buildroot/).
 
 1. Obter o Buildroot e partir do defconfig do Pi 4 (64-bit):
    ```bash

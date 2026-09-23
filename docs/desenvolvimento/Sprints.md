@@ -1,6 +1,6 @@
 # Sprints e backlog (TCC Calculadora)
 
-Fonte operacional de **execução** em paralelo ao [`PRD.md`](PRD.md) e ao [`Cronograma/cronograma.md`](Cronograma/cronograma.md).  
+Fonte operacional de **execução** em paralelo ao [`PRD.md`](../produto/PRD.md) e ao [`cronograma/cronograma.md`](../../cronograma/cronograma.md).  
 Equipe: **Gustavo**, **João**, **Yuri**.
 
 ---
@@ -11,8 +11,8 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 - Status permitidos: `todo` | `doing` | `blocked` | `done`.
 - Ao concluir: marcar `Status: done` e data curta no rodapé da task (opcional).
 - **Não mover** tasks entre sprints sem acordo da equipe; prefira nova task na sprint corrente se for retrabalho.
-- Alinhar entregáveis formais (professor) com o [`Cronograma/cronograma.md`](Cronograma/cronograma.md).
-- A versão que **toda a equipe** deve assumir como referência é a de **`main` no GitHub** após **merge** do PR; editem nas branches de trabalho e integrem com frequência (ver [`docs/GITHUB_WORKFLOW.md`](docs/GITHUB_WORKFLOW.md), secção 3).
+- Alinhar entregáveis formais (professor) com o [`cronograma/cronograma.md`](../../cronograma/cronograma.md).
+- A versão que **toda a equipe** deve assumir como referência é a de **`main` no GitHub** após **merge** do PR; editem nas branches de trabalho e integrem com frequência (ver [`GITHUB_WORKFLOW.md`](GITHUB_WORKFLOW.md), secção 3).
 
 ---
 
@@ -23,7 +23,7 @@ Equipe: **Gustavo**, **João**, **Yuri**.
 - **Responsável:** Gustavo (ou rotação)
 - **Status:** done
 
-### T1.2 — Manter `Sprints.md` e `docs/CONTEXT.md` atualizados a cada sessão
+### T1.2 — Manter `Sprints.md` e `CONTEXT.md` atualizados a cada sessão
 
 - **Responsável:** todos
 - **Status:** todo

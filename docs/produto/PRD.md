@@ -3,7 +3,7 @@
 **Projeto:** calculadora científica acessível (hardware + software embarcado)  
 **Versão do documento:** 1.5
 **Status:** rascunho iterativo — evoluir junto ao TCC e à implementação  
-**Referências:** [TCC.txt](TCC.txt) (texto legado de materiais/métodos e escopo de funções); [prompt-prd-raspberry.md](prompt-prd-raspberry.md) (briefing; cópia em [promptspassados/prompt-prd-raspberry.md](promptspassados/prompt-prd-raspberry.md)); [promptspassados/](promptspassados/) (prompts arquivados); planejamento temporal em [Cronograma/cronograma.md](Cronograma/cronograma.md); fluxo Git e equipe em [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md); backlog operacional em [Sprints.md](Sprints.md); memória de sessão em [docs/CONTEXT.md](docs/CONTEXT.md); índice de documentação em [docs/README.md](docs/README.md); mapa de pastas do repositório em [docs/REPO_STRUCTURE.md](docs/REPO_STRUCTURE.md); Waveshare (notas + CAD) em [docs/waveshare/README.md](docs/waveshare/README.md); GPIO do Pi 4 em [docs/raspberry-pi-4b/README.md](docs/raspberry-pi-4b/README.md).
+**Referências:** `TCC.txt` (texto legado de materiais/métodos e escopo de funções); `prompt-prd-raspberry.md` (briefing original, não versionado); planejamento temporal em [cronograma/cronograma.md](../../cronograma/cronograma.md); fluxo Git e equipe em [desenvolvimento/GITHUB_WORKFLOW.md](../desenvolvimento/GITHUB_WORKFLOW.md); backlog operacional em [desenvolvimento/Sprints.md](../desenvolvimento/Sprints.md); memória de sessão em [desenvolvimento/CONTEXT.md](../desenvolvimento/CONTEXT.md); índice de documentação em [docs/README.md](../README.md); mapa de pastas do repositório em [desenvolvimento/REPO_STRUCTURE.md](../desenvolvimento/REPO_STRUCTURE.md); Waveshare (notas + CAD) em [waveshare/README.md](../waveshare/README.md); GPIO do Pi 4 em [raspberry-pi-4b/README.md](../raspberry-pi-4b/README.md).
 
 ---
 
@@ -15,7 +15,7 @@ O produto é uma **calculadora científica** com ênfase em **acessibilidade** (
 
 ## 2. Relação com o material legado (`TCC.txt`)
 
-O arquivo [TCC.txt](TCC.txt) acompanha o trabalho acadêmico (incluindo **materiais, métodos** e o **catálogo de funções** da seção 2.5), mas **não descreve mais a arquitetura vigente** do produto. Este PRD trata apenas da calculadora baseada em **Raspberry Pi 4B**, **periféricos Waveshare** (UPS HAT + LCD 4,3"), **segunda saída HDMI** para monitor, **switches hotswap**, **PCI em fenolite dupla face 15×15 cm** (KiCad + percloreto de ferro) e do **comportamento de software** previsto aqui. A redação formal do TCC (normas, figuras, metodologia) evolui em paralelo.
+O arquivo `TCC.txt` acompanha o trabalho acadêmico (incluindo **materiais, métodos** e o **catálogo de funções** da seção 2.5), mas **não descreve mais a arquitetura vigente** do produto. Este PRD trata apenas da calculadora baseada em **Raspberry Pi 4B**, **periféricos Waveshare** (UPS HAT + LCD 4,3"), **segunda saída HDMI** para monitor, **switches hotswap**, **PCI em fenolite dupla face 15×15 cm** (KiCad + percloreto de ferro) e do **comportamento de software** previsto aqui. A redação formal do TCC (normas, figuras, metodologia) evolui em paralelo.
 
 ---
 
@@ -48,7 +48,7 @@ O arquivo [TCC.txt](TCC.txt) acompanha o trabalho acadêmico (incluindo **materi
 
 ## 5. Escopo matemático (catálogo de funções)
 
-Conforme a seção **2.5 — Recursos disponíveis** de [TCC.txt](TCC.txt), o produto deve suportar pelo menos:
+Conforme a seção **2.5 — Recursos disponíveis** de `TCC.txt`, o produto deve suportar pelo menos:
 
 ### Funções trigonométricas
 
@@ -129,7 +129,7 @@ Conforme a seção **2.5 — Recursos disponíveis** de [TCC.txt](TCC.txt), o pr
 
 ---
 
-**Requisito:** a **lógica de cálculo** do sistema deve produzir resultados **consistentes** com esse catálogo; regras de precedência, formato numérico e tratamento de erros seguem a **seção 13** (códigos e feedback). Definições formais de cada função (domínio no plano real, convenções de ângulo graus/radianos se aplicável) permanecem **alinhadas ao texto acadêmico** em [TCC.txt](TCC.txt) §2.5 — não é necessário repetir no PRD uma especificação matemática longa, desde que o comportamento implementado seja o mesmo.
+**Requisito:** a **lógica de cálculo** do sistema deve produzir resultados **consistentes** com esse catálogo; regras de precedência, formato numérico e tratamento de erros seguem a **seção 13** (códigos e feedback). Definições formais de cada função (domínio no plano real, convenções de ângulo graus/radianos se aplicável) permanecem **alinhadas ao texto acadêmico** em `TCC.txt` §2.5 — não é necessário repetir no PRD uma especificação matemática longa, desde que o comportamento implementado seja o mesmo.
 
 Funções descritas em níveis aninhados representam operações alternativas associadas ao mesmo botão físico/lógico, sendo executadas quando o estado `Ctrl` estiver definido como `true`.
 ### 5.1 Quanto detalhar a seção 5 (sem fugir do escopo)
@@ -149,8 +149,8 @@ Funções descritas em níveis aninhados representam operações alternativas as
 | Componente | Papel |
 | ---------- | ----- |
 | Raspberry Pi 4B | SBC principal: SO, aplicação, áudio, vídeo. |
-| Waveshare UPS HAT | Continuidade elétrica; leitura de carga por **I2C** (ver [docs/waveshare/UPS_HAT.md](docs/waveshare/UPS_HAT.md)); **avisos** (ex.: **TTS** com bateria baixa) quando implementado; **sem** exigência de persistência de sessão após encerramento. |
-| LCD Waveshare **4,3" HDMI (B)** | Painel local; **modelo, cablagem e `config.txt`** em [docs/waveshare/4.3inch_HDMI_LCD_B.md](docs/waveshare/4.3inch_HDMI_LCD_B.md). **Interruptor físico** no encapsulamento (com **Braille** no exterior) desliga a **saída HDMI** para o LCD; o painel entra em **standby** conforme o circuito. |
+| Waveshare UPS HAT | Continuidade elétrica; leitura de carga por **I2C** (ver [waveshare/UPS_HAT.md](../waveshare/UPS_HAT.md)); **avisos** (ex.: **TTS** com bateria baixa) quando implementado; **sem** exigência de persistência de sessão após encerramento. |
+| LCD Waveshare **4,3" HDMI (B)** | Painel local; **modelo, cablagem e `config.txt`** em [waveshare/4.3inch_HDMI_LCD_B.md](../waveshare/4.3inch_HDMI_LCD_B.md). **Interruptor físico** no encapsulamento (com **Braille** no exterior) desliga a **saída HDMI** para o LCD; o painel entra em **standby** conforme o circuito. |
 | Monitor HDMI externo | Segunda saída HDMI; quando em uso, torna-se a saída visual principal com **front dedicado**. |
 | Teclado físico | **Cherry MX Red** em **hotswap**; trilhas na **fenolite**; **barra de pinos** + **cabo flat** até aos **GPIO** do Pi para matriz **6×7**. **Lista de GPIOs e funções** por documento de hardware (a acrescentar). |
 | Identificação **Braille** | Peças em **PLA** (impressão **Bambu Lab A1**); notação **Braille português (BR)** segundo **normas oficiais** (rótulos no interruptor / teclas conforme desenho). |
@@ -212,7 +212,7 @@ flowchart TD
 
 **Detecção de HDMI:** depende de SO e driver; detalhes técnicos permanecem em **itens em aberto** até testes no hardware.
 
-**Organização de código:** mantém-se a ideia de módulos separados (equivalente conceitual a `core`, interfaces e `accessibility` citados em [TCC.txt](TCC.txt), seção 2.6), **sem** amarrar o PRD a frameworks legados do texto acadêmico.
+**Organização de código:** mantém-se a ideia de módulos separados (equivalente conceitual a `core`, interfaces e `accessibility` citados em `TCC.txt`, seção 2.6), **sem** amarrar o PRD a frameworks legados do texto acadêmico.
 
 ---
 
@@ -253,7 +253,7 @@ flowchart TD
 ## 11. Riscos e dependências
 
 - **Hotplug HDMI no Linux:** eventos de conexão e nomes de saídas (`HDMI-A-1`, `HDMI-A-2`) variam conforme kernel/driver; pode exigir `udev`, `libdrm` ou camadas do compositor. Como o papel de cada painel vem da **porta física** (§6: HDMI0 = LCD, HDMI1 = monitor), é a **correspondência porta ↔ nome de conector** que precisa de ser verificada no hardware; trocar os cabos de porta inverte os fronts.
-- **Driver e modo do LCD Waveshare:** seguir [docs/waveshare/4.3inch_HDMI_LCD_B.md](docs/waveshare/4.3inch_HDMI_LCD_B.md); alterações de SO podem exigir revisão de `config.txt` / firmware.
+- **Driver e modo do LCD Waveshare:** seguir [waveshare/4.3inch_HDMI_LCD_B.md](../waveshare/4.3inch_HDMI_LCD_B.md); alterações de SO podem exigir revisão de `config.txt` / firmware.
 - **Sincronização UI + áudio:** evitar anúncios duplicados ou fora de ordem ao trocar de modo.
 - **Fabricação em fenolite:** tolerâncias e corrosão caseira afetam confiabilidade da PCI; revisão de largura de trilha/isolamento no KiCad.
 - **Bateria e UPS:** autonomia limitada; **avisos** por TTS conforme RF-06; **sem** política de backup de sessão na baseline.

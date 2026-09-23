@@ -1,6 +1,6 @@
 # Software (calculadora)
 
-Alinhado ao [PRD.md](../PRD.md) §8: **motor em Python**, **dois fronts** (LCD e HDMI), **áudio** em paralelo, módulos **sem** acoplar o núcleo à UI.
+Alinhado ao [PRD.md](../docs/produto/PRD.md) §8: **motor em Python**, **dois fronts** (LCD e HDMI), **áudio** em paralelo, módulos **sem** acoplar o núcleo à UI.
 
 | Pasta | Conteúdo esperado |
 | ----- | ------------------ |

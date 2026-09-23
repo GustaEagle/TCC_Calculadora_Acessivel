@@ -1,0 +1,46 @@
+# Estrutura do repositório (mapa PRD → pastas)
+
+Este documento liga o [PRD.md](../produto/PRD.md) à organização de código e hardware. **Não é obrigatório** criar tudo antes do primeiro commit: pastas vazias podem ganhar ficheiros à medida que as tasks avançam; a árvore abaixo é a **direção** acordada.
+
+---
+
+## Resumo visual
+
+| Área no PRD | Pasta(s) |
+| ----------- | -------- |
+| Motor de cálculo (§8), Python | [`software/core/`](../../software/core/) |
+| Ponto de entrada (escolhe a saída ativa, §7) | [`software/app.py`](../../software/app.py) |
+| Front LCD 7.x (§7) | [`software/ui/lcd/`](../../software/ui/lcd/) |
+| Front monitor HDMI (§7) | [`software/ui/hdmi/`](../../software/ui/hdmi/) |
+| Peças de UI partilhadas pelos dois fronts | [`software/ui/shared/`](../../software/ui/shared/) |
+| Modo somente áudio (RF-04) | [`software/audio_only.py`](../../software/audio_only.py) |
+| Áudio / TTS / acessibilidade (§8) | [`software/accessibility/`](../../software/accessibility/) |
+| GPIO, UPS, detecção HDMI, integração | [`software/hw_platform/`](../../software/hw_platform/) |
+| Testes (cruzados ou por módulo) | [`software/tests/`](../../software/tests/) + `tests/` dentro de cada pacote quando fizer sentido |
+| PCI KiCad, fenolite (§6) | [`hardware/pcb/`](../../hardware/pcb/) — ver nota sobre `Placa Kicad/` |
+| Imagem SO, `config.txt`, arranque, scripts (§12) | [`system/`](../../system/) |
+| Datasheets, CAD, pinout, Waveshare | [`docs/`](../README.md) (já existente) |
+| Cronograma interativo | [`cronograma/`](../../cronograma/) |
+
+---
+
+## KiCad e várias versões
+
+- O projeto atual pode continuar em **`Placa Kicad/`** até migrarem sem problemas de caminhos; a pasta alvo versionada é **`hardware/pcb/<nome-do-projeto>/`** (um `.kicad_pro` por linha de produto).
+- O KiCad gera **`/.history/`** com muitos ficheiros: está **ignorado no Git** (ver [`.gitignore`](../../.gitignore)). Para marcos (revisão, envio à gráfica), use **`hardware/pcb/snapshots/`** com subpastas datadas (ex.: `2026-06-10-gerbers-review/`) contendo export explícito (Gerber, PDF esquemático, STEP se necessário).
+
+---
+
+## Criar pastas “já” vs ir commitando
+
+- **Convém** ter o **esqueleto** `software/*` e `system/` desde cedo: todos sabem onde pôr ficheiros e o PRD cita modularidade (RNF-04).
+- **Não é obrigatório** preencher cada pasta na primeira sprint: ficheiros aparecem com as features.
+- Quem trabalha com IA: no início da sessão, o [`prompts/bootstrap.txt`](../../prompts/bootstrap.txt) já pede leitura do PRD; **não é necessário um agente novo** só para pastas — opcionalmente mencionar *“seguir docs/desenvolvimento/REPO_STRUCTURE.md”* no chat se estiverem a refatorar árvore.
+
+---
+
+## Migração sugerida (quando quiserem)
+
+1. Copiar ou mover o `.kicad_pro` + `.kicad_sch` + `.kicad_pcb` (+ bibliotecas locais) para `hardware/pcb/tcc-calculadora/` (nome ajustável).
+2. Manter `Placa Kicad/` só como arquivo ou apagar após validar que o Git e o KiCad abrem o novo caminho.
+3. Registar no [`CONTEXT.md`](CONTEXT.md) a pasta canónica da PCB.
