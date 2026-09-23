@@ -143,7 +143,8 @@ dá framebuffer à segunda porta e, com `vc4-kms-v3d`, o hotplug de que o RF-09
 depende. A exclusividade resolve-se no X, não castrando o firmware.
 
 **Diagnóstico.** O `--list-outputs` mostra numa só execução os conectores DRM, as
-saídas do `xrandr` com o seu estado, e o mapeamento efetivo de cada papel:
+saídas do `xrandr` com o seu estado e rotação, e o mapeamento efetivo de cada
+papel (incluindo a rotação que cada painel vai receber):
 
 ```sh
 cd /opt/calculadora && python3 -m software.app --list-outputs
@@ -152,6 +153,41 @@ cd /opt/calculadora && python3 -m software.app --list-outputs
 E o que o layout fez fica registado em `~/calculadora.log` (sobreponível por
 `CALC_LOG_FILE`) — no kiosk o tty1 fica coberto pelo X, então o ficheiro é a
 única forma de distinguir um `xrandr` que funcionou de um que falhou.
+
+### LCD de cabeça para baixo: imagem virada 180°
+
+O LCD é montado invertido no gabinete, então a imagem só sai na posição certa se
+o X a virar 180°. Isso é feito na **mesma** chamada `xrandr` que acende o painel
+(`--rotate inverted`), e não como um ajuste global: a rotação pertence ao painel,
+e o monitor externo continua em pé (`--rotate normal`). Trocar de tela em uso
+(RF-09) reaplica a rotação certa para o painel que acende, porque quem a escolhe
+é o mesmo ponto que escolhe a saída.
+
+Como o giro é de 180°, largura e altura **não** trocam: o painel continua 800×480
+e a faixa de layout escolhida pelo front é a mesma. O toque do LCD não entra nesta
+conta — a entrada do produto é o teclado matricial, não o táctil (se o táctil vier
+a ser usado, as coordenadas precisam da mesma inversão via
+`xinput set-prop ... "Coordinate Transformation Matrix"`).
+
+Como o resto do vídeo, o valor é corrigível na imagem sem recompilar nada, pelo
+`.xinitrc`:
+
+```sh
+export CALC_LCD_ROTATE=inverted     # 180° (padrão do produto)
+export CALC_MONITOR_ROTATE=normal   # monitor externo em pé (padrão)
+```
+
+Aceita `normal`/`left`/`inverted`/`right` ou `0`/`90`/`180`/`270`. Um valor
+inválido cai no padrão e fica registado no log — nunca chega ao `xrandr`, que
+recusaria a chamada inteira e deixaria o painel apagado por causa de um erro de
+digitação. E, como no resto do módulo, o resultado é **verificado**: se o `xrandr`
+aceitar o comando mas a saída não ficar na rotação pedida, isso é **WRN-012** no
+log, não sucesso — um LCD aceso de pernas para o ar é tão inútil quanto um apagado.
+
+> **Não** misture com rotação de kernel (`video=HDMI-A-1:800x480@60,rotate=180`
+> no `cmdline.txt`) nem com `display_hdmi_rotate`: são mecanismos alternativos e,
+> juntos, um desfaz o outro. O que a imagem usa é o `xrandr`. A rotação por
+> kernel só interessa se o **console de boot** também tiver de aparecer virado.
 
 ### Monitor ligado com a calculadora já em uso (RF-09)
 
@@ -252,6 +288,12 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
       aparecer **WRN-012**, o log traz o modo pretendido e os nomes tentados —
       compare-os com a tabela acima e, se divergirem, defina
       `CALC_LCD_XRANDR_OUTPUT` / `CALC_MONITOR_XRANDR_OUTPUT` no `.xinitrc`.
+- [ ] **Imagem do LCD virada 180°**: com o painel montado no gabinete, o texto tem
+      de aparecer na posição de leitura (não de cabeça para baixo). `--list-outputs`
+      mostra `rotacao: inverted` na saída do LCD, e o monitor externo, ligado a
+      seguir, continua **em pé** (`rotacao: normal`) — a volta é do painel, não do
+      ecrã. Se o painel estiver montado ao contrário do previsto, corrija com
+      `CALC_LCD_ROTATE` no `.xinitrc` em vez de mexer no código.
 - [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
       LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
       `connected`, o interruptor não corta o hotplug detect e a detecção do

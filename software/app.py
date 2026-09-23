@@ -129,8 +129,22 @@ def point_x_at(mode: DisplayMode, blackout: VideoBlackout | None = None) -> bool
     if blackout is not None and blackout.active:
         return video_output.all_off((lcd, monitor), mode=mode.value)
 
-    target = monitor if mode == DisplayMode.HDMI else lcd
-    return video_output.activate(target, disable=(lcd, monitor), mode=mode.value)
+    # Each panel carries its own orientation: the LCD is mounted upside down in
+    # the enclosure and is lit rotated 180 graus, the external monitor upright.
+    if mode == DisplayMode.HDMI:
+        target = monitor
+        rotate = video_output.rotation(
+            video_output.MONITOR_ROTATION_ENV, video_output.DEFAULT_MONITOR_ROTATION
+        )
+    else:
+        target = lcd
+        rotate = video_output.rotation(
+            video_output.LCD_ROTATION_ENV, video_output.DEFAULT_LCD_ROTATION
+        )
+
+    return video_output.activate(
+        target, disable=(lcd, monitor), mode=mode.value, rotate=rotate
+    )
 
 
 def make_video_applier(
@@ -350,14 +364,27 @@ def print_outputs() -> None:
         if not outputs:
             print("  nenhuma (sem DISPLAY, sem xrandr, ou estado ilegivel)")
         else:
+            # A rotacao entra aqui porque o sintoma dela - imagem de pernas para
+            # o ar - nao aparece em nenhuma outra linha deste diagnostico.
+            rotations = video_output.read_rotations()
             for name, active in outputs.items():
-                print(f"  {name}: {'ativa' if active else 'inativa'}")
+                estado = "ativa" if active else "inativa"
+                print(f"  {name}: {estado} (rotacao: {rotations.get(name, '?')})")
 
     lcd_output, monitor_output = resolve_output_names()
+    lcd_rotation = video_output.rotation(
+        video_output.LCD_ROTATION_ENV, video_output.DEFAULT_LCD_ROTATION
+    )
+    monitor_rotation = video_output.rotation(
+        video_output.MONITOR_ROTATION_ENV, video_output.DEFAULT_MONITOR_ROTATION
+    )
     print()
     print("Mapeamento em uso (conector DRM -> saida X):")
-    print(f"  LCD (HDMI0)     -> {reader.lcd_connector} -> {lcd_output}")
-    print(f"  Monitor (HDMI1) -> {reader.monitor_connector} -> {monitor_output}")
+    print(f"  LCD (HDMI0)     -> {reader.lcd_connector} -> {lcd_output} [rotacao: {lcd_rotation}]")
+    print(
+        f"  Monitor (HDMI1) -> {reader.monitor_connector} -> {monitor_output}"
+        f" [rotacao: {monitor_rotation}]"
+    )
     print(f"Deteccao real disponivel: {'sim' if reader.available() else 'nao (usando simulacao)'}")
 
 
