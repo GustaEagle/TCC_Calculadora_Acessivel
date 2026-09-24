@@ -73,6 +73,17 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 press(app, keyboard, "Shift", "log")
                 self.assertEqual(app.state.expression, "logbase(")
 
+    def test_shift_then_slash_toggles_the_angle_mode(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "Shift", "/")
+                self.assertEqual(app.state.angle_mode, "rad")
+                # Indicador e voz acompanham o modo: quem não vê a tela só tem a voz.
+                self.assertEqual(app.mode_var.get(), "RAD")
+                app.speech.say.assert_called_with("Modo rad")
+                self.assertEqual(app.state.expression, "")
+                self.assertFalse(app.shift_active, "o Shift tem de ser consumido")
+
     def test_question_mark_is_announced_and_types_nothing(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
