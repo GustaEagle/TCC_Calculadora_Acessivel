@@ -264,6 +264,16 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 - [ ] Liga e sobe **direto na calculadora** (sem desktop/login/cursor).
 - [ ] UI `ttkbootstrap` em **tela cheia** e legível no LCD Waveshare 4,3" (800×480).
 - [ ] **TTS pt-BR** anuncia entradas/resultados **sem rede** (offline).
+- [ ] O som sai pelo **jack de 3,5 mm do Pi** (fone ligado ao cabo TRS do gabinete),
+      **não** pelo HDMI. Confirmar com `aplay -l` que existe a placa `Headphones`
+      (bcm2835) e que é o nome usado em `overlay/etc/asound.conf`; `speaker-test -c2 -t wav`
+      tem de sair no fone. Se `Headphones` não aparecer, conferir a ordem das linhas
+      no `usercfg.txt` (ver "Ajustes prováveis"). A placa arranca **sem mudo e no
+      volume máximo**: baixe o volume do fone antes do primeiro teste.
+- [ ] **Interrupção da fala** (RF-08): apertar `=` enquanto uma tecla ainda está sendo
+      anunciada → o anúncio **corta** e só o resultado é falado, sem sobrepor e sem
+      `Device or resource busy` do `aplay`. Depois de um tempo de uso, `/tmp` (tmpfs,
+      ou seja, RAM) não acumula `fala-*` nem `tmp*.wav`.
 - [ ] Matar o app (`pkill -f software.app`) → ele **reinicia sozinho**.
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
 - [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem
@@ -331,8 +341,26 @@ e depois `Esc` (o `AC` do PC). O que só o hardware responde:
 - **Vídeo do LCD:** começar por `dtoverlay=vc4-kms-v3d` (em `overlay/boot/usercfg.txt`);
   se o painel não sincronizar, usar o bloco `hdmi_cvt 800 480` comentado lá
   (ver [../../../docs/waveshare/README.md](../../../docs/waveshare/README.md)).
-- **Áudio:** conferir `aplay -l` e ajustar `card` em `overlay/etc/asound.conf`
-  (HDMI vs. jack 3,5 mm).
+- **Áudio:** a saída **já está decidida** — o jack de 3,5 mm do próprio Pi
+  (`overlay/etc/asound.conf` fixa a placa `Headphones`); HDMI **não** serve, porque
+  o som morreria junto com o vídeo no `Ctrl` + `AC`. O que resta é **conferir**:
+  `aplay -l` tem de listar `Headphones`. Se não listar, o primeiro suspeito é a
+  ordem no `usercfg.txt`: `dtparam=audio=on` tem de vir **antes** do
+  `dtoverlay=vc4-kms-v3d`, porque depois dele a linha liga o parâmetro `audio` do
+  próprio overlay (áudio do HDMI) e a placa analógica não é criada — o sintoma é
+  silêncio total, já que o `asound.conf` exige uma placa que não existe. Se a placa
+  existir com outro nome, corrija o nome no `asound.conf` (não volte a usar índice
+  de card).
+- **Volume do jack:** o driver `snd-bcm2835` cria a placa **sem mudo e em 0 dB**, o
+  máximo. Quando a placa aparece, a regra udev `90-alsa-restore.rules` roda
+  `alsactl restore`; sem estado salvo ele cai no `alsactl init`, que também não
+  deixa mudo. Um ajuste feito com `amixer` (ex.: `amixer -c Headphones sset PCM 80%`)
+  só sobrevive ao reinício se for salvo com `alsactl store` — a mesma regra udev o
+  restaura no boot seguinte.
+- **`asound.conf` e o `!`:** nome de placa em `defaults.pcm.card` exige
+  `defaults.pcm.!card "Headphones"`. Sem o `!`, o ALSA recusa o arquivo
+  (`card is not a string`) e **nenhum** programa toca som, em placa nenhuma — foi a
+  causa do silêncio total na primeira imagem com a saída no jack.
 - **dtb/overlays:** o layout exato do `linux-rpi`/`raspberrypi-bootloader` pode
   variar por versão — se não bootar, checar se `bcm2711-rpi-4-b.dtb` e `overlays/`
   foram para a raiz da partição de boot.

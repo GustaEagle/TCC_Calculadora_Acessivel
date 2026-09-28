@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import logging
+import os
 import queue
+import shutil
+import signal
+import tempfile
 import threading
 import multiprocessing
 from dataclasses import dataclass
@@ -41,10 +45,59 @@ def _speak_process(text: str) -> None:
                 engine.setProperty("voice", voice.id)
                 break
 
+        # O driver espeak do pyttsx3 sintetiza numa thread do espeak-ng e toca o
+        # WAV com `aplay` a partir dela: runAndWait() volta com a fala ainda por
+        # tocar. Sair ali deixaria o aplay órfão — a fila não esperaria o fim da
+        # fala e a interrupção não acharia processo vivo — ou mataria a fala
+        # antes de o aplay começar.
+        started = threading.Event()
+        finished = threading.Event()
+        engine.connect("started-utterance", lambda **_: started.set())
+        engine.connect("finished-utterance", lambda **_: finished.set())
         engine.say(text)
         engine.runAndWait()
+        if started.is_set():  # say() descarta texto em branco: nada começa nem termina
+            finished.wait()
     except Exception:
         logger.exception("Falha ao falar '%s' via pyttsx3", text)
+
+
+class _SpeakProcess(multiprocessing.Process):
+    """One announcement's process; terminate() also silences the aplay it spawned.
+
+    The pyttsx3 espeak driver plays through `os.system("aplay ...")`, so the
+    sound comes from a grandchild that the stock terminate() would leave
+    playing. This process leads its own process group, which the sh and the
+    aplay inherit, and terminate() signals the whole group.
+
+    Each run also gets a scratch dir for the driver's temporary WAV, removed on
+    join(): a killed announcement never reaches the driver's os.remove(), and
+    /tmp on the device is tmpfs (RAM).
+    """
+
+    def start(self) -> None:
+        self._workdir = tempfile.mkdtemp(prefix="fala-")
+        super().start()
+
+    def run(self) -> None:
+        if hasattr(os, "setpgrp"):  # não existe no Windows, onde o SAPI5 fala sem aplay
+            os.setpgrp()
+        tempfile.tempdir = self._workdir  # é onde o driver cria o WAV
+        super().run()
+
+    def terminate(self) -> None:
+        if hasattr(os, "killpg"):
+            try:
+                os.killpg(self.pid, signal.SIGTERM)
+                return
+            except ProcessLookupError:
+                pass  # ainda antes do setpgrp(), logo também antes do aplay
+        super().terminate()
+
+    def join(self, timeout: float | None = None) -> None:
+        super().join(timeout)
+        if self.exitcode is not None:
+            shutil.rmtree(self._workdir, ignore_errors=True)
 
 
 class _Generation:
@@ -85,7 +138,7 @@ class SpeechService:
     ) -> None:
         self.enabled = enabled
         self._process_factory = process_factory or (
-            lambda text: multiprocessing.Process(target=_speak_process, args=(text,))
+            lambda text: _SpeakProcess(target=_speak_process, args=(text,))
         )
         self._queue: queue.Queue[SpeechMessage | None] = queue.Queue()
         self._current_process: SpeakProcess | None = None
