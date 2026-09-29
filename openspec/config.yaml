@@ -32,8 +32,10 @@ context: |
   - ui_lcd/  -> front atual em ttkbootstrap (Tkinter), dimensionado p/ 800x480 do
                LCD; também serve para testes locais no PC.
   - ui_hdmi/ -> front do monitor externo (planejado; ainda vazio).
-  - accessibility/ -> speech.py: TTS pt-BR offline via pyttsx3, fila não-bloqueante
-               em thread + processo separado para permitir interrupção (RF-08).
+  - accessibility/ -> speech.py: TTS pt-BR offline pela voz neural cadu (Piper +
+               onnxruntime), motor residente + cache de frases fixas + fallback
+               espeak-ng (WRN-011); fila não-bloqueante em thread com reprodução
+               por aplay (raw pela stdin) para permitir interrupção (RF-08).
   - hw_platform/ -> adaptadores/stubs de hardware (keyboard, display, ups) que
                isolam GPIO/I2C; hoje simulados p/ rodar no PC.
   - tests/   -> unittest (27 testes passando): aritmética, funções do PRD, engine.

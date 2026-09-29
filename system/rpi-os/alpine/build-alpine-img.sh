@@ -45,6 +45,27 @@ BOOT_SIZE_MIB=256      # partição de boot FAT32
 HOSTNAME="calculadora"
 KIOSK_USER="kiosk"
 
+# --- Voz neural (Piper + cadu) ---------------------------------------------
+# O piper-tts NÃO tem wheel musl no PyPI (design D7): um wheel musl/aarch64 é
+# compilado UMA vez (tarefa 2.1) e reaproveitado aqui. Aponte para um arquivo
+# local (PIPER_WHEEL) OU uma URL (PIPER_WHEEL_URL + PIPER_WHEEL_SHA256).
+PIPER_WHEEL="${PIPER_WHEEL:-}"
+PIPER_WHEEL_URL="${PIPER_WHEEL_URL:-}"
+PIPER_WHEEL_SHA256="${PIPER_WHEEL_SHA256:-}"
+# Escape hatch (opt-in): sem wheel pré-compilado, PIPER_BUILD_IN_CHROOT=1 compila
+# o wheel DENTRO do chroot qemu (build-base/cmake/git/ninja + pip wheel da tag do
+# git; o toolchain é removido depois). Autossuficiente, porém LENTO sob qemu
+# (dezenas de min). O design (D7) prefere o wheel pré-compilado fora do build.
+PIPER_BUILD_IN_CHROOT="${PIPER_BUILD_IN_CHROOT:-0}"
+PIPER_GIT_URL="${PIPER_GIT_URL:-https://github.com/OHF-Voice/piper1-gpl}"
+PIPER_GIT_REF="${PIPER_GIT_REF:-v1.8.0}"   # tags do repo piper1-gpl têm prefixo 'v'
+# Onde a voz fica embutida no aparelho (o mesmo caminho que o speech.py procura).
+VOICE_DIR="/opt/piper/voices"
+# sha256 fixo da voz cadu (repassado ao download-piper-voice.sh). Preencha assim
+# que a equipe tiver o hash (tarefa 2.2); com STRICT=1 o download recusa voz sem hash.
+export CADU_ONNX_SHA256="${CADU_ONNX_SHA256:-}"
+export CADU_JSON_SHA256="${CADU_JSON_SHA256:-}"
+
 # ---------------------------------------------------------------------------
 # Caminhos
 # ---------------------------------------------------------------------------
@@ -54,6 +75,7 @@ OVERLAY_DIR="${SCRIPT_DIR}/overlay"
 PACKAGES_FILE="${SCRIPT_DIR}/packages"
 REQUIREMENTS="${REPO_ROOT}/software/requirements.txt"
 SOFTWARE_DIR="${REPO_ROOT}/software"
+VOICE_SCRIPT="${REPO_ROOT}/scripts/download-piper-voice.sh"
 
 WORK_DIR="${SCRIPT_DIR}/.work"          # ignorado pelo git
 DL_DIR="${WORK_DIR}/downloads"
@@ -203,12 +225,93 @@ EOF
 
     log "Instalando libs Python (pip) de requirements.txt"
     install -Dm644 "${REQUIREMENTS}" "${ROOTFS}/tmp/requirements.txt"
+    # O marcador do requirements.txt pula o piper-tts em aarch64: aqui o pip só
+    # instala ttkbootstrap. O Piper vem do wheel musl pré-compilado (install_piper).
     in_chroot "pip3 install --break-system-packages --no-cache-dir -r /tmp/requirements.txt"
 
-    # pyttsx3 carrega libespeak-ng.so.1; se algum caminho procurar libespeak.so.1,
-    # criar symlink de compatibilidade (defensivo). Ver design D6.
-    in_chroot 'nglib=$(ls /usr/lib/libespeak-ng.so.1* 2>/dev/null | head -n1); \
-               [ -n "$nglib" ] && [ ! -e /usr/lib/libespeak.so.1 ] && ln -sf "$nglib" /usr/lib/libespeak.so.1 || true'
+    install_piper
+}
+
+# ---------------------------------------------------------------------------
+# 3b. Voz neural: wheel musl do piper-tts (--no-deps sobre py3-onnxruntime) + cadu
+# ---------------------------------------------------------------------------
+install_piper() {
+    log "Instalando o Piper (voz cadu)"
+
+    # 1) Instalar o piper: wheel pré-compilado (local/URL) OU build no chroot.
+    #    Em todos os casos, --no-deps: o onnxruntime vem do apk (py3-onnxruntime).
+    if [ -n "${PIPER_WHEEL}" ] || [ -n "${PIPER_WHEEL_URL}" ]; then
+        install_piper_prebuilt
+    elif [ "${PIPER_BUILD_IN_CHROOT}" = "1" ]; then
+        build_and_install_piper_in_chroot
+    else
+        die "Sem wheel do Piper. Escolha um caminho:
+  - wheel pré-compilado (design D7):  PIPER_WHEEL=<arquivo.whl>  ou  PIPER_WHEEL_URL=<url>
+  - compilar no chroot (lento):       PIPER_BUILD_IN_CHROOT=1
+O sdist do PyPI é incompleto, por isso não dá para 'pip install piper-tts' direto em musl."
+    fi
+
+    # pathvalidate (Python puro) é dependência do piper e não veio pelo --no-deps.
+    in_chroot "pip3 install --break-system-packages --no-cache-dir pathvalidate"
+
+    # 2) Gate: o piper tem de importar no Python do rootfs (3.14/musl).
+    in_chroot "python3 -c 'import piper; print(\"piper OK\")'" \
+        || die "piper não importa no rootfs — ver design (risco Python 3.14/musl)."
+
+    # 3) Enxugar modelos de outras línguas embutidos no piper (~25 MB): só pt-BR é usado.
+    in_chroot 'for d in $(find /usr/lib/python3*/site-packages/piper -type d \
+                 \( -iname "hebrew" -o -iname "tashkeel" \) 2>/dev/null); do rm -rf "$d"; done || true'
+
+    # 4) Baixar e verificar a voz cadu direto no rootfs (STRICT: nunca embutir voz sem sha256).
+    [ -f "${VOICE_SCRIPT}" ] || die "não achei ${VOICE_SCRIPT}"
+    log "Baixando/verificando a voz cadu em ${ROOTFS}${VOICE_DIR}"
+    STRICT=1 "${VOICE_SCRIPT}" "${ROOTFS}${VOICE_DIR}"
+}
+
+# Resolve o wheel pré-compilado (arquivo local ou download verificado) e instala.
+install_piper_prebuilt() {
+    log "Piper: usando wheel pré-compilado"
+    local wheel_host="${WORK_DIR}/piper_wheel.whl"
+    if [ -n "${PIPER_WHEEL}" ]; then
+        [ -f "${PIPER_WHEEL}" ] || die "PIPER_WHEEL não é um arquivo: ${PIPER_WHEEL}"
+        cp -f "${PIPER_WHEEL}" "${wheel_host}"
+    else
+        log "Baixando o wheel do Piper"
+        curl -fSL "${PIPER_WHEEL_URL}" -o "${wheel_host}"
+        if [ -n "${PIPER_WHEEL_SHA256}" ]; then
+            echo "${PIPER_WHEEL_SHA256}  ${wheel_host}" | sha256sum -c - \
+                || die "sha256 do wheel do Piper não confere."
+        else
+            warn "PIPER_WHEEL_SHA256 não fixado — build não reprodutível."
+        fi
+    fi
+    local wheel_name
+    wheel_name="$(basename "${wheel_host}")"
+    cp -f "${wheel_host}" "${ROOTFS}/tmp/${wheel_name}"
+    in_chroot "pip3 install --break-system-packages --no-cache-dir --no-deps /tmp/${wheel_name}"
+    rm -f "${ROOTFS}/tmp/${wheel_name}"
+}
+
+# Escape hatch: compila o wheel musl/aarch64 do piper-tts DENTRO do chroot qemu.
+# Instala o toolchain como grupo virtual (.piper-build) e o remove no fim, para o
+# ~200 MB de build-base/cmake NÃO ir para a imagem. Lento sob qemu.
+build_and_install_piper_in_chroot() {
+    warn "Piper: compilando o wheel no chroot (PIPER_BUILD_IN_CHROOT=1) — LENTO sob qemu."
+    # O CMakeLists do piper baixa e compila o espeak-ng estático (precisa de git,
+    # cmake, ninja e compilador C); a extensão liga contra Python.h (python3-dev).
+    in_chroot "apk add --no-progress --virtual .piper-build build-base cmake git ninja python3-dev"
+    in_chroot "rm -rf /tmp/piper-wheelhouse && mkdir -p /tmp/piper-wheelhouse"
+    # Build isolation (padrão) puxa o backend scikit-build-core do PyPI; --no-deps
+    # não baixa o onnxruntime (vem do apk). CMake/ninja/git são os do apk (PATH).
+    in_chroot "pip3 wheel --no-cache-dir --no-deps -w /tmp/piper-wheelhouse \
+        'piper-tts @ git+${PIPER_GIT_URL}@${PIPER_GIT_REF}'" \
+        || die "falha ao compilar o wheel do Piper no chroot (ver log; tag=${PIPER_GIT_REF})."
+    in_chroot "pip3 install --break-system-packages --no-cache-dir --no-deps /tmp/piper-wheelhouse/piper_tts-*.whl"
+    # Guardar o wheel fora do rootfs para reuso (evita recompilar no próximo build).
+    cp -f "${ROOTFS}"/tmp/piper-wheelhouse/piper_tts-*.whl "${WORK_DIR}/" 2>/dev/null \
+        && log "Wheel salvo em ${WORK_DIR}/ (reuse com PIPER_WHEEL=... no próximo build)." || true
+    in_chroot "apk del .piper-build" || warn "não consegui remover o toolchain .piper-build."
+    in_chroot "rm -rf /tmp/piper-wheelhouse"
 }
 
 # ---------------------------------------------------------------------------
@@ -288,15 +391,28 @@ smoke_tests() {
     in_chroot "python3 -c 'import tkinter, ttkbootstrap; print(\"tkinter/ttkbootstrap OK\")'" \
         || die "Tkinter/ttkbootstrap não importam no rootfs — base gráfica quebrada (ver design, risco musl×Tkinter)."
 
-    log "Smoke: inicialização do TTS (pyttsx3 -> espeak-ng)"
-    # Só init + enumeração de vozes: reproduzir áudio (runAndWait) exige placa de
-    # som e é validado NO HARDWARE (README, checklist 9.3). Aqui é aviso, não gate,
-    # porque o chroot emulado (qemu-user) não tem áudio e pode dar falso negativo.
-    if in_chroot "python3 -c 'import pyttsx3; e=pyttsx3.init(); print(\"vozes:\", len(e.getProperty(\"voices\")))'"; then
-        log "TTS inicializou no chroot."
-    else
-        warn "pyttsx3.init() falhou no chroot (pode ser limitação do qemu-user). VALIDAR NO HARDWARE (checklist 9.3)."
-    fi
+    log "Smoke: síntese real do Piper (voz cadu -> PCM), sem placa de som — gate obrigatório"
+    # Síntese não precisa de áudio: o Piper gera PCM em memória. Isso valida o
+    # import do piper/onnxruntime no Python 3.14/musl (não testado upstream) e a
+    # voz cadu embutida, e falha CEDO se algo disso quebrar — mais forte que o
+    # antigo pyttsx3.init(). A REPRODUÇÃO pelo aplay é validada NO HARDWARE
+    # (README, checklist). O qemu-user é lento: a síntese pode levar dezenas de s.
+    install -Dm644 /dev/stdin "${ROOTFS}/tmp/piper_smoke.py" <<PYEOF
+import sys
+from pathlib import Path
+from piper import PiperVoice
+model = Path("${VOICE_DIR}/pt_BR-cadu-medium.onnx")
+cfg = Path(str(model) + ".json")
+voice = PiperVoice.load(str(model), config_path=str(cfg) if cfg.is_file() else None)
+pcm = b"".join(
+    getattr(c, "audio_int16_bytes", b"") for c in voice.synthesize("Calculadora pronta")
+)
+assert pcm, "Piper devolveu PCM vazio"
+print("Piper OK: %d bytes de PCM da voz cadu" % len(pcm))
+PYEOF
+    in_chroot "python3 /tmp/piper_smoke.py" \
+        || die "Síntese do Piper falhou no chroot (import 3.14/musl, onnxruntime ou voz cadu) — ver design, risco Python 3.14."
+    rm -f "${ROOTFS}/tmp/piper_smoke.py"
 }
 
 # ---------------------------------------------------------------------------

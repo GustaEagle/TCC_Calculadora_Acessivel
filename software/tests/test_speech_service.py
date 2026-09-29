@@ -1,19 +1,24 @@
 import os
-import shutil
+import stat
 import sys
 import tempfile
 import threading
 import time
-import types
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from software.accessibility.speech import SpeechService, _SpeakProcess, _speak_process
+from software.accessibility import speech
+from software.accessibility.speech import (
+    PiperEngine,
+    SpeechService,
+    _RawPlaybackProcess,
+    default_fixed_phrases,
+)
 
 
 class _FakeProcess:
-    """Stands in for multiprocessing.Process: blocks in join() until terminated."""
+    """Stands in for a playback handle: blocks in join() until terminated."""
 
     def __init__(self, text: str, on_start=None) -> None:
         self.text = text
@@ -36,6 +41,34 @@ class _FakeProcess:
         self._done.set()
 
 
+class _FakeEngine:
+    """Resident engine stand-in: no Piper, no audio, records synthesize() calls."""
+
+    def __init__(self, *, ready: bool = True, failed: bool = False, sample_rate: int = 22050) -> None:
+        self._ready = ready
+        self.failed = failed
+        self.sample_rate = sample_rate
+        self.calls: list[str] = []
+        self._settled = threading.Event()
+        if ready or failed:
+            self._settled.set()
+
+    @property
+    def is_ready(self) -> bool:
+        return self._ready
+
+    def load_async(self) -> None:
+        self._settled.set()
+
+    def wait_ready(self, timeout: float | None = None) -> bool:
+        self._settled.wait(timeout)
+        return self._ready
+
+    def synthesize(self, text: str) -> bytes:
+        self.calls.append(text)
+        return f"PCM:{text}".encode()
+
+
 def _wait_until(predicate, timeout: float = 2.0) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -46,6 +79,8 @@ def _wait_until(predicate, timeout: float = 2.0) -> bool:
 
 
 class SpeechServiceInterruptionTest(unittest.TestCase):
+    """RF-08: the queue/generation/interruption contract, engine-agnostic."""
+
     def _make_service(self):
         started = threading.Event()
         processes: list[_FakeProcess] = []
@@ -106,130 +141,162 @@ class SpeechServiceInterruptionTest(unittest.TestCase):
             service.stop()
 
 
-class _EspeakLikeEngine:
-    """pyttsx3 engine the way its espeak driver behaves: runAndWait() announces
-    'started-utterance' and returns with the phrase still to play, and
-    'finished-utterance' comes later, from espeak-ng's own thread. Like
-    pyttsx3, say() drops blank text."""
+class CacheAndSynthesisTest(unittest.TestCase):
+    """D4: frases fixas saem do cache; resultados dinâmicos são sintetizados."""
 
-    def __init__(self) -> None:
-        self.playback_over = threading.Event()
-        self._callbacks: dict[str, list] = {}
-        self._text = ""
+    def _service(self, engine, **kw):
+        service = SpeechService(engine=engine, warm_cache=False, **kw)
+        self.addCleanup(service.stop)
+        return service
 
-    def setProperty(self, name, value) -> None:
-        pass
+    def test_cached_phrase_is_not_resynthesized(self) -> None:
+        engine = _FakeEngine(ready=True)
+        service = self._service(engine)
+        service._cache["seno"] = b"CACHED"
 
-    def getProperty(self, name):
-        return []
+        pcm, rate = service._produce("seno")
 
-    def connect(self, topic, callback) -> None:
-        self._callbacks.setdefault(topic, []).append(callback)
+        self.assertEqual(pcm, b"CACHED")
+        self.assertEqual(rate, service._cache_rate)
+        self.assertEqual(engine.calls, [], "uma frase em cache não deve chamar a síntese")
 
-    def say(self, text) -> None:
-        if text.strip():
-            self._text = text
+    def test_dynamic_result_is_synthesized(self) -> None:
+        engine = _FakeEngine(ready=True)
+        service = self._service(engine)
 
-    def runAndWait(self) -> None:
-        if not self._text:
-            return
-        self._notify("started-utterance")
+        pcm, rate = service._produce("Resultado 14")
 
-        def play() -> None:
-            self.playback_over.wait()
-            self._notify("finished-utterance", completed=True)
+        self.assertEqual(pcm, b"PCM:Resultado 14")
+        self.assertEqual(rate, engine.sample_rate)
+        self.assertEqual(engine.calls, ["Resultado 14"])
 
-        threading.Thread(target=play, daemon=True).start()
+    def test_cache_warm_prefills_fixed_phrases(self) -> None:
+        engine = _FakeEngine(ready=True)
+        service = SpeechService(engine=engine, fixed_phrases=["seno", "cosseno"])
+        self.addCleanup(service.stop)
 
-    def _notify(self, topic, **kwargs) -> None:
-        for callback in self._callbacks.get(topic, []):
-            callback(name=None, **kwargs)
+        self.assertTrue(_wait_until(lambda: "seno" in service._cache and "cosseno" in service._cache))
+        self.assertCountEqual(engine.calls, ["seno", "cosseno"])
 
-
-class SpeakWaitsForPlaybackTest(unittest.TestCase):
-    def _speak_in_background(self, text: str) -> tuple[threading.Thread, _EspeakLikeEngine]:
-        engine = _EspeakLikeEngine()
-        patcher = mock.patch.dict(sys.modules, {"pyttsx3": types.SimpleNamespace(init=lambda: engine)})
-        patcher.start()
-        self.addCleanup(patcher.stop)
-        speaking = threading.Thread(target=_speak_process, args=(text,), daemon=True)
-        speaking.start()
-        return speaking, engine
-
-    def test_returns_only_after_the_phrase_finishes_playing(self) -> None:
-        speaking, engine = self._speak_in_background("resultado quatorze")
-
-        speaking.join(timeout=0.3)
-        # Voltar aqui deixaria o aplay órfão: a fila não esperaria o fim da
-        # fala e a interrupção não acharia processo vivo para encerrar.
-        self.assertTrue(speaking.is_alive(), "voltou com a fala ainda tocando")
-
-        engine.playback_over.set()
-        speaking.join(timeout=2)
-        self.assertFalse(speaking.is_alive())
-
-    def test_blank_text_does_not_wait_for_a_phrase_that_never_starts(self) -> None:
-        speaking, _ = self._speak_in_background("   ")
-
-        speaking.join(timeout=2)
-        # Travar aqui prenderia o worker: nenhuma fala seguinte sairia.
-        self.assertFalse(speaking.is_alive(), "travou esperando uma fala que nunca começou")
+        engine.calls.clear()
+        pcm, _ = service._produce("seno")
+        self.assertEqual(pcm, b"PCM:seno")
+        self.assertEqual(engine.calls, [], "após aquecido, a frase fixa não é re-sintetizada")
 
 
-def _play_like_the_espeak_driver(report: str) -> None:
-    """What the pyttsx3 espeak driver does per phrase: a temporary WAV played by
-    `aplay` through os.system. Here `sleep` is the aplay; `exec` keeps the PID
-    the shell wrote to `report`."""
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav:
-        pass
-    os.system(f"echo {wav.name} $$ > {report}.part && mv {report}.part {report} && exec sleep 30")
-    os.remove(wav.name)
+class FallbackTest(unittest.TestCase):
+    """D6: sem Piper, cai para espeak-ng, loga WRN-011 uma vez, e não trava."""
+
+    def test_missing_engine_falls_back_and_logs_wrn011_once(self) -> None:
+        engine = _FakeEngine(ready=False, failed=True)
+        service = SpeechService(engine=engine, warm_cache=False)
+        self.addCleanup(service.stop)
+
+        with mock.patch.object(speech, "_espeak_pcm", return_value=(b"ESPEAK", 22050)) as espeak:
+            with self.assertLogs(speech.logger, level="WARNING") as logs:
+                first = service._produce("Calculadora pronta")
+                second = service._produce("Erro 001. Divisão por zero.")
+
+        self.assertEqual(first, (b"ESPEAK", 22050))
+        self.assertEqual(second, (b"ESPEAK", 22050))
+        self.assertEqual(espeak.call_count, 2, "toda frase degradada usa o fallback")
+        wrn = [line for line in logs.output if "WRN-011" in line]
+        self.assertEqual(len(wrn), 1, "WRN-011 é logado uma única vez")
+
+    def test_queue_keeps_working_under_fallback(self) -> None:
+        engine = _FakeEngine(ready=False, failed=True)
+        played: list[str] = []
+        service = SpeechService(engine=engine, warm_cache=False)
+        self.addCleanup(service.stop)
+
+        with mock.patch.object(speech, "_espeak_pcm", side_effect=lambda t: (played.append(t) or (b"", 22050))):
+            service.say("uma")
+            service.say("duas")
+            self.assertTrue(_wait_until(lambda: played == ["uma", "duas"]))
 
 
-def _playing(pid: int) -> bool:
-    try:
-        stat = Path(f"/proc/{pid}/stat").read_text()
-    except FileNotFoundError:
-        return False
-    return stat.rsplit(")", 1)[1].split()[0] not in ("Z", "X")  # zumbi não toca mais
+def _write_fake_aplay(path: Path, body: str) -> None:
+    path.write_text("#!/usr/bin/env python3\n" + body)
+    path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "usa grupos de processos e /proc")
-class SpeakProcessTerminateTest(unittest.TestCase):
-    def _speak(self) -> tuple[_SpeakProcess, str, int]:
-        scratch = tempfile.mkdtemp()
-        self.addCleanup(shutil.rmtree, scratch, True)
-        report = Path(scratch) / "report"
-        process = _SpeakProcess(target=_play_like_the_espeak_driver, args=(str(report),))
-        process.start()
+class RawPlaybackProcessTest(unittest.TestCase):
+    """3.2: player raw via aplay pela stdin; terminate() mata o aplay."""
 
-        def stop() -> None:
-            if process.is_alive():
-                process.terminate()
-            process.join(5)
+    def setUp(self) -> None:
+        self._tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(self._tmp, ignore_errors=True))
+        self._aplay = Path(self._tmp) / "aplay"
+        patcher = mock.patch.object(speech, "_APLAY", str(self._aplay))
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-        self.addCleanup(stop)
-        self.assertTrue(_wait_until(report.exists, timeout=5), "o aplay nunca começou")
-        wav, aplay = report.read_text().split()
-        return process, wav, int(aplay)
+    def test_command_format_and_pcm_reach_aplay(self) -> None:
+        report = Path(self._tmp) / "report"
+        _write_fake_aplay(
+            self._aplay,
+            "import sys\n"
+            f"data = sys.stdin.buffer.read()\n"
+            f"open({str(report)!r}, 'wb').write(('|'.join(sys.argv[1:]) + '\\n').encode() + data)\n",
+        )
+        handle = _RawPlaybackProcess(lambda: (b"\x01\x02\x03\x04", 22050))
+        handle.start()
+        handle.join(timeout=5)
 
-    def test_terminate_silences_the_aplay_too(self) -> None:
-        process, _, aplay = self._speak()
+        self.assertTrue(report.exists(), "o aplay não recebeu a frase")
+        head, _, data = report.read_bytes().partition(b"\n")
+        self.assertEqual(
+            head.decode().split("|"),
+            ["-q", "-t", "raw", "-f", "S16_LE", "-c", "1", "-r", "22050", "-"],
+        )
+        self.assertEqual(data, b"\x01\x02\x03\x04")
 
-        process.terminate()
-        process.join(timeout=5)
+    def test_terminate_kills_the_aplay(self) -> None:
+        pidfile = Path(self._tmp) / "pid"
+        _write_fake_aplay(
+            self._aplay,
+            "import os, time\n"
+            f"open({str(pidfile)!r}, 'w').write(str(os.getpid()))\n"
+            "time.sleep(30)\n",
+        )
+        handle = _RawPlaybackProcess(lambda: (b"\x00" * 16, 22050))
+        handle.start()
+        self.assertTrue(_wait_until(pidfile.exists, timeout=5), "o aplay nunca começou")
+        pid = int(pidfile.read_text())
 
-        self.assertFalse(process.is_alive())
-        self.assertTrue(_wait_until(lambda: not _playing(aplay)), "o aplay seguiu tocando")
+        handle.terminate()
+        handle.join(timeout=5)
 
-    def test_interrupted_phrase_leaves_no_wav_behind(self) -> None:
-        process, wav, _ = self._speak()
+        self.assertFalse(handle.is_alive())
+        self.assertTrue(_wait_until(lambda: not _alive(pid)), "o aplay seguiu tocando")
 
-        process.terminate()
-        process.join(timeout=5)
 
-        # O driver só apaga o WAV depois do aplay; interrompido, nunca chega lá.
-        self.assertFalse(os.path.exists(wav))
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except (ProcessLookupError, PermissionError):
+        return False
+    return True
+
+
+class DefaultFixedPhrasesTest(unittest.TestCase):
+    def test_covers_key_names_digits_and_errors(self) -> None:
+        phrases = default_fixed_phrases()
+        self.assertIn("seno", phrases)                 # nome de tecla (SPOKEN_TOKEN_NAMES)
+        self.assertIn("7", phrases)                    # dígito
+        self.assertIn("Calculadora pronta", phrases)   # anúncio fixo
+        self.assertTrue(any(p.startswith("Erro 001.") for p in phrases))  # §13
+        self.assertEqual(len(phrases), len(set(phrases)), "sem duplicatas")
+
+
+class PiperEngineImportTest(unittest.TestCase):
+    def test_engine_without_voice_reports_failed_not_ready(self) -> None:
+        engine = PiperEngine(voice_path="/caminho/que/nao/existe.onnx")
+        engine.load_async()
+        self.assertTrue(engine.wait_ready(timeout=5) is False)
+        self.assertTrue(engine.failed)
+        self.assertFalse(engine.is_ready)
 
 
 class GenerationTest(unittest.TestCase):

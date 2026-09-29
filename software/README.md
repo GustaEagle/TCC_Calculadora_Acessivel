@@ -45,7 +45,7 @@ Cada subprojeto pode ter o seu próprio `tests/` ou `pyproject.toml` quando a st
 
 ## Dependências
 
-- **Python:** `ttkbootstrap` e `pyttsx3`, com versões fixadas em [requirements.txt](requirements.txt) (`ttkbootstrap==1.20.4`, `pyttsx3==2.99`).
-- **Sistema:** `python3-tk` (Tkinter) e **`espeak-ng`** para o TTS.
-  > ⚠️ Use **`espeak-ng`**, **não** o `espeak` clássico: este último é incompatível com o driver do `pyttsx3` (falha com `SetVoiceByName ... gmw/en`) e o áudio não inicia. Vale para qualquer forma de empacotar (Docker, Pi OS, Buildroot).
+- **Python:** `ttkbootstrap` e `piper-tts` (voz neural cadu, sobre `onnxruntime`), com versões fixadas em [requirements.txt](requirements.txt). Em glibc (CI/Docker/host) o `piper-tts` vem do PyPI; na imagem Alpine (musl/aarch64) ele é instalado por um wheel pré-compilado + `py3-onnxruntime` do apk (ver `system/rpi-os/alpine/`).
+- **Sistema:** `python3-tk` (Tkinter), `alsa-utils` (`aplay`, que reproduz o PCM) e **`espeak-ng`** — agora como **fonemizador do Piper** e motor de **fallback** (WRN-011), não mais como voz principal.
+  > A voz principal é a neural **`cadu`** (Piper). Baixe-a para o caminho padrão com `scripts/download-piper-voice.sh /opt/piper/voices` (o Docker já faz isso no build). Sem a voz ou sem o Piper, o serviço degrada para o `espeak-ng` e registra `WRN-011`, sem travar a entrada (RF-08). Use `espeak-ng`, não o `espeak` clássico.
 - **Testes:** só a biblioteca padrão (`unittest`) — nenhuma dependência extra. Ver `make check`.
