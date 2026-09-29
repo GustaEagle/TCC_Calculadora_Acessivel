@@ -35,3 +35,6 @@ data/
 
 # Cópia local da partição boot (firmware/binários Raspberry Pi); regenerar a partir da imagem oficial ou de system/
 bootfoverlay/
+
+# Configuracao local do Claude Code (especifica da maquina)
+.claude/settings.local.json
