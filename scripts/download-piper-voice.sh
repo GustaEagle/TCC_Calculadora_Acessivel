@@ -24,9 +24,14 @@ VOICE_NAME="pt_BR-cadu-medium"
 # rhasspy/piper-voices (HuggingFace): pt / pt_BR / cadu / medium.
 BASE_URL="${PIPER_VOICE_BASE_URL:-https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium}"
 
-# sha256 fixo da voz (PREENCHER — ver cabeçalho). Env tem prioridade.
-CADU_ONNX_SHA256="${CADU_ONNX_SHA256:-}"
-CADU_JSON_SHA256="${CADU_JSON_SHA256:-}"
+# sha256 fixo da voz. Obtidos do rhasspy/piper-voices (HuggingFace) em
+# 2026-09-30, baixando os dois arquivos e conferindo o hash; é o que torna o
+# build reprodutível e o que STRICT=1 (imagem) exige. Env tem prioridade, para
+# quem precise apontar para outra cópia da voz.
+#   pt_BR-cadu-medium.onnx       61 MB
+#   pt_BR-cadu-medium.onnx.json   5 KB
+CADU_ONNX_SHA256="${CADU_ONNX_SHA256:-765f0809a6ea9035d4a6d0d008dbf8876e68b2dd32029312672fa8f405bdb535}"
+CADU_JSON_SHA256="${CADU_JSON_SHA256:-5fe03aa3d4901880554905b12075713cd552598c8a350455a1ec73f8b4e6be19}"
 
 DEST_DIR="${1:-/opt/piper/voices}"
 STRICT="${STRICT:-0}"

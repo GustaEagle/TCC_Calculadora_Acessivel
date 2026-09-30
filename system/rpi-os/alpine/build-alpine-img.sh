@@ -316,7 +316,12 @@ resolve_wheel_path() {
 
 install_piper_prebuilt() {
     log "Piper: usando wheel pré-compilado"
-    local wheel_host="${WORK_DIR}/piper_wheel.whl"
+    # O NOME do arquivo é significativo: o pip lê nome, versão e tags do próprio
+    # nome do wheel e recusa qualquer coisa fora do padrão
+    # {nome}-{versao}-{python}-{abi}-{plataforma}.whl, com
+    # "Invalid wheel filename (wrong number of parts)". Por isso o nome ORIGINAL
+    # é preservado aqui, em vez de normalizado para algo genérico.
+    local wheel_host wheel_name
     if [ -n "${PIPER_WHEEL}" ]; then
         local wheel_src
         wheel_src="$(resolve_wheel_path "${PIPER_WHEEL}")" || die \
@@ -324,9 +329,14 @@ install_piper_prebuilt() {
 Tentei o caminho como dado e relativo a ${REPO_ROOT}, expandindo globs.
 Gere o wheel com 'make piper-wheel' (sai em system/rpi-os/alpine/wheels/)."
         log "Wheel do Piper: ${wheel_src}"
+        wheel_name="$(basename "${wheel_src}")"
+        wheel_host="${WORK_DIR}/${wheel_name}"
         cp -f "${wheel_src}" "${wheel_host}"
     else
         log "Baixando o wheel do Piper"
+        # Nome vindo da URL, sem query string nem fragmento.
+        wheel_name="$(basename "${PIPER_WHEEL_URL%%[?#]*}")"
+        wheel_host="${WORK_DIR}/${wheel_name}"
         curl -fSL "${PIPER_WHEEL_URL}" -o "${wheel_host}"
         if [ -n "${PIPER_WHEEL_SHA256}" ]; then
             echo "${PIPER_WHEEL_SHA256}  ${wheel_host}" | sha256sum -c - \
@@ -335,10 +345,17 @@ Gere o wheel com 'make piper-wheel' (sai em system/rpi-os/alpine/wheels/)."
             warn "PIPER_WHEEL_SHA256 não fixado — build não reprodutível."
         fi
     fi
-    local wheel_name
-    wheel_name="$(basename "${wheel_host}")"
+
+    # Recusar aqui, com o nome à vista, é mais claro que o erro do pip lá dentro.
+    case "${wheel_name}" in
+        *-*-*-*-*.whl) ;;
+        *) die "nome de wheel inválido para o pip: '${wheel_name}'
+Esperado {nome}-{versao}-{python}-{abi}-{plataforma}.whl (ex.:
+piper_tts-1.8.0-cp39-abi3-linux_aarch64.whl). Não renomeie o arquivo." ;;
+    esac
+
     cp -f "${wheel_host}" "${ROOTFS}/tmp/${wheel_name}"
-    in_chroot "pip3 install --break-system-packages --no-cache-dir --no-deps /tmp/${wheel_name}"
+    in_chroot "pip3 install --break-system-packages --no-cache-dir --no-deps '/tmp/${wheel_name}'"
     rm -f "${ROOTFS}/tmp/${wheel_name}"
 }
 
