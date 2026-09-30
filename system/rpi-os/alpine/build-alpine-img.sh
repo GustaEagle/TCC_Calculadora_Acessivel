@@ -278,9 +278,20 @@ O sdist do PyPI é incompleto, por isso não dá para 'pip install piper-tts' di
     in_chroot "python3 -c 'import piper; print(\"piper OK\")'" \
         || die "piper não importa no rootfs — ver design (risco Python 3.14/musl)."
 
-    # 3) Enxugar modelos de outras línguas embutidos no piper (~25 MB): só pt-BR é usado.
-    in_chroot 'for d in $(find /usr/lib/python3*/site-packages/piper -type d \
-                 \( -iname "hebrew" -o -iname "tashkeel" \) 2>/dev/null); do rm -rf "$d"; done || true'
+    # 3) Enxugar os MODELOS de outras línguas embutidos no piper (~26 MB): a
+    #    imagem só usa pt-BR.
+    #
+    #    Apagar os DIRETÓRIOS (como se fazia antes) quebrava o pacote: o
+    #    piper/voice.py faz `from .tashkeel import TashkeelDiacritizer` no topo
+    #    do módulo, sem condição — sem o pacote, `import piper` morre com
+    #    ModuleNotFoundError e a imagem sai sem voz nenhuma.
+    #
+    #    Então só os .onnx saem (21 MB do hebraico + 4,8 MB do árabe) e todo o
+    #    código Python fica. Esses modelos só são carregados para voz árabe (ar)
+    #    ou hebraica (he), e a instanciação é preguiçosa (voice.py), então o
+    #    caminho pt-BR nunca os toca.
+    in_chroot 'rm -f /usr/lib/python3*/site-packages/piper/hebrew/nakdimon.onnx \
+                     /usr/lib/python3*/site-packages/piper/tashkeel/model.onnx || true'
 
     # 4) Baixar e verificar a voz cadu direto no rootfs (STRICT: nunca embutir voz sem sha256).
     [ -f "${VOICE_SCRIPT}" ] || die "não achei ${VOICE_SCRIPT}"
