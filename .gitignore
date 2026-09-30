@@ -38,3 +38,8 @@ bootfoverlay/
 
 # Configuracao local do Claude Code (especifica da maquina)
 .claude/settings.local.json
+
+# Wheel musl/aarch64 do Piper (~34 MB), compilado por scripts/build-piper-wheel.sh.
+# Artefato de build reproduzível (`make piper-wheel`), tratado como o .img: fica
+# fora do git. O README da pasta é versionado e explica o porquê.
+system/rpi-os/alpine/wheels/*.whl

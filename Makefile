@@ -29,11 +29,13 @@
 #   make rpi-img-distclean    # apaga .work/ E o .img gerado
 #   make rpi-vm-remove        # (Windows) apaga a VM de build e libera o disco
 #
-# A voz neural (Piper) precisa de um wheel musl/aarch64 — o build EXIGE que você
-# escolha de onde ele vem (senão para com "Sem wheel do Piper"):
-#   make piper-wheel                                  # compila o wheel uma vez (-> system/rpi-os/alpine/wheels/)
-#   make rpi-img PIPER_WHEEL=.../piper_tts-*.whl      # usa um wheel já compilado (rápido)
-#   make rpi-img PIPER_BUILD_IN_CHROOT=1              # compila o wheel dentro do build (lento)
+# A voz neural (Piper) precisa de um wheel musl/aarch64 (não existe no PyPI —
+# ver system/rpi-os/alpine/wheels/README.md). Fluxo normal, dois comandos:
+#   make piper-wheel   # compila o wheel UMA vez (-> system/rpi-os/alpine/wheels/)
+#   make rpi-img       # já encontra o wheel acima sozinho (PIPER_WHEEL tem padrão)
+# Variações:
+#   make rpi-img PIPER_WHEEL=/outro/caminho/piper_tts-*.whl   # wheel de outro lugar
+#   make rpi-img PIPER_BUILD_IN_CHROOT=1                      # compila no build (lento)
 # Fixe também CADU_ONNX_SHA256/CADU_JSON_SHA256 (a voz é baixada com sha256).
 #
 # Bring-up do TECLADO físico 6x7 — estes alvos rodam NO Raspberry Pi (por SSH),
@@ -74,7 +76,13 @@ CONTINUE ?= 0
 # Voz neural (Piper) no build da imagem. Escolha UM:
 #   PIPER_WHEEL=/caminho/piper_tts-*.whl  -> usa um wheel musl/aarch64 pronto (rápido)
 #   PIPER_BUILD_IN_CHROOT=1               -> compila o wheel no chroot (lento sob qemu)
-PIPER_WHEEL ?=
+# Padrão: o wheel que `make piper-wheel` deixa em system/rpi-os/alpine/wheels/.
+# Com isto `make rpi-img` funciona sem argumentos depois de `make piper-wheel`.
+# O glob e o caminho relativo são resolvidos pelo próprio script
+# (resolve_wheel_path em build-alpine-img.sh) — necessário porque este alvo faz
+# `cd` para a pasta do script e passa o valor entre aspas. Se nada casar, o build
+# para com uma mensagem dizendo para rodar `make piper-wheel`.
+PIPER_WHEEL ?= $(RPI_IMG_DIR)/wheels/piper_tts-*.whl
 PIPER_BUILD_IN_CHROOT ?=
 # sha256 fixo da voz cadu (repassados ao build; obrigatórios na imagem).
 CADU_ONNX_SHA256 ?=

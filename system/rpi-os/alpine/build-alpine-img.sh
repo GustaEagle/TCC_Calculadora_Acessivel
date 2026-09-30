@@ -227,7 +227,11 @@ EOF
     install -Dm644 "${REQUIREMENTS}" "${ROOTFS}/tmp/requirements.txt"
     # O marcador do requirements.txt pula o piper-tts em aarch64: aqui o pip só
     # instala ttkbootstrap. O Piper vem do wheel musl pré-compilado (install_piper).
-    in_chroot "pip3 install --break-system-packages --no-cache-dir -r /tmp/requirements.txt"
+    # --retries/--timeout: a rede do chroot emulado (qemu) reseta conexoes com
+    # frequencia; o pillow (compilado, grande) saiu para o apk por isso mesmo,
+    # e o que sobra aqui e' um wheel pequeno e puro Python.
+    in_chroot "pip3 install --break-system-packages --no-cache-dir \
+        --retries 10 --timeout 60 -r /tmp/requirements.txt"
 
     install_piper
 }
@@ -235,6 +239,22 @@ EOF
 # ---------------------------------------------------------------------------
 # 3b. Voz neural: wheel musl do piper-tts (--no-deps sobre py3-onnxruntime) + cadu
 # ---------------------------------------------------------------------------
+# Garante o Piper num rootfs REAPROVEITADO (REUSE_ROOTFS=1).
+#
+# install_piper vive dentro de install_packages, que o caminho de reuso pula -
+# sem isto, `make rpi-img CONTINUE=1` produziria uma imagem SEM voz neural e em
+# silêncio: no aparelho o app cairia no fallback espeak-ng (WRN-011) e ninguém
+# perceberia até ouvir a voz errada. Verifica antes de instalar para não repetir
+# o download/verificação da voz a cada rebuild.
+ensure_piper() {
+    if in_chroot "python3 -c 'import piper'" >/dev/null 2>&1; then
+        log "Piper já presente no rootfs reaproveitado"
+        return 0
+    fi
+    warn "Piper ausente no rootfs reaproveitado — instalando agora."
+    install_piper
+}
+
 install_piper() {
     log "Instalando o Piper (voz cadu)"
 
@@ -269,12 +289,42 @@ O sdist do PyPI é incompleto, por isso não dá para 'pip install piper-tts' di
 }
 
 # Resolve o wheel pré-compilado (arquivo local ou download verificado) e instala.
+# Resolve o valor de PIPER_WHEEL num arquivo que existe de facto.
+#
+# Absorve dois tropecos reais do jeito como o Makefile chama este script:
+#   - ele faz `cd` para a pasta do script antes de executar, entao um caminho
+#     RELATIVO a raiz do repositorio (o natural de digitar) resolveria errado;
+#   - ele passa o valor entre aspas, entao um glob como "piper_tts-*.whl" chega
+#     aqui LITERAL, com o asterisco, e nunca casa com [ -f ].
+# compgen -G expande o padrao sem sofrer word splitting - necessario porque o
+# caminho deste repositorio contem espacos ("Area de trabalho").
+resolve_wheel_path() {
+    local spec="$1" candidate match
+    for candidate in "${spec}" "${REPO_ROOT}/${spec}"; do
+        if [ -f "${candidate}" ]; then
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+        match="$(compgen -G "${candidate}" 2>/dev/null | head -n1)" || true
+        if [ -n "${match}" ] && [ -f "${match}" ]; then
+            printf '%s\n' "${match}"
+            return 0
+        fi
+    done
+    return 1
+}
+
 install_piper_prebuilt() {
     log "Piper: usando wheel pré-compilado"
     local wheel_host="${WORK_DIR}/piper_wheel.whl"
     if [ -n "${PIPER_WHEEL}" ]; then
-        [ -f "${PIPER_WHEEL}" ] || die "PIPER_WHEEL não é um arquivo: ${PIPER_WHEEL}"
-        cp -f "${PIPER_WHEEL}" "${wheel_host}"
+        local wheel_src
+        wheel_src="$(resolve_wheel_path "${PIPER_WHEEL}")" || die \
+"PIPER_WHEEL não resolve para nenhum arquivo: ${PIPER_WHEEL}
+Tentei o caminho como dado e relativo a ${REPO_ROOT}, expandindo globs.
+Gere o wheel com 'make piper-wheel' (sai em system/rpi-os/alpine/wheels/)."
+        log "Wheel do Piper: ${wheel_src}"
+        cp -f "${wheel_src}" "${wheel_host}"
     else
         log "Baixando o wheel do Piper"
         curl -fSL "${PIPER_WHEEL_URL}" -o "${wheel_host}"
@@ -299,7 +349,10 @@ build_and_install_piper_in_chroot() {
     warn "Piper: compilando o wheel no chroot (PIPER_BUILD_IN_CHROOT=1) — LENTO sob qemu."
     # O CMakeLists do piper baixa e compila o espeak-ng estático (precisa de git,
     # cmake, ninja e compilador C); a extensão liga contra Python.h (python3-dev).
-    in_chroot "apk add --no-progress --virtual .piper-build build-base cmake git ninja python3-dev"
+    # linux-headers e obrigatorio: o espeak-ng inclui <linux/limits.h>, que no
+    # Alpine nao acompanha o build-base (ver scripts/build-piper-wheel.sh).
+    in_chroot "apk add --no-progress --virtual .piper-build \
+        build-base cmake git ninja linux-headers python3-dev"
     in_chroot "rm -rf /tmp/piper-wheelhouse && mkdir -p /tmp/piper-wheelhouse"
     # Build isolation (padrão) puxa o backend scikit-build-core do PyPI; --no-deps
     # não baixa o onnxruntime (vem do apk). CMake/ninja/git são os do apk (PATH).
@@ -520,6 +573,7 @@ main() {
     if [ "${REUSE_ROOTFS:-0}" = "1" ] && [ -d "${ROOTFS}/etc" ]; then
         warn "REUSE_ROOTFS=1: reaproveitando pacotes de ${ROOTFS} (pulando download/apk/pip)."
         mount_chroot
+        ensure_piper            # a voz neural não pode faltar por causa do reuso
         apply_overlay_and_app   # app/overlay sempre atualizados a partir do repo
         smoke_tests
     else

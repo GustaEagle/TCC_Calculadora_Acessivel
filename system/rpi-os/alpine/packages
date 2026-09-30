@@ -22,6 +22,11 @@ mkinitfs          # gera o initramfs-rpi (features: base ext4 mmc, ver script)
 python3
 python3-tkinter   # _tkinter ligado ao Tcl/Tk do Alpine (evita recompilar Tk)
 py3-pip           # instala ttkbootstrap de software/requirements.txt
+py3-pillow        # dependencia do ttkbootstrap (pillow>=10,<13). Vem do apk, NAO
+                  # do pip: e' pacote compilado e o download dele pela rede
+                  # emulada do chroot qemu quebrava com "Connection reset by
+                  # peer". Mesmo princípio do py3-onnxruntime (design D8).
+                  # Alpine v3.24 community: 12.2.0 — dentro da faixa exigida.
 
 # --- X11 mínimo (sem desktop) ---
 xorg-server

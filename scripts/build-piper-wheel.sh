@@ -11,7 +11,12 @@
 #              (rootless: usa `unshare -r`; precisa de qemu-aarch64-static e binfmt).
 #
 # Uso:   ./build-piper-wheel.sh [OUT_DIR]        (padrão: system/rpi-os/alpine/wheels)
-# Saída: OUT_DIR/piper_tts-*-musllinux_*_aarch64.whl  (caminho impresso no fim)
+# Saída: OUT_DIR/piper_tts-*-linux_aarch64.whl  (caminho impresso no fim)
+#        O build do Piper NÃO passa por auditwheel, então a tag fica
+#        'linux_aarch64' e não 'musllinux_*_aarch64'. O binário é musl de
+#        verdade (compilado no Alpine 3.24) — só não leva o rótulo. Como a
+#        instalação é por caminho de arquivo na MESMA versão do Alpine, o pip
+#        aceita a tag genérica.
 #
 # É LENTO no motor chroot (compila sob emulação qemu). O wheel é abi3: serve para
 # qualquer Python 3.x da imagem.
@@ -28,7 +33,11 @@ MINIROOTFS_SHA256="f55a90f69052c5bd6f92cb09a8f47065970830b194c917a006fb94028e721
 
 PIPER_GIT_URL="${PIPER_GIT_URL:-https://github.com/OHF-Voice/piper1-gpl}"
 PIPER_GIT_REF="${PIPER_GIT_REF:-v1.8.0}"   # tags do repo têm prefixo 'v' (v1.8.0)
-BUILD_DEPS="build-base cmake git ninja python3 python3-dev py3-pip"
+# linux-headers: o espeak-ng inclui <linux/limits.h> (speech.h), que no Alpine
+# NAO vem com o build-base — em distros glibc esse header vem de carona no
+# pacote de dev da libc. Sem ele a compilacao morre com
+# "fatal error: linux/limits.h: No such file or directory".
+BUILD_DEPS="build-base cmake git ninja linux-headers python3 python3-dev py3-pip"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
