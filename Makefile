@@ -3,7 +3,8 @@
 # Objetivo: quem clona o repositório roda tudo por aqui, sem decorar comandos.
 # Os testes usam unittest (biblioteca padrão do Python), igual ao CI — então
 # `make check` roda direto no host, sem instalar nada. O app em si (GUI + TTS)
-# roda no Docker (`make up`), porque depende de tkinter/ttkbootstrap/pyttsx3.
+# roda no Docker (`make up`), porque depende de tkinter/ttkbootstrap e da voz
+# neural (Piper + cadu); o Docker já baixa a voz no build.
 # Alvo padrão: `check`.
 #
 #   make          # equivale a `make check`
@@ -27,6 +28,15 @@
 #   make rpi-img-clean        # apaga só .work/ (preserva o .img)
 #   make rpi-img-distclean    # apaga .work/ E o .img gerado
 #   make rpi-vm-remove        # (Windows) apaga a VM de build e libera o disco
+#
+# A voz neural (Piper) precisa de um wheel musl/aarch64 (não existe no PyPI —
+# ver system/rpi-os/alpine/wheels/README.md). Fluxo normal, dois comandos:
+#   make piper-wheel   # compila o wheel UMA vez (-> system/rpi-os/alpine/wheels/)
+#   make rpi-img       # já encontra o wheel acima sozinho (PIPER_WHEEL tem padrão)
+# Variações:
+#   make rpi-img PIPER_WHEEL=/outro/caminho/piper_tts-*.whl   # wheel de outro lugar
+#   make rpi-img PIPER_BUILD_IN_CHROOT=1                      # compila no build (lento)
+# Fixe também CADU_ONNX_SHA256/CADU_JSON_SHA256 (a voz é baixada com sha256).
 #
 # Bring-up do TECLADO físico 6x7 — estes alvos rodam NO Raspberry Pi (por SSH),
 # não no PC de desenvolvimento, porque precisam dos GPIO reais do header J8:
@@ -63,13 +73,27 @@ RPI_IMG_DIR := system/rpi-os/alpine
 RPI_IMG_SCRIPT := ./build-alpine-img.sh
 # CONTINUE=1 -> REUSE_ROOTFS=1 no script: pula download/apk/pip/smoke.
 CONTINUE ?= 0
+# Voz neural (Piper) no build da imagem. Escolha UM:
+#   PIPER_WHEEL=/caminho/piper_tts-*.whl  -> usa um wheel musl/aarch64 pronto (rápido)
+#   PIPER_BUILD_IN_CHROOT=1               -> compila o wheel no chroot (lento sob qemu)
+# Padrão: o wheel que `make piper-wheel` deixa em system/rpi-os/alpine/wheels/.
+# Com isto `make rpi-img` funciona sem argumentos depois de `make piper-wheel`.
+# O glob e o caminho relativo são resolvidos pelo próprio script
+# (resolve_wheel_path em build-alpine-img.sh) — necessário porque este alvo faz
+# `cd` para a pasta do script e passa o valor entre aspas. Se nada casar, o build
+# para com uma mensagem dizendo para rodar `make piper-wheel`.
+PIPER_WHEEL ?= $(RPI_IMG_DIR)/wheels/piper_tts-*.whl
+PIPER_BUILD_IN_CHROOT ?=
+# sha256 fixo da voz cadu (repassados ao build; obrigatórios na imagem).
+CADU_ONNX_SHA256 ?=
+CADU_JSON_SHA256 ?=
 # No Windows o build roda numa VM do VirtualBox, orquestrada por este script.
 RPI_IMG_PS := powershell -NoProfile -ExecutionPolicy Bypass -File $(RPI_IMG_DIR)/build-alpine-img.ps1
 
 .DEFAULT_GOAL := check
 .PHONY: check check-docker install run run-hdmi run-lcd run-audio \
         build image up down clean help \
-        rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean rpi-vm-remove \
+        piper-wheel rpi-img rpi-img-continue rpi-img-clean rpi-img-distclean rpi-vm-remove \
         keypad-pins keypad-scan keypad-toggle
 
 check: ## Roda toda a suíte de testes com unittest (igual ao CI)
@@ -85,7 +109,10 @@ install: ## Cria um venv (.venv) e instala as deps Python do app — evita o PEP
 	$(VENV_PY) -m pip install -r software/requirements.txt
 	@echo ""
 	@echo "OK. O app tambem precisa de pacotes de SISTEMA (nao vem por pip):"
-	@echo "  Debian/Ubuntu:  sudo apt install python3-tk espeak-ng python3-venv"
+	@echo "  Debian/Ubuntu:  sudo apt install python3-tk espeak-ng alsa-utils python3-venv"
+	@echo "  E da voz neural cadu (Piper) no caminho padrao:"
+	@echo "    sudo scripts/download-piper-voice.sh /opt/piper/voices"
+	@echo "    (sem a voz, o app fala pelo fallback espeak-ng — WRN-011)"
 	@echo "  Depois:  make run     (ou, sem setup nenhum:  make up)"
 
 run: ## Roda o app no host usando o venv criado por `make install`
@@ -115,14 +142,20 @@ up: | image ## Abre o app no Docker (janela na tela). Antes: xhost +local:root
 down: ## Encerra o app / container
 	$(COMPOSE) down
 
-rpi-img: ## Gera a imagem Alpine do Pi (CONTINUE=1 reaproveita o rootfs de .work/)
+piper-wheel: ## Compila o wheel musl/aarch64 do Piper p/ a imagem (-> system/rpi-os/alpine/wheels/)
+	scripts/build-piper-wheel.sh
+
+rpi-img: ## Gera a imagem Alpine do Pi (precisa PIPER_WHEEL=... ou PIPER_BUILD_IN_CHROOT=1; CONTINUE=1 reusa .work/)
 ifeq ($(OS),Windows_NT)
 	@echo "==> Gerando imagem do Raspberry Pi pelo Windows (VM VirtualBox, CONTINUE=$(CONTINUE))."
 	$(RPI_IMG_PS) -Action $(if $(filter 1,$(CONTINUE)),continue,build)
 else
 	@echo "==> Gerando imagem do Raspberry Pi (CONTINUE=$(CONTINUE)) — vai pedir sudo."
 	@echo "    Dica: se a sessão gráfica cair, rode num TTY texto (Ctrl+Alt+F3)."
-	cd $(RPI_IMG_DIR) && sudo env REUSE_ROOTFS=$(CONTINUE) $(RPI_IMG_SCRIPT) 2>&1 | tee build.log
+	cd $(RPI_IMG_DIR) && sudo env REUSE_ROOTFS=$(CONTINUE) \
+		PIPER_WHEEL="$(PIPER_WHEEL)" PIPER_BUILD_IN_CHROOT="$(PIPER_BUILD_IN_CHROOT)" \
+		CADU_ONNX_SHA256="$(CADU_ONNX_SHA256)" CADU_JSON_SHA256="$(CADU_JSON_SHA256)" \
+		$(RPI_IMG_SCRIPT) 2>&1 | tee build.log
 endif
 
 rpi-img-continue: ## Atalho para `make rpi-img CONTINUE=1` (refaz só o .img)

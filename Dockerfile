@@ -10,13 +10,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Dependências de sistema:
 #  - python3 / python3-tk : interpretador 3.11 + Tkinter (ttkbootstrap)
-#  - espeak-ng             : motor TTS offline usado pelo pyttsx3. O pacote
-#    clássico "espeak" usa nomes de voz simples ("en"), mas o driver do
-#    pyttsx3 espera a convenção hierárquica do espeak-ng ("gmw/en"),
-#    então "espeak" isolado falha ao inicializar a voz padrão.
+#  - espeak-ng             : fonemizador do Piper e motor TTS de FALLBACK
+#    (WRN-011). A voz principal é neural (Piper + cadu), instalada por pip
+#    (piper-tts, wheel glibc) mais o modelo baixado abaixo.
+#  - curl                  : baixa a voz cadu no build (download-piper-voice.sh)
 #  - libasound2-plugins    : ponte ALSA -> PulseAudio (áudio para o host)
-#  - alsa-utils            : fornece o binário "aplay" que o espeak-ng chama
-#    para reproduzir o áudio sintetizado
+#  - alsa-utils            : fornece o binário "aplay" que reproduz o PCM
+#    (o speech.py toca raw pela stdin do aplay)
 #  - fonts-dejavu-core     : fontes para a UI não ficar sem glifos
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-tk \
         espeak-ng \
         libespeak-ng1 \
+        curl \
         libasound2-plugins \
         alsa-utils \
         fonts-dejavu-core \
@@ -38,8 +39,15 @@ RUN printf 'pcm.!default {\n  type pulse\n}\nctl.!default {\n  type pulse\n}\n' 
 WORKDIR /app
 
 # Instala as dependências Python primeiro para aproveitar o cache de camadas.
+# Em glibc o piper-tts vem do PyPI com wheel (puxa o onnxruntime); o marcador do
+# requirements.txt só pula o piper em aarch64 (imagem Alpine, wheel próprio).
 COPY software/requirements.txt software/requirements.txt
 RUN pip3 install -r software/requirements.txt
+
+# Baixa a voz neural cadu para o caminho padrão que o speech.py procura
+# (/opt/piper/voices). Idempotente; o app é offline em execução.
+COPY scripts/download-piper-voice.sh /usr/local/bin/download-piper-voice.sh
+RUN /usr/local/bin/download-piper-voice.sh /opt/piper/voices
 
 # Copia apenas o código da aplicação (o resto é ignorado pelo .dockerignore).
 COPY software/ software/

@@ -1,6 +1,6 @@
 # Contexto da última sessão (memória curta)
 
-Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt [`Prompts/close-session.txt`](../Prompts/close-session.txt)).
+Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt [`prompts/close-session.txt`](../../prompts/close-session.txt)).
 
 ---
 
@@ -9,12 +9,12 @@ Atualizar no **encerramento** de cada sessão de trabalho (humano ou via prompt 
 ## Estado atual
 
 - Repositório remoto ativo com a feature de logaritmo customizado (`logbase`) implementada e testada. Interface LCD agora suporta o estado `Shift` para o botão `log`.
-- Documentação normativa: `PRD.md`; tempo: `cronograma/cronograma.md` e `cronograma/cronograma.html`; registo da equipa: `docs/sessoes/`.
-- Backlog: `Sprints.md`.
+- Documentação normativa: [`docs/produto/PRD.md`](../produto/PRD.md); tempo: [`cronograma/`](../../cronograma/); registo da equipa: [`sessoes/`](sessoes/README.md).
+- Backlog: [`Sprints.md`](Sprints.md).
 
 ## Pendências / débitos
 - Refatoração do botão de separador decimal (T1.6) para suportar Shift (vírgula).
-- Combinar convenção de branches e revisão de PR (T1.3 em `Sprints.md`).
+- Combinar convenção de branches e revisão de PR (T1.3 em [`Sprints.md`](Sprints.md)).
 - Manter `Sprints.md` e este `CONTEXT.md` atualizados por sessão (T1.2).
 
 ## Riscos / atenções

@@ -148,6 +148,36 @@ class FlagCombinationTest(unittest.TestCase):
         self.assertEqual(activate.call_args.kwargs["mode"], DisplayMode.HDMI.value)
 
 
+class PanelRotationTest(unittest.TestCase):
+    """O LCD e' montado de cabeca para baixo: so' ele acende virado 180 graus."""
+
+    def apply(self, mode: DisplayMode, env: dict[str, str] | None = None) -> mock.Mock:
+        with isolated_logging(), \
+             mock.patch.dict("os.environ", env or {}, clear=True), \
+             mock.patch("software.hw_platform.video_output.activate") as activate, \
+             mock.patch("software.hw_platform.video_output.read_outputs", return_value={}):
+            app.point_x_at(mode)
+        return activate
+
+    def test_the_lcd_is_lit_upside_down(self) -> None:
+        activate = self.apply(DisplayMode.LCD)
+
+        self.assertEqual(activate.call_args.args[0], "HDMI-1")
+        self.assertEqual(activate.call_args.kwargs["rotate"], "inverted")
+
+    def test_the_external_monitor_is_lit_upright(self) -> None:
+        """A volta e' do painel, nao do ecra: o monitor esta' em pe na mesa."""
+        activate = self.apply(DisplayMode.HDMI)
+
+        self.assertEqual(activate.call_args.args[0], "HDMI-2")
+        self.assertEqual(activate.call_args.kwargs["rotate"], "normal")
+
+    def test_an_env_var_corrects_a_panel_mounted_the_other_way(self) -> None:
+        activate = self.apply(DisplayMode.LCD, {"CALC_LCD_ROTATE": "normal"})
+
+        self.assertEqual(activate.call_args.kwargs["rotate"], "normal")
+
+
 class PrintOutputsTest(unittest.TestCase):
     """5.1/5.2: one command answering both halves of the bring-up checklist."""
 

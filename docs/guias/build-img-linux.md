@@ -1,7 +1,7 @@
 # Rodar a calculadora como sistema embarcado (kiosk) no Raspberry Pi 4B
 
 Objetivo: ao **ligar o Pi, ele arranca direto no aplicativo** da calculadora —
-sem mostrar o SO, desktop ou terminal. Referência: [PRD.md](../../PRD.md) §12
+sem mostrar o SO, desktop ou terminal. Referência: [PRD.md](../produto/PRD.md) §12
 (SO/arranque) e RNF-06 (boot rápido).
 
 ---
@@ -59,11 +59,17 @@ serviço systemd (que exige mexer no `Xwrapper.config`).
 2. **Instalar dependências** no Pi:
    ```bash
    sudo apt update
-   sudo apt install -y xserver-xorg xinit python3-tk espeak-ng python3-pip unclutter
+   sudo apt install -y xserver-xorg xinit python3-tk espeak-ng alsa-utils python3-pip unclutter
    ```
 
-   > ⚠️ É `espeak-ng`, **não** `espeak`. O `espeak` clássico é incompatível com o
-   > driver do `pyttsx3` (falha com `SetVoiceByName ... gmw/en`) e o TTS não sobe.
+   > ⚠️ É `espeak-ng`, **não** `espeak`. O `espeak-ng` é o **fonemizador** do Piper
+   > e o motor de **fallback** (WRN-011); a voz principal é a neural `cadu`. O
+   > `alsa-utils` fornece o `aplay`, que reproduz o PCM.
+
+   Baixe a voz neural cadu para o caminho padrão (uma vez; o dispositivo é offline):
+   ```bash
+   sudo scripts/download-piper-voice.sh /opt/piper/voices
+   ```
 
 3. **Copiar o código** para o Pi (ex.: `/home/pi/calculadora/`, contendo `software/`)
    e instalar as libs Python com as versões fixadas do projeto:
@@ -156,11 +162,13 @@ adiciona um "estágio" próprio que instala o app e o kiosk — o resultado é u
    cd pi-gen
    ```
 2. Criar um estágio `stage-calculadora/` com:
-   - `00-packages` — lista de pacotes apt (`xserver-xorg xinit python3-tk espeak-ng unclutter`).
+   - `00-packages` — lista de pacotes apt (`xserver-xorg xinit python3-tk espeak-ng alsa-utils unclutter`).
    - `01-run.sh` — copia a pasta `software/`, instala as libs Python
-     (`pip3 install --break-system-packages -r software/requirements.txt`), grava o
-     `~/.xinitrc` e o `~/.bash_profile` e habilita o autologin (os mesmos passos 3–6
-     da seção kiosk, mas em script).
+     (`pip3 install --break-system-packages -r software/requirements.txt`, que puxa o
+     `piper-tts`/`onnxruntime` em glibc), baixa a voz cadu
+     (`scripts/download-piper-voice.sh /opt/piper/voices`), grava o `~/.xinitrc` e o
+     `~/.bash_profile` e habilita o autologin (os mesmos passos 3–6 da seção kiosk,
+     mas em script).
 3. Definir `config` (nome da imagem, `TARGET_HOSTNAME`, usuário) e rodar:
    ```bash
    sudo ./build.sh
@@ -174,10 +182,11 @@ adiciona um "estágio" próprio que instala o app e o kiosk — o resultado é u
 
 Imagem **Alpine Linux (aarch64)** montada 100% por script, já com o app e o kiosk
 embutidos. Fica mais enxuta que o Pi OS e é bem mais rápida de montar que o
-Buildroot (usa pacotes prontos: `python3`, `py3-tkinter`, `espeak-ng`, X mínimo).
+Buildroot (usa pacotes prontos: `python3`, `py3-tkinter`, `py3-onnxruntime`,
+`espeak-ng`, X mínimo; o Piper vem por wheel + a voz cadu baixada no build).
 Base fixada e reprodutível; roda no PC via `qemu-user`/binfmt (ou nativo no Pi).
 
-Tudo vive em [../system/rpi-os/alpine/](../system/rpi-os/alpine/):
+Tudo vive em [../system/rpi-os/alpine/](../../system/rpi-os/alpine/):
 
 ```bash
 cd system/rpi-os/alpine
@@ -188,7 +197,7 @@ O script baixa+verifica o minirootfs oficial, instala os pacotes de `packages` +
 kernel/firmware do Pi + as libs Python de `software/requirements.txt`, configura
 o autologin/kiosk (mesmo padrão `~/.xinitrc` desta doc, adaptado ao OpenRC/BusyBox
 do Alpine) e empacota a imagem. Detalhes de gravação e a **checklist de validação
-no hardware** estão no [README da pasta](../system/rpi-os/alpine/README.md).
+no hardware** estão no [README da pasta](../../system/rpi-os/alpine/README.md).
 
 > Como nas demais vias: versione só os scripts/config de `system/rpi-os/alpine/`,
 > **nunca** o `.img`.
@@ -198,7 +207,7 @@ no hardware** estão no [README da pasta](../system/rpi-os/alpine/README.md).
 Constrói um sistema mínimo só com o necessário para o app. Boot em segundos, mas
 é a via mais trabalhosa — Tkinter, X e TTS precisam ser habilitados manualmente e
 alguns pacotes Python não existem prontos no Buildroot. Os artefatos reutilizáveis
-(defconfig, overlay) ficam em [system/buildroot/](../buildroot/).
+(defconfig, overlay) ficam em [system/buildroot/](../../system/buildroot/).
 
 1. Obter o Buildroot e partir do defconfig do Pi 4 (64-bit):
    ```bash
@@ -210,9 +219,11 @@ alguns pacotes Python não existem prontos no Buildroot. Os artefatos reutilizá
    - **Toolchain:** headers/compilador compatíveis.
    - **Target packages → Interpreter languages:** `python3` + a opção **tkinter**.
    - **Graphic libraries → X.org:** servidor X mínimo (xserver + xinit).
-   - **Audio/misc:** `espeak-ng` (para o TTS; o `espeak` clássico não serve ao pyttsx3).
+   - **Audio/misc:** `espeak-ng` (fonemizador do Piper + fallback), `alsa-utils`
+     (`aplay`) e `onnxruntime` (runtime do Piper). A voz principal é a neural cadu
+     (Piper), instalada por wheel + modelo baixado no build.
    - **System:** init (systemd **ou** BusyBox) e autologin.
-3. **App + dependências Python:** `ttkbootstrap` e `pyttsx3` não são pacotes
+3. **App + dependências Python:** `ttkbootstrap` e `piper-tts` não são pacotes
    nativos do Buildroot. Opções:
    - criar um *package* Buildroot para cada um, **ou**
    - usar um **rootfs overlay** (`system/buildroot/overlay/`) com o `software/` e

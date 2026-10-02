@@ -1,6 +1,6 @@
 # Fluxo Git e GitHub — equipe (TCC Calculadora)
 
-Padronização para **Gustavo**, **João** e **Yuri**: versionamento, início/fim de sessão e contexto compartilhado. Complementa os prompts em [`Prompts/bootstrap.txt`](../Prompts/bootstrap.txt) e [`Prompts/close-session.txt`](../Prompts/close-session.txt).
+Padronização para **Gustavo**, **João** e **Yuri**: versionamento, início/fim de sessão e contexto compartilhado. Complementa os prompts em [`prompts/bootstrap.txt`](../../prompts/bootstrap.txt) e [`prompts/close-session.txt`](../../prompts/close-session.txt).
 
 ---
 
@@ -8,14 +8,13 @@ Padronização para **Gustavo**, **João** e **Yuri**: versionamento, início/fi
 
 | Artefato | Função |
 | -------- | ------ |
-| [`PRD.md`](../PRD.md) | Requisitos e escopo do produto (normativo). |
-| [`Cronograma/cronograma.md`](../Cronograma/cronograma.md) | Linha do tempo acadêmica (professor). |
-| [`Cronograma/cronograma.html`](../Cronograma/cronograma.html) | Visualização interativa + Gantt (abrir no navegador). |
-| [`docs/sessoes/`](sessoes/README.md) | Registro semanal agregado por pessoa (fim de sessão). |
-| [`Sprints.md`](../Sprints.md) | Backlog por sprint: tasks, responsáveis, status. |
-| [`docs/CONTEXT.md`](CONTEXT.md) | Memória curta: última sessão, pendências, próximo foco. |
-| [`TCC.txt`](../TCC.txt) | Texto acadêmico legado (funções, materiais). |
-| [`docs/README.md`](README.md) | Índice da documentação técnica. |
+| [`docs/produto/PRD.md`](../produto/PRD.md) | Requisitos e escopo do produto (normativo). |
+| [`cronograma/cronograma.md`](../../cronograma/cronograma.md) | Linha do tempo acadêmica (professor). |
+| [`cronograma/cronograma.html`](../../cronograma/cronograma.html) | Visualização interativa + Gantt (abrir no navegador). |
+| [`docs/desenvolvimento/sessoes/`](sessoes/README.md) | Registro semanal agregado por pessoa (fim de sessão). |
+| [`Sprints.md`](Sprints.md) | Backlog por sprint: tasks, responsáveis, status. |
+| [`CONTEXT.md`](CONTEXT.md) | Memória curta: última sessão, pendências, próximo foco. |
+| [`docs/README.md`](../README.md) | Índice da documentação técnica. |
 
 Regra: **não inventar escopo** no `Sprints.md`; desvios grandes exigem atualização do `PRD.md` (e alinhamento com o cronograma).
 
@@ -145,7 +144,7 @@ git commit -m "tipo: descrição curta em inglês"
 git push -u origin HEAD
 ```
 
-Mensagens de commit: seguir **[`.github/COMMIT_GUIDELINES.md`](../.github/COMMIT_GUIDELINES.md)** (Conventional Commits, inglês, escopo opcional). Exemplos rápidos: `docs: add GitHub workflow`, `feat(ui): scaffold calculator shell`.
+Mensagens de commit: seguir **[`.github/COMMIT_GUIDELINES.md`](../../.github/COMMIT_GUIDELINES.md)** (Conventional Commits, inglês, escopo opcional). Exemplos rápidos: `docs: add GitHub workflow`, `feat(ui): scaffold calculator shell`.
 
 Se for o **primeiro push** da branch:
 
@@ -174,10 +173,10 @@ Resolver conflitos nos arquivos indicados, depois `git add` e `git merge --conti
 
 ## 7. Checklist cognitivo (humano ou IA após comandos)
 
-1. Ler [`PRD.md`](../PRD.md) (ou seções relevantes ao que será feito).
-2. Ler [`Sprints.md`](../Sprints.md) — sprint e task atuais.
-3. Ler [`docs/CONTEXT.md`](CONTEXT.md) — pendências da última sessão.
-4. Consultar [`Cronograma/cronograma.md`](../Cronograma/cronograma.md) ou [`Cronograma/cronograma.html`](../Cronograma/cronograma.html) para marcos da semana; registo da equipa em [`docs/sessoes/`](sessoes/README.md).
+1. Ler [`docs/produto/PRD.md`](../produto/PRD.md) (ou seções relevantes ao que será feito).
+2. Ler [`Sprints.md`](Sprints.md) — sprint e task atuais.
+3. Ler [`CONTEXT.md`](CONTEXT.md) — pendências da última sessão.
+4. Consultar [`cronograma/cronograma.md`](../../cronograma/cronograma.md) ou [`cronograma/cronograma.html`](../../cronograma/cronograma.html) para marcos da semana; registo da equipa em [`docs/desenvolvimento/sessoes/`](sessoes/README.md).
 5. Só então alterar código ou documentos; alinhar com a task escolhida.
 
 ---
@@ -193,13 +192,13 @@ Resolver conflitos nos arquivos indicados, depois `git add` e `git merge --conti
 
 ## 9. IA (Cursor) — uso dos prompts
 
-Índice: [`Prompts/README.md`](../Prompts/README.md).
+Índice: [`prompts/README.md`](../../prompts/README.md).
 
-- **Abrir projeto / nova conversa**: colar ou anexar [`Prompts/bootstrap.txt`](../Prompts/bootstrap.txt) — Git (conforme permissões), leitura de artefatos, resumo **antes** de codar.
-- **Encerrar trabalho**: [`Prompts/close-session.txt`](../Prompts/close-session.txt) — `Sprints.md`, `docs/CONTEXT.md`, handoff.
-- **Sprint (cada sessão ou sob demanda)**: [`Prompts/agent-sprint-coach.txt`](../Prompts/agent-sprint-coach.txt) — avaliar se o sprint está saudável, alinhado ao cronograma e ao PRD; recomendações sem alterar arquivos até você pedir.
-- **Semanal (ritual de liderança)**: [`Prompts/agent-weekly-squad-lead.txt`](../Prompts/agent-weekly-squad-lead.txt) — retrospectiva da semana, riscos, prioridades da próxima semana, checklist; útil como “tech lead / squad lead” assistido por IA.
-- **Sincronização em equipe (`main` + branches)**: [`Prompts/agent-github-sync.txt`](../Prompts/agent-github-sync.txt) — a IA interpreta `fetch`/`status`/comparativo com `origin/main` e lembra o fluxo sequencial/paralelo da secção 3 deste documento.
+- **Abrir projeto / nova conversa**: colar ou anexar [`prompts/bootstrap.txt`](../../prompts/bootstrap.txt) — Git (conforme permissões), leitura de artefatos, resumo **antes** de codar.
+- **Encerrar trabalho**: [`prompts/close-session.txt`](../../prompts/close-session.txt) — `Sprints.md`, `CONTEXT.md`, handoff.
+- **Sprint (cada sessão ou sob demanda)**: [`prompts/agent-sprint-coach.txt`](../../prompts/agent-sprint-coach.txt) — avaliar se o sprint está saudável, alinhado ao cronograma e ao PRD; recomendações sem alterar arquivos até você pedir.
+- **Semanal (ritual de liderança)**: [`prompts/agent-weekly-squad-lead.txt`](../../prompts/agent-weekly-squad-lead.txt) — retrospectiva da semana, riscos, prioridades da próxima semana, checklist; útil como “tech lead / squad lead” assistido por IA.
+- **Sincronização em equipe (`main` + branches)**: [`prompts/agent-github-sync.txt`](../../prompts/agent-github-sync.txt) — a IA interpreta `fetch`/`status`/comparativo com `origin/main` e lembra o fluxo sequencial/paralelo da secção 3 deste documento.
 
 Os prompts “agent-*” são **instruções fixas** (não rodam sozinhos): o comportamento depende do modelo e dos comandos que você autorizar no terminal.
 
@@ -207,4 +206,4 @@ Os prompts “agent-*” são **instruções fixas** (não rodam sozinhos): o co
 
 ## 10. Contato e decisões
 
-Decisões de arquitetura ou mudança de escopo: registrar em `docs/CONTEXT.md` ou em comentário no PR, e refletir no `PRD.md` quando for requisito de produto.
+Decisões de arquitetura ou mudança de escopo: registrar em [`CONTEXT.md`](CONTEXT.md) ou em comentário no PR, e refletir no [`PRD.md`](../produto/PRD.md) quando for requisito de produto.

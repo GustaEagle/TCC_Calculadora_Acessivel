@@ -324,12 +324,6 @@ class CalculatorApp:
             self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
             return
 
-        if primary == "RAD/DEG":
-            self.state.press("RAD/DEG")
-            self.mode_var.set(self.state.angle_mode.upper())
-            self.speech.say(f"Modo {self.state.angle_mode}")
-            return
-
         token = primary
         if self.shift_active and shifted:
             token = shifted
@@ -339,6 +333,13 @@ class CalculatorApp:
             token = secondary
             self.ctrl_active = False
             self.ctrl_var.set("")
+
+        # Depois dos modificadores: na matriz e na tela o RAD/DEG é o Shift + /.
+        if token == "RAD/DEG":
+            self.state.press("RAD/DEG")
+            self.mode_var.set(self.state.angle_mode.upper())
+            self.speech.say(f"Modo {self.state.angle_mode}")
+            return
 
         if token == HISTORY_TOKEN:
             self._toggle_history()

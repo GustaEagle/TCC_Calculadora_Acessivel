@@ -12,4 +12,4 @@ Para marcos de revisão ou fabrico, use **`pcb/snapshots/<data>-<rótulo>/`** co
 - Layout de teclado (KLE): [`docs/keyboard-layout/`](../docs/keyboard-layout/).
 - CAD mecânico: [`docs/cad/`](../docs/cad/).
 
-Mapa geral: [docs/REPO_STRUCTURE.md](../docs/REPO_STRUCTURE.md).
+Mapa geral: [docs/desenvolvimento/REPO_STRUCTURE.md](../docs/desenvolvimento/REPO_STRUCTURE.md).

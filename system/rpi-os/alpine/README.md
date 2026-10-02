@@ -4,7 +4,7 @@ Gera uma imagem **Alpine Linux 3.24.1 (aarch64)** bootável que faz o Raspberry
 Pi 4B **arrancar direto na calculadora** (modo kiosk): sem desktop, sem login
 visível, sem cursor. É a via de empacotamento do **produto final** — enxuta e
 gerada por script — alternativa mais leve ao Buildroot descrito em
-[../../../docs/build-img-linux.md](../../../docs/build-img-linux.md).
+[../../../docs/guias/build-img-linux.md](../../../docs/guias/build-img-linux.md).
 
 > A aplicação (`software/`) **não** é alterada; aqui só a empacotamos e
 > configuramos o arranque. Ver o plano em
@@ -20,7 +20,7 @@ gerada por script — alternativa mais leve ao Buildroot descrito em
 | `.work/` | Diretório de trabalho do build (rootfs/downloads/mount). **Ignorado pelo git.** |
 
 O `.img` gerado e o `.work/` **nunca** são versionados (regra do
-[../README.md](../README.md); ver `.gitignore`).
+[../../README.md](../../README.md); ver `.gitignore`).
 
 ## Como a imagem arranca (kiosk)
 
@@ -52,14 +52,35 @@ cd system/rpi-os/alpine
 sudo ./build-alpine-img.sh
 ```
 
+> ⚠️ **Voz neural (Piper):** o `piper-tts` não tem wheel `musl` no PyPI, então o
+> build **exige** que você indique de onde vem o wheel — senão ele para com
+> «Sem wheel do Piper». Duas formas:
+>
+> ```bash
+> # A) wheel musl/aarch64 já compilado (recomendado, reprodutível — design D7):
+> sudo PIPER_WHEEL=/caminho/piper_tts-*.whl ./build-alpine-img.sh
+>
+> # B) compilar o wheel dentro do chroot (autossuficiente, porém LENTO sob qemu):
+> sudo PIPER_BUILD_IN_CHROOT=1 ./build-alpine-img.sh
+> ```
+>
+> O caminho (B) instala o toolchain (build-base/cmake/git/ninja) só durante o
+> build e o remove no fim; ao terminar, salva o `.whl` em `.work/` para você
+> reusar com `PIPER_WHEEL=...` (aí o build volta a ser rápido). A tag do git é
+> `PIPER_GIT_REF` (padrão `1.8.0`; use `v1.8.0` se a tag do repo tiver o `v`).
+> Fixe também `CADU_ONNX_SHA256`/`CADU_JSON_SHA256` (a voz é baixada com sha256
+> obrigatório no build da imagem).
+
 Saída: `calculadora-alpine-3.24.1-aarch64.img` nesta pasta. O script:
 
 1. baixa e **verifica o sha256** do minirootfs oficial;
 2. instala os pacotes (`packages`) + kernel/firmware do Pi + as libs Python
    fixadas em [../../../software/requirements.txt](../../../software/requirements.txt);
 3. configura autologin/kiosk e copia `software/` para `/opt/calculadora/`;
-4. roda smokes no chroot (`import tkinter`/`ttkbootstrap` é **gate**; `pyttsx3.init()`
-   é aviso — áudio real só no hardware);
+4. instala o **Piper** (wheel musl/aarch64, `--no-deps` sobre `py3-onnxruntime`) e
+   baixa/verifica (sha256) a voz **cadu**; roda smokes no chroot (`import
+   tkinter`/`ttkbootstrap` **e** uma **síntese real do Piper → PCM** são **gate**;
+   a reprodução pelo `aplay` só no hardware);
 5. empacota a imagem (boot FAT32 + root ext4 gravável).
 
 ### Rebuild rápido ao mudar o código do app
@@ -143,7 +164,8 @@ dá framebuffer à segunda porta e, com `vc4-kms-v3d`, o hotplug de que o RF-09
 depende. A exclusividade resolve-se no X, não castrando o firmware.
 
 **Diagnóstico.** O `--list-outputs` mostra numa só execução os conectores DRM, as
-saídas do `xrandr` com o seu estado, e o mapeamento efetivo de cada papel:
+saídas do `xrandr` com o seu estado e rotação, e o mapeamento efetivo de cada
+papel (incluindo a rotação que cada painel vai receber):
 
 ```sh
 cd /opt/calculadora && python3 -m software.app --list-outputs
@@ -152,6 +174,41 @@ cd /opt/calculadora && python3 -m software.app --list-outputs
 E o que o layout fez fica registado em `~/calculadora.log` (sobreponível por
 `CALC_LOG_FILE`) — no kiosk o tty1 fica coberto pelo X, então o ficheiro é a
 única forma de distinguir um `xrandr` que funcionou de um que falhou.
+
+### LCD de cabeça para baixo: imagem virada 180°
+
+O LCD é montado invertido no gabinete, então a imagem só sai na posição certa se
+o X a virar 180°. Isso é feito na **mesma** chamada `xrandr` que acende o painel
+(`--rotate inverted`), e não como um ajuste global: a rotação pertence ao painel,
+e o monitor externo continua em pé (`--rotate normal`). Trocar de tela em uso
+(RF-09) reaplica a rotação certa para o painel que acende, porque quem a escolhe
+é o mesmo ponto que escolhe a saída.
+
+Como o giro é de 180°, largura e altura **não** trocam: o painel continua 800×480
+e a faixa de layout escolhida pelo front é a mesma. O toque do LCD não entra nesta
+conta — a entrada do produto é o teclado matricial, não o táctil (se o táctil vier
+a ser usado, as coordenadas precisam da mesma inversão via
+`xinput set-prop ... "Coordinate Transformation Matrix"`).
+
+Como o resto do vídeo, o valor é corrigível na imagem sem recompilar nada, pelo
+`.xinitrc`:
+
+```sh
+export CALC_LCD_ROTATE=inverted     # 180° (padrão do produto)
+export CALC_MONITOR_ROTATE=normal   # monitor externo em pé (padrão)
+```
+
+Aceita `normal`/`left`/`inverted`/`right` ou `0`/`90`/`180`/`270`. Um valor
+inválido cai no padrão e fica registado no log — nunca chega ao `xrandr`, que
+recusaria a chamada inteira e deixaria o painel apagado por causa de um erro de
+digitação. E, como no resto do módulo, o resultado é **verificado**: se o `xrandr`
+aceitar o comando mas a saída não ficar na rotação pedida, isso é **WRN-012** no
+log, não sucesso — um LCD aceso de pernas para o ar é tão inútil quanto um apagado.
+
+> **Não** misture com rotação de kernel (`video=HDMI-A-1:800x480@60,rotate=180`
+> no `cmdline.txt`) nem com `display_hdmi_rotate`: são mecanismos alternativos e,
+> juntos, um desfaz o outro. O que a imagem usa é o `xrandr`. A rotação por
+> kernel só interessa se o **console de boot** também tiver de aparecer virado.
 
 ### Monitor ligado com a calculadora já em uso (RF-09)
 
@@ -227,7 +284,29 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 
 - [ ] Liga e sobe **direto na calculadora** (sem desktop/login/cursor).
 - [ ] UI `ttkbootstrap` em **tela cheia** e legível no LCD Waveshare 4,3" (800×480).
-- [ ] **TTS pt-BR** anuncia entradas/resultados **sem rede** (offline).
+- [ ] **TTS pt-BR pela voz neural `cadu` (Piper)** anuncia entradas/resultados **sem
+      rede** (offline). A voz deve soar **natural**, não metálica: se soar como o
+      espeak-ng, o Piper caiu no **fallback** — checar `WRN-011` no log e se a voz
+      `/opt/piper/voices/pt_BR-cadu-medium.onnx` carregou.
+- [ ] **Sem `WRN-011` inesperado** em uso normal: o log pode ter no máximo um
+      `WRN-011` transitório no arranque (janela de carga do modelo); depois de o
+      Piper carregar, nenhum novo `WRN-011` deve aparecer a cada frase.
+- [ ] O som sai pelo **jack de 3,5 mm do Pi** (fone ligado ao cabo TRS do gabinete),
+      **não** pelo HDMI. Confirmar com `aplay -l` que existe a placa `Headphones`
+      (bcm2835) e que é o nome usado em `overlay/etc/asound.conf`; `speaker-test -c2 -t wav`
+      tem de sair no fone. Se `Headphones` não aparecer, conferir a ordem das linhas
+      no `usercfg.txt` (ver "Ajustes prováveis"). A placa arranca **sem mudo e no
+      volume máximo**: baixe o volume do fone antes do primeiro teste.
+- [ ] **Interrupção da fala** (RF-08): apertar `=` enquanto uma tecla ainda está sendo
+      anunciada → o anúncio **corta** e só o resultado é falado, sem sobrepor e sem
+      `Device or resource busy` do `aplay` (só um `aplay` toca por vez; o ALSA da
+      imagem não tem `dmix`). Como o motor agora toca PCM **raw** pela stdin do
+      `aplay`, `/tmp` (tmpfs, RAM) **não** acumula WAVs (`fala-*` / `tmp*.wav`).
+- [ ] **Latência**: anúncio de tecla (nome vindo do **cache** de frases fixas) ≤
+      a baseline do espeak-ng (tarefa 1.1); resultado longo dentro do aceitável do
+      PRD. Anotar os números em `docs/testes/` (tarefa 6.2).
+- [ ] **Arranque não bloqueado pelo modelo** (RNF-06): "Calculadora pronta" sai de
+      imediato mesmo se o ONNX ainda estiver carregando (fallback na janela de carga).
 - [ ] Matar o app (`pkill -f software.app`) → ele **reinicia sozinho**.
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
 - [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem
@@ -252,6 +331,12 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
       aparecer **WRN-012**, o log traz o modo pretendido e os nomes tentados —
       compare-os com a tabela acima e, se divergirem, defina
       `CALC_LCD_XRANDR_OUTPUT` / `CALC_MONITOR_XRANDR_OUTPUT` no `.xinitrc`.
+- [ ] **Imagem do LCD virada 180°**: com o painel montado no gabinete, o texto tem
+      de aparecer na posição de leitura (não de cabeça para baixo). `--list-outputs`
+      mostra `rotacao: inverted` na saída do LCD, e o monitor externo, ligado a
+      seguir, continua **em pé** (`rotacao: normal`) — a volta é do painel, não do
+      ecrã. Se o painel estiver montado ao contrário do previsto, corrija com
+      `CALC_LCD_ROTATE` no `.xinitrc` em vez de mexer no código.
 - [ ] **Interruptor físico** do LCD desligado, sem monitor → `--list-outputs` mostra o
       LCD como `disconnected` e o app cai em **somente-áudio** (RF-04). Se continuar
       `connected`, o interruptor não corta o hotplug detect e a detecção do
@@ -289,8 +374,26 @@ e depois `Esc` (o `AC` do PC). O que só o hardware responde:
 - **Vídeo do LCD:** começar por `dtoverlay=vc4-kms-v3d` (em `overlay/boot/usercfg.txt`);
   se o painel não sincronizar, usar o bloco `hdmi_cvt 800 480` comentado lá
   (ver [../../../docs/waveshare/README.md](../../../docs/waveshare/README.md)).
-- **Áudio:** conferir `aplay -l` e ajustar `card` em `overlay/etc/asound.conf`
-  (HDMI vs. jack 3,5 mm).
+- **Áudio:** a saída **já está decidida** — o jack de 3,5 mm do próprio Pi
+  (`overlay/etc/asound.conf` fixa a placa `Headphones`); HDMI **não** serve, porque
+  o som morreria junto com o vídeo no `Ctrl` + `AC`. O que resta é **conferir**:
+  `aplay -l` tem de listar `Headphones`. Se não listar, o primeiro suspeito é a
+  ordem no `usercfg.txt`: `dtparam=audio=on` tem de vir **antes** do
+  `dtoverlay=vc4-kms-v3d`, porque depois dele a linha liga o parâmetro `audio` do
+  próprio overlay (áudio do HDMI) e a placa analógica não é criada — o sintoma é
+  silêncio total, já que o `asound.conf` exige uma placa que não existe. Se a placa
+  existir com outro nome, corrija o nome no `asound.conf` (não volte a usar índice
+  de card).
+- **Volume do jack:** o driver `snd-bcm2835` cria a placa **sem mudo e em 0 dB**, o
+  máximo. Quando a placa aparece, a regra udev `90-alsa-restore.rules` roda
+  `alsactl restore`; sem estado salvo ele cai no `alsactl init`, que também não
+  deixa mudo. Um ajuste feito com `amixer` (ex.: `amixer -c Headphones sset PCM 80%`)
+  só sobrevive ao reinício se for salvo com `alsactl store` — a mesma regra udev o
+  restaura no boot seguinte.
+- **`asound.conf` e o `!`:** nome de placa em `defaults.pcm.card` exige
+  `defaults.pcm.!card "Headphones"`. Sem o `!`, o ALSA recusa o arquivo
+  (`card is not a string`) e **nenhum** programa toca som, em placa nenhuma — foi a
+  causa do silêncio total na primeira imagem com a saída no jack.
 - **dtb/overlays:** o layout exato do `linux-rpi`/`raspberrypi-bootloader` pode
   variar por versão — se não bootar, checar se `bcm2711-rpi-4-b.dtb` e `overlays/`
   foram para a raiz da partição de boot.

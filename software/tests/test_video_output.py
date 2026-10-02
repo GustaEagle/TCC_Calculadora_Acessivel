@@ -44,8 +44,13 @@ def fake_query(stdout: str):
     return mock.Mock(returncode=0, stdout=stdout, stderr="")
 
 
+# Rotacao que activate() ve' quando o teste nao esta' a falar de rotacao: os dois
+# paineis como o xrandr os reporta por omissao, sem nenhuma volta aplicada.
+UNROTATED = {"HDMI-1": "normal", "HDMI-2": "normal"}
+
+
 @contextlib.contextmanager
-def xrandr_ready(available: bool = True):
+def xrandr_ready(available: bool = True, rotations: dict[str, str] | None = UNROTATED):
     """Pin BOTH environment probes, so these tests do not depend on the machine
     running them actually having xrandr installed.
 
@@ -56,9 +61,25 @@ def xrandr_ready(available: bool = True):
     then fails for a reason that has nothing to do with what is under test.
     The cases that deliberately exercise the missing-binary path patch
     shutil.which themselves and do not use this helper.
+
+    `rotations` pins what activate() reads back as the panels' orientation, for
+    the same reason the probes are pinned: a test about layout mocks
+    subprocess.run with no usable stdout, so an unpinned rotation read would
+    parse a Mock. `rotations=None` leaves the real reader in place, which is
+    what the rotation tests themselves need.
     """
-    with mock.patch.object(video_output, "available", return_value=available), \
-         mock.patch.object(video_output, "missing_xrandr_on_x", return_value=False):
+    patches = [
+        mock.patch.object(video_output, "available", return_value=available),
+        mock.patch.object(video_output, "missing_xrandr_on_x", return_value=False),
+    ]
+    if rotations is not None:
+        patches.append(
+            mock.patch.object(video_output, "read_rotations", return_value=rotations)
+        )
+
+    with contextlib.ExitStack() as stack:
+        for patch in patches:
+            stack.enter_context(patch)
         yield
 
 
@@ -66,7 +87,7 @@ class ReadOutputsTest(unittest.TestCase):
     """1.1/1.2: read the outputs X really has, and never raise doing it."""
 
     def read(self, stdout: str) -> dict[str, bool]:
-        with xrandr_ready(True), \
+        with xrandr_ready(True, rotations=None), \
              mock.patch("subprocess.run", return_value=fake_query(stdout)):
             return video_output.read_outputs()
 
@@ -225,8 +246,11 @@ class ActivateTest(unittest.TestCase):
             )
 
         argv = run.call_args.args[0]
-        self.assertEqual(argv[:5], ["xrandr", "--output", "HDMI-2", "--auto", "--primary"])
-        self.assertEqual(argv[5:], ["--output", "HDMI-1", "--off"])
+        self.assertEqual(
+            argv[:7],
+            ["xrandr", "--output", "HDMI-2", "--auto", "--primary", "--rotate", "normal"],
+        )
+        self.assertEqual(argv[7:], ["--output", "HDMI-1", "--off"])
 
     def test_the_target_is_never_switched_off_by_its_own_call(self) -> None:
         with xrandr_ready(True), \
@@ -235,7 +259,7 @@ class ActivateTest(unittest.TestCase):
             video_output.activate("HDMI-1", disable=("HDMI-1", "HDMI-2"))
 
         argv = run.call_args.args[0]
-        self.assertNotIn("--off", argv[:4])
+        self.assertNotIn("--off", argv[:6])
         self.assertEqual(argv.count("--off"), 1)
 
     def test_a_failing_xrandr_is_reported_not_raised(self) -> None:
@@ -580,3 +604,220 @@ class PreferredSizeTest(unittest.TestCase):
         with xrandr_ready(True), \
              mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
             self.assertIsNone(video_output.preferred_size("HDMI-2"))
+
+
+# O LCD ligado e virado 180 graus: e' assim que o xrandr reporta o painel depois
+# de activate(). A palavra da rotacao vem DEPOIS da geometria e ANTES dos
+# parenteses - que listam as rotacoes suportadas e aparecem iguais em toda a
+# saida, rodada ou nao.
+QUERY_LCD_INVERTED = """Screen 0: minimum 320 x 200, current 800 x 480, maximum 16384 x 16384
+HDMI-1 connected primary 800x480+0+0 inverted (normal left inverted right x axis y axis) 154mm x 86mm
+   800x480       59.90*+
+HDMI-2 connected (normal left inverted right x axis y axis) 598mm x 336mm
+   1920x1080     60.00 +  50.00
+"""
+
+
+class ReadRotationsTest(unittest.TestCase):
+    """O LCD e' montado de cabeca para baixo: a orientacao tem de ser legivel."""
+
+    def read(self, stdout: str) -> dict[str, str]:
+        with xrandr_ready(True, rotations=None), \
+             mock.patch("subprocess.run", return_value=fake_query(stdout)):
+            return video_output.read_rotations()
+
+    def test_reads_the_rotation_word_printed_after_the_geometry(self) -> None:
+        self.assertEqual(
+            self.read(QUERY_LCD_INVERTED), {"HDMI-1": "inverted", "HDMI-2": "normal"}
+        )
+
+    def test_an_unrotated_output_reads_as_normal(self) -> None:
+        """O xrandr nao imprime nada para "normal" - a ausencia e' a resposta."""
+        self.assertEqual(self.read(QUERY_LCD_ONLY), {"HDMI-1": "normal", "HDMI-2": "normal"})
+
+    def test_the_supported_rotations_in_parentheses_are_not_the_current_one(self) -> None:
+        """"(normal left inverted right ...)" aparece em TODA a saida."""
+        self.assertEqual(self.read(QUERY_EXTENDED)["HDMI-1"], "normal")
+
+    def test_an_unreadable_state_is_an_empty_dict(self) -> None:
+        with xrandr_ready(False, rotations=None):
+            self.assertEqual(video_output.read_rotations(), {})
+
+    def test_a_failing_xrandr_is_unknown_not_an_exception(self) -> None:
+        with xrandr_ready(True, rotations=None), \
+             mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "xrandr")):
+            self.assertEqual(video_output.read_rotations(), {})
+
+    def test_the_active_state_survives_the_shared_parse(self) -> None:
+        """Rotacao e estado saem da mesma linha; ler uma nao pode perder a outra."""
+        with xrandr_ready(True, rotations=None), \
+             mock.patch("subprocess.run", return_value=fake_query(QUERY_LCD_INVERTED)):
+            self.assertEqual(video_output.read_outputs(), {"HDMI-1": True, "HDMI-2": False})
+
+
+class RotationResolutionTest(unittest.TestCase):
+    """Que volta cada painel leva, e como o bring-up a corrige sem recompilar."""
+
+    def rotation(self, env: dict[str, str], env_var: str, default: str) -> str:
+        with mock.patch.dict("os.environ", env, clear=True):
+            return video_output.rotation(env_var, default)
+
+    def test_the_lcd_is_inverted_by_default(self) -> None:
+        """O painel esta' montado de pernas para o ar dentro do gabinete."""
+        self.assertEqual(video_output.DEFAULT_LCD_ROTATION, "inverted")
+        self.assertEqual(
+            self.rotation({}, video_output.LCD_ROTATION_ENV, video_output.DEFAULT_LCD_ROTATION),
+            "inverted",
+        )
+
+    def test_the_monitor_stays_upright_by_default(self) -> None:
+        self.assertEqual(
+            self.rotation(
+                {}, video_output.MONITOR_ROTATION_ENV, video_output.DEFAULT_MONITOR_ROTATION
+            ),
+            "normal",
+        )
+
+    def test_an_env_var_overrides_the_default(self) -> None:
+        self.assertEqual(
+            self.rotation(
+                {"CALC_LCD_ROTATE": "normal"},
+                video_output.LCD_ROTATION_ENV,
+                video_output.DEFAULT_LCD_ROTATION,
+            ),
+            "normal",
+        )
+
+    def test_degrees_are_accepted_on_the_bench(self) -> None:
+        for degrees, expected in (("0", "normal"), ("90", "left"), ("180", "inverted"),
+                                  ("270", "right")):
+            self.assertEqual(
+                self.rotation(
+                    {"CALC_LCD_ROTATE": degrees},
+                    video_output.LCD_ROTATION_ENV,
+                    video_output.DEFAULT_LCD_ROTATION,
+                ),
+                expected,
+            )
+
+    def test_case_and_spaces_do_not_matter(self) -> None:
+        self.assertEqual(
+            self.rotation(
+                {"CALC_LCD_ROTATE": " Inverted "},
+                video_output.LCD_ROTATION_ENV,
+                video_output.DEFAULT_LCD_ROTATION,
+            ),
+            "inverted",
+        )
+
+    def test_a_typo_falls_back_to_the_default_and_is_logged(self) -> None:
+        """Um valor invalido no argv faria o xrandr recusar a chamada inteira."""
+        with mock.patch.dict("os.environ", {"CALC_LCD_ROTATE": "180graus"}, clear=True), \
+             self.assertLogs(video_output.logger, level="WARNING") as logs:
+            value = video_output.rotation(
+                video_output.LCD_ROTATION_ENV, video_output.DEFAULT_LCD_ROTATION
+            )
+
+        self.assertEqual(value, "inverted")
+        self.assertIn("CALC_LCD_ROTATE", "\n".join(logs.output))
+
+
+class RotationMatchesTest(unittest.TestCase):
+    def test_the_wanted_rotation_already_applied_is_a_match(self) -> None:
+        self.assertIs(
+            video_output.rotation_matches("HDMI-1", "inverted", {"HDMI-1": "inverted"}), True
+        )
+
+    def test_another_rotation_is_not_a_match(self) -> None:
+        self.assertIs(
+            video_output.rotation_matches("HDMI-1", "inverted", {"HDMI-1": "normal"}), False
+        )
+
+    def test_an_unreadable_state_is_neither(self) -> None:
+        self.assertIsNone(video_output.rotation_matches("HDMI-1", "inverted", {}))
+
+    def test_an_output_x_does_not_know_is_unreadable(self) -> None:
+        self.assertIsNone(
+            video_output.rotation_matches("HDMI-9", "inverted", {"HDMI-1": "normal"})
+        )
+
+
+class ActivateRotationTest(unittest.TestCase):
+    """A imagem do LCD tem de sair virada 180 graus - e so' a do LCD."""
+
+    def test_the_rotation_travels_in_the_same_xrandr_call(self) -> None:
+        """Uma unica reconfiguracao: acender e virar nao sao dois passos."""
+        with xrandr_ready(True, rotations={"HDMI-1": "inverted", "HDMI-2": "normal"}), \
+             mock.patch.object(video_output, "layout_matches", side_effect=[False, True]), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(
+                video_output.activate(
+                    "HDMI-1", disable=("HDMI-1", "HDMI-2"), rotate="inverted"
+                )
+            )
+
+        argv = run.call_args.args[0]
+        self.assertEqual(
+            argv[:7],
+            ["xrandr", "--output", "HDMI-1", "--auto", "--primary", "--rotate", "inverted"],
+        )
+        run.assert_called_once()
+
+    def test_a_panel_lit_but_upside_down_is_reconfigured(self) -> None:
+        """O layout ja' esta' certo e mesmo assim ha' trabalho a fazer."""
+        with xrandr_ready(True, rotations={"HDMI-1": "normal"}), \
+             mock.patch.object(video_output, "read_outputs",
+                               return_value={"HDMI-1": True, "HDMI-2": False}), \
+             mock.patch("subprocess.run") as run:
+            video_output.activate("HDMI-1", disable=("HDMI-2",), rotate="inverted")
+
+        run.assert_called_once()
+
+    def test_the_right_layout_in_the_right_rotation_skips_xrandr(self) -> None:
+        with xrandr_ready(True, rotations={"HDMI-1": "inverted"}), \
+             mock.patch.object(video_output, "read_outputs",
+                               return_value={"HDMI-1": True, "HDMI-2": False}), \
+             mock.patch("subprocess.run") as run:
+            self.assertTrue(
+                video_output.activate("HDMI-1", disable=("HDMI-2",), rotate="inverted")
+            )
+
+        run.assert_not_called()
+
+    def test_xrandr_succeeding_while_the_image_stays_upright_is_a_failure(self) -> None:
+        """Mesmo argumento do CRTC: o codigo de saida nao prova a rotacao."""
+        with xrandr_ready(True, rotations={"HDMI-1": "normal"}), \
+             mock.patch.object(video_output, "layout_matches", side_effect=[False, True]), \
+             mock.patch("subprocess.run"), \
+             self.assertLogs(video_output.logger, level="WARNING") as logs:
+            self.assertFalse(
+                video_output.activate(
+                    "HDMI-1", disable=("HDMI-2",), mode="lcd", rotate="inverted"
+                )
+            )
+
+        recorded = "\n".join(logs.output)
+        self.assertIn("WRN-012", recorded)
+        self.assertIn("inverted", recorded)
+
+    def test_an_unverifiable_rotation_is_reported_but_does_not_raise(self) -> None:
+        with xrandr_ready(True, rotations={}), \
+             mock.patch.object(video_output, "layout_matches", side_effect=[False, True]), \
+             mock.patch("subprocess.run"), \
+             self.assertLogs(video_output.logger, level="WARNING"):
+            self.assertFalse(
+                video_output.activate("HDMI-1", disable=("HDMI-2",), rotate="inverted")
+            )
+
+    def test_an_unknown_rotation_never_reaches_the_argv(self) -> None:
+        """O xrandr recusaria a chamada inteira e o painel ficaria apagado."""
+        with xrandr_ready(True), \
+             mock.patch.object(video_output, "layout_matches", side_effect=[False, True]), \
+             mock.patch("subprocess.run") as run, \
+             self.assertLogs(video_output.logger, level="WARNING"):
+            self.assertTrue(
+                video_output.activate("HDMI-2", disable=("HDMI-1",), rotate="de-lado")
+            )
+
+        self.assertNotIn("de-lado", run.call_args.args[0])
+        self.assertIn("normal", run.call_args.args[0])

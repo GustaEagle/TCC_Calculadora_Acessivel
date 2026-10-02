@@ -1,7 +1,7 @@
 #!/bin/sh
 # Sessão gráfica do kiosk: nenhuma barra, menu ou gerenciador de janelas — apenas
 # a janela da calculadora ocupando a tela. Espelha o padrão já validado para
-# Pi OS em docs/build-img-linux.md, adaptado ao Alpine (OpenRC/BusyBox).
+# Pi OS em docs/guias/build-img-linux.md, adaptado ao Alpine (OpenRC/BusyBox).
 
 # Nunca apagar/desligar a tela (appliance sempre visível).
 xset s off
@@ -25,6 +25,15 @@ fi
 # confira com "xrandr --listmonitors" e descomente se for diferente.
 #export CALC_LCD_XRANDR_OUTPUT=HDMI-1
 #export CALC_MONITOR_XRANDR_OUTPUT=HDMI-2
+
+# Rotacao de cada painel. O LCD e' montado de cabeca para baixo no gabinete, entao
+# a sua imagem sai virada 180 graus ("inverted"); o monitor externo fica em pe
+# ("normal"). Estes sao os padroes do codigo - descomente e corrija aqui se o
+# painel tiver sido montado de outra forma. Aceita normal/left/inverted/right ou
+# 0/90/180/270. NAO combinar com rotacao por kernel (video=...,rotate= no
+# cmdline.txt): sao mecanismos alternativos e um desfaz o outro.
+#export CALC_LCD_ROTATE=inverted
+#export CALC_MONITOR_ROTATE=normal
 
 # Executar a calculadora a partir da raiz do projeto (/opt/calculadora), de onde
 # "python3 -m software.app" resolve o pacote software/. O laço faz o papel de

@@ -38,8 +38,8 @@
 
 ## 6. Documentação e registo do código
 
-- [x] 6.1 Registar `WRN-013` na tabela do `PRD.md` §13 (P2, «Telas desligadas/religadas por comando»), com a frase falada, e acrescentar entrada no histórico de versões do PRD. Verificar: a linha existe entre `WRN-012` e `WRN-020`.
-- [x] 6.2 Em `docs/comandos-teclado.md`, retirar `?` da lista de teclas reservadas (§3; ela não existe na matriz), acrescentar `Ctrl` + `AC` às tabelas do teclado físico e `Ctrl` e depois `Esc` à do PC (com a nota do menu Iniciar no Windows), e documentar a recuperação por `AC`. Verificar: nenhuma menção residual a `?` como tecla nem a `v` como atalho.
+- [x] 6.1 Registar `WRN-013` na tabela do `docs/produto/PRD.md` §13 (P2, «Telas desligadas/religadas por comando»), com a frase falada, e acrescentar entrada no histórico de versões do PRD. Verificar: a linha existe entre `WRN-012` e `WRN-020`.
+- [x] 6.2 Em `docs/guias/comandos-teclado.md`, retirar `?` da lista de teclas reservadas (§3; ela não existe na matriz), acrescentar `Ctrl` + `AC` às tabelas do teclado físico e `Ctrl` e depois `Esc` à do PC (com a nota do menu Iniciar no Windows), e documentar a recuperação por `AC`. Verificar: nenhuma menção residual a `?` como tecla nem a `v` como atalho.
 - [x] 6.3 Em `system/rpi-os/alpine/README.md`, acrescentar à checklist de bring-up os itens da secção 7. Verificar: itens presentes na checklist.
 
 ## 7. Verificação no hardware (Raspberry Pi 4B)

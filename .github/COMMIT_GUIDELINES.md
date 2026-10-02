@@ -95,4 +95,4 @@ Abrir **Pull Request** para `main`; referenciar issue, se existir (`Closes #n` n
 2. Um commit deve representar uma **unidade lógica** de mudança quando possível (facilita review).
 3. Usar **escopo** quando deixar o contexto óbvio (`feat(lcd):`, `docs(workflow):`, etc.).
 
-Documento irmão: [`docs/GITHUB_WORKFLOW.md`](../docs/GITHUB_WORKFLOW.md).
+Documento irmão: [`docs/desenvolvimento/GITHUB_WORKFLOW.md`](../docs/desenvolvimento/GITHUB_WORKFLOW.md).

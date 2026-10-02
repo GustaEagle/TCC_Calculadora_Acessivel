@@ -17,7 +17,7 @@ O RF-04 já prevê exatamente este estado — «operar em modo somente áudio qu
 - **Anti-armadilha: `AC` sempre religa.** A tecla `AC` (`Esc` no PC), que já significa «volta ao estado neutro», passa a religar a tela quando ela está apagada. Sem isto, um utilizador vidente que acione o comando por engano fica perante um aparelho aparentemente morto — o modo mais grave de falha que esta mudança pode introduzir.
 - **A escolha sobrevive à troca de painel (RF-09).** Se um monitor for ligado ou desligado com as telas apagadas, o `VideoOutputWatch` continua a fazer a entrega entre fronts, mas o novo front **nasce apagado**: uma reconfiguração de hardware não deve cancelar em silêncio uma escolha explícita do utilizador.
 - **Novo código de aviso `WRN-013`** registado no PRD §13, como a própria secção exige para códigos novos. **Não** se reusa o `WRN-012`: ele já designa a *troca automática de saída* do RF-09, e dar duas leituras opostas à mesma frase quebraria a regra «mesmo código → mesmo significado» das convenções do projeto.
-- **Documentação:** `docs/comandos-teclado.md` deixa de listar `?` como tecla reservada (ela não existe na matriz) e passa a descrever o comando `Ctrl` + `AC`; o `README.md` da imagem Alpine ganha o caso na checklist de bring-up. Os ficheiros KLE não são alterados por esta mudança.
+- **Documentação:** `docs/guias/comandos-teclado.md` deixa de listar `?` como tecla reservada (ela não existe na matriz) e passa a descrever o comando `Ctrl` + `AC`; o `README.md` da imagem Alpine ganha o caso na checklist de bring-up. Os ficheiros KLE não são alterados por esta mudança.
 
 ## Capabilities
 
@@ -31,7 +31,7 @@ O RF-04 já prevê exatamente este estado — «operar em modo somente áudio qu
 
 - **Código alterado:** `software/hw_platform/video_output.py` (função para desligar todas as saídas e reler o estado para confirmar), `software/app.py` (`point_x_at` respeita o blackout; o estado acompanha o laço `run_mode`), `software/ui/hdmi/app.py` e `software/ui/lcd/app.py` (ligação da tecla e anúncio — mesmo comportamento nos dois fronts), `software/ui/shared/keypad.py` (`AC` ganha a função secundária `BLACKOUT`; a `?` inexistente sai do catálogo), `software/ui/shared/video_watch.py` (propagação do estado na entrega).
 - **Sem alteração:** `software/core/` — o motor de cálculo não sabe que existe tela, e continua assim (regra do projeto); `software/hw_platform/display.py`, cuja regra de prioridade do §7 já está correta; o catálogo matemático do PRD §5.
-- **Documentação alterada:** `PRD.md` §13 (registo do `WRN-013`), `docs/comandos-teclado.md`, `system/rpi-os/alpine/README.md`.
+- **Documentação alterada:** `docs/produto/PRD.md` §13 (registo do `WRN-013`), `docs/guias/comandos-teclado.md`, `system/rpi-os/alpine/README.md`.
 - **Testes novos** em `software/tests/`, seguindo o padrão de `test_video_output.py`: o caminho `xrandr` é *mockado*, de modo que a suíte continua a correr sem servidor X no CI (Python 3.11).
 - **Requisitos cobertos:** RF-04 (o «display desligado» que o requisito já previa passa a ser alcançável por comando), RF-05 (mapeamento de teclas documentado), RF-06 (autonomia do UPS), RF-09 e RNF-03 (a escolha atravessa o hotplug sem travar o app).
 - **Risco principal:** deixar o utilizador sem forma de religar. Mitigado pelo anúncio falado que nomeia a tecla, pelo `AC` como via de recuperação e pelo facto de o estado nunca sobreviver a um reinício.

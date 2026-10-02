@@ -15,7 +15,7 @@ Voce esta encerrando a sessao atual do projeto **TCC Calculadora** (equipe: Gust
 
 ---
 
-## Passo 2 — Atualizar `Sprints.md`
+## Passo 2 — Atualizar `docs/desenvolvimento/Sprints.md`
 
 Para cada task **realmente concluida** nesta sessao:
 
@@ -25,11 +25,11 @@ Para cada task **realmente concluida** nesta sessao:
 Regras:
 
 - **Nao** criar item novo nem mover task entre sprints sem instrucao explicita do usuario.
-- Se a task ficou **parcial**, **nao** marcar `done`; registre o restante em `docs/CONTEXT.md` como pendencia.
+- Se a task ficou **parcial**, **nao** marcar `done`; registre o restante em `docs/desenvolvimento/CONTEXT.md` como pendencia.
 
 ---
 
-## Passo 3 — Atualizar `docs/CONTEXT.md`
+## Passo 3 — Atualizar `docs/desenvolvimento/CONTEXT.md`
 
 Preencha ou atualize:
 
@@ -37,24 +37,24 @@ Preencha ou atualize:
 - **Estado atual** — uma ou duas frases sobre o repositorio/produto.
 - **Pendencias / debitos** — o que ficou aberto.
 - **Riscos / atencoes** — bloqueios, dependencias externas, prazos do cronograma.
-- **Proximo foco sugerido** — proxima task logica segundo `Sprints.md` (cite ID).
+- **Proximo foco sugerido** — proxima task logica segundo `docs/desenvolvimento/Sprints.md` (cite ID).
 - **Tasks concluidas nesta sessao** — IDs e titulos.
 
 ---
 
-## Passo 3b — Registro semanal da equipa (`docs/sessoes/`)
+## Passo 3b — Registro semanal da equipa (`docs/desenvolvimento/sessoes/`)
 
-1. Determinar o **numero da semana do plano** (N de 1 a 30): mesma regra do cronograma — semana 1 comeca em **01/03/2026** (domingo); ou usar o indicador "Semana N" em [`Cronograma/cronograma.html`](Cronograma/cronograma.html); ou pedir N ao usuario se houver duvida.
-2. Abrir **`docs/sessoes/semana-NN.md`** com NN em **dois digitos** (ex.: `semana-07.md`). Se o ficheiro nao existir, criar a partir de [`docs/sessoes/_template-semana.md`](docs/sessoes/_template-semana.md) e preencher o titulo com N e o intervalo de datas (consultar `Cronograma/cronograma.md`).
+1. Determinar o **numero da semana do plano** (N de 1 a 30): mesma regra do cronograma — semana 1 comeca em **01/03/2026** (domingo); ou usar o indicador "Semana N" em [`cronograma/cronograma.html`](cronograma/cronograma.html); ou pedir N ao usuario se houver duvida.
+2. Abrir **`docs/desenvolvimento/sessoes/semana-NN.md`** com NN em **dois digitos** (ex.: `semana-07.md`). Se o ficheiro nao existir, criar a partir de [`docs/desenvolvimento/sessoes/_template-semana.md`](docs/desenvolvimento/sessoes/_template-semana.md) e preencher o titulo com N e o intervalo de datas (consultar `cronograma/cronograma.md`).
 3. Na secao do **participante** desta sessao (Gustavo, João ou Yuri — o usuario deve dizer quem e, se nao for obvio pelo contexto), **acrescentar** um novo bloco no fim da secao com:
    - data (AAAA-MM-DD);
    - **Task / ID** (ex.: T1.2) ou descricao curta;
    - **Feito:** lista objetiva do que foi desenvolvido ou decidido;
    - opcional: PR/branch, bloqueios, proximo passo.
 4. **Nao apagar** registos anteriores da mesma semana; **nao** sobrescrever trabalho de outro membro — apenas acrescentar na sua secao.
-5. Incluir este ficheiro no commit quando fizer sentido (junto com `docs/CONTEXT.md`).
+5. Incluir este ficheiro no commit quando fizer sentido (junto com `docs/desenvolvimento/CONTEXT.md`).
 
-Ver convencoes em [`docs/sessoes/README.md`](docs/sessoes/README.md).
+Ver convencoes em [`docs/desenvolvimento/sessoes/README.md`](docs/desenvolvimento/sessoes/README.md).
 
 ---
 
@@ -69,14 +69,14 @@ Se o usuario quiser enviar ao remoto:
 4. `git add` (arquivos relevantes) e `git commit -m "..."`.
 5. `git push -u origin <branch-atual>` se for primeiro push da branch; caso contrario `git push`.
 
-Lembrete: integracao em `main` via **Pull Request** quando for politica da equipe (ver `docs/GITHUB_WORKFLOW.md`). **Push + PR + merge** e o que faz o trabalho (codigo e `Sprints.md`) aparecer para o colega quando ele der `git pull` em `main`; sem merge em `main`, o outro clone nao ve suas alteracoes "oficiais".
+Lembrete: integracao em `main` via **Pull Request** quando for politica da equipe (ver `docs/desenvolvimento/GITHUB_WORKFLOW.md`). **Push + PR + merge** e o que faz o trabalho (codigo e `docs/desenvolvimento/Sprints.md`) aparecer para o colega quando ele der `git pull` em `main`; sem merge em `main`, o outro clone nao ve suas alteracoes "oficiais".
 
 ---
 
 ## Passo 5 — Divergencias e proximos passos
 
-1. Se houver divergencia entre **`PRD.md`**, **`Sprints.md`**, **`Cronograma/cronograma.md`** e o codigo/docs implementados, registre no handoff (e em `docs/CONTEXT.md` se for persistente).
-2. Indique o **proximo item logico** com base em `Sprints.md` (sem inventar backlog).
+1. Se houver divergencia entre **`docs/produto/PRD.md`**, **`docs/desenvolvimento/Sprints.md`**, **`cronograma/cronograma.md`** e o codigo/docs implementados, registre no handoff (e em `docs/desenvolvimento/CONTEXT.md` se for persistente).
+2. Indique o **proximo item logico** com base em `docs/desenvolvimento/Sprints.md` (sem inventar backlog).
 
 ---
 
@@ -92,6 +92,6 @@ Encerre com uma secao **"Pronto para proxima sessao"** contendo:
 
 ## Regras de encerramento
 
-- Nao encerrar sem atualizar **`docs/CONTEXT.md`** quando houve trabalho substantive; incluir **`docs/sessoes/semana-NN.md`** no Passo 3b quando alguem da equipa trabalhou na sessao.
-- Nao marcar **`done`** em `Sprints.md` sem conclusao real da task.
-- **`PRD.md`** permanece normativo; mudancas grandes de escopo exigem atualizacao do PRD e alinhamento com o cronograma academico.
+- Nao encerrar sem atualizar **`docs/desenvolvimento/CONTEXT.md`** quando houve trabalho substantive; incluir **`docs/desenvolvimento/sessoes/semana-NN.md`** no Passo 3b quando alguem da equipa trabalhou na sessao.
+- Nao marcar **`done`** em `docs/desenvolvimento/Sprints.md` sem conclusao real da task.
+- **`docs/produto/PRD.md`** permanece normativo; mudancas grandes de escopo exigem atualizacao do PRD e alinhamento com o cronograma academico.

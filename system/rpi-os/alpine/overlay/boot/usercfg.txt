@@ -6,6 +6,15 @@
 # hardware — ver docs/waveshare/README.md. Comece por KMS; se o LCD não sincronizar,
 # troque para o bloco fbdev/HDMI custom comentado no fim.
 
+# Áudio: habilita a placa analógica bcm2835 do jack 3,5 mm, que É a saída de som
+# do produto — o fone liga nela pelo cabo TRS interno do gabinete. /etc/asound.conf
+# fixa essa placa pelo nome ("Headphones"). Sem esta linha a placa não existe e
+# sobra só o HDMI, que se cala junto com o vídeo no Ctrl + AC (RF-04, WRN-013).
+# TEM de vir ANTES do dtoverlay=vc4-kms-v3d: um dtparam depois de um dtoverlay vai
+# primeiro para os parâmetros desse overlay, e o vc4-kms-v3d tem um "audio" próprio
+# (áudio do HDMI0). Depois dele, esta linha liga o HDMI e a placa Headphones some.
+dtparam=audio=on
+
 # Driver gráfico KMS do Pi 4 (usado pelo Xorg via modesetting/mesa-dri-gallium).
 # Também é o que dá hotplug de HDMI: o KMS atualiza /sys/class/drm em tempo de
 # execução, que é como o app percebe o monitor externo ligado com a calculadora
@@ -17,10 +26,6 @@ max_framebuffers=2
 
 # Sem borda preta em volta da imagem no LCD.
 disable_overscan=1
-
-# Áudio: habilita a saída analógica do jack 3,5 mm (além do HDMI). Escolha a saída
-# final em /etc/asound.conf conforme `aplay -l`.
-dtparam=audio=on
 
 # I2C1 nos pinos 3/5 (GPIO2 SDA, GPIO3 SCL): é o barramento onde o UPS HAT lê
 # tensão/corrente/capacidade no endereço 0x42 (PRD §12, RF-06/RF-14). Sem isto

@@ -28,8 +28,9 @@
 # ---------------------------------------------------------------------------
 # O Windows não tem um socket de áudio equivalente ao PulseAudio do Linux.
 # Sem configuração extra, o app abre e funciona normalmente na tela, mas o
-# pyttsx3/espeak falha ao iniciar a voz dentro do container -- o erro fica
-# só registrado em software/speech_debug.log, sem travar a aplicação.
+# `aplay` falha ao abrir a placa dentro do container -- o erro fica só
+# registrado no log, sem travar a aplicação (a síntese do Piper ocorre; só a
+# reprodução é que não encontra saída de áudio).
 # Se precisar mesmo do áudio no Windows, a via mais simples é instalar um
 # servidor PulseAudio para Windows e então acrescentar aqui:
 #   environment:

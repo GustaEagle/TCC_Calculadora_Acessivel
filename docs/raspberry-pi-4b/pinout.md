@@ -1,7 +1,7 @@
 # Especificação do pinout — Raspberry Pi 4 Model B (header J8)
 
 **Conector:** J8, **40 pinos** (2×20), passo **2,54 mm**.  
-**Âmbito:** apenas pinagem e funções de **uso corrente** no header; não substitui o [datasheet oficial](../RP-008341-DS-1-raspberry-pi-4-datasheet.pdf) para limites absolutos de corrente, derivações do SoC nem diagramas de bloco.
+**Âmbito:** apenas pinagem e funções de **uso corrente** no header; não substitui o [datasheet oficial](RP-008341-DS-1-raspberry-pi-4-datasheet.pdf) para limites absolutos de corrente, derivações do SoC nem diagramas de bloco.
 
 **Referências externas:** [pinout.xyz](https://pinout.xyz/) · [Documentação Raspberry Pi](https://www.raspberrypi.com/documentation/)
 

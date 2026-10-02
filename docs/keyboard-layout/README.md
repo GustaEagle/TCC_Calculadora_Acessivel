@@ -1,6 +1,6 @@
 # Layout de teclado (Keyboard Layout Editor)
 
-Este diretório contém o ficheiro **[keyboard-layout(9).json](keyboard-layout(9).json)** no formato exportado pelo site **[Keyboard Layout Editor](https://www.keyboard-layout-editor.com/)** (KLE).
+Este diretório contém o ficheiro **[keyboard-layout(9).json](keyboard-layout%289%29.json)** no formato exportado pelo site **[Keyboard Layout Editor](https://www.keyboard-layout-editor.com/)** (KLE).
 
 ## Como abrir ou editar
 
