@@ -52,14 +52,35 @@ cd system/rpi-os/alpine
 sudo ./build-alpine-img.sh
 ```
 
+> ⚠️ **Voz neural (Piper):** o `piper-tts` não tem wheel `musl` no PyPI, então o
+> build **exige** que você indique de onde vem o wheel — senão ele para com
+> «Sem wheel do Piper». Duas formas:
+>
+> ```bash
+> # A) wheel musl/aarch64 já compilado (recomendado, reprodutível — design D7):
+> sudo PIPER_WHEEL=/caminho/piper_tts-*.whl ./build-alpine-img.sh
+>
+> # B) compilar o wheel dentro do chroot (autossuficiente, porém LENTO sob qemu):
+> sudo PIPER_BUILD_IN_CHROOT=1 ./build-alpine-img.sh
+> ```
+>
+> O caminho (B) instala o toolchain (build-base/cmake/git/ninja) só durante o
+> build e o remove no fim; ao terminar, salva o `.whl` em `.work/` para você
+> reusar com `PIPER_WHEEL=...` (aí o build volta a ser rápido). A tag do git é
+> `PIPER_GIT_REF` (padrão `1.8.0`; use `v1.8.0` se a tag do repo tiver o `v`).
+> Fixe também `CADU_ONNX_SHA256`/`CADU_JSON_SHA256` (a voz é baixada com sha256
+> obrigatório no build da imagem).
+
 Saída: `calculadora-alpine-3.24.1-aarch64.img` nesta pasta. O script:
 
 1. baixa e **verifica o sha256** do minirootfs oficial;
 2. instala os pacotes (`packages`) + kernel/firmware do Pi + as libs Python
    fixadas em [../../../software/requirements.txt](../../../software/requirements.txt);
 3. configura autologin/kiosk e copia `software/` para `/opt/calculadora/`;
-4. roda smokes no chroot (`import tkinter`/`ttkbootstrap` é **gate**; `pyttsx3.init()`
-   é aviso — áudio real só no hardware);
+4. instala o **Piper** (wheel musl/aarch64, `--no-deps` sobre `py3-onnxruntime`) e
+   baixa/verifica (sha256) a voz **cadu**; roda smokes no chroot (`import
+   tkinter`/`ttkbootstrap` **e** uma **síntese real do Piper → PCM** são **gate**;
+   a reprodução pelo `aplay` só no hardware);
 5. empacota a imagem (boot FAT32 + root ext4 gravável).
 
 ### Rebuild rápido ao mudar o código do app
@@ -263,7 +284,13 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
 
 - [ ] Liga e sobe **direto na calculadora** (sem desktop/login/cursor).
 - [ ] UI `ttkbootstrap` em **tela cheia** e legível no LCD Waveshare 4,3" (800×480).
-- [ ] **TTS pt-BR** anuncia entradas/resultados **sem rede** (offline).
+- [ ] **TTS pt-BR pela voz neural `cadu` (Piper)** anuncia entradas/resultados **sem
+      rede** (offline). A voz deve soar **natural**, não metálica: se soar como o
+      espeak-ng, o Piper caiu no **fallback** — checar `WRN-011` no log e se a voz
+      `/opt/piper/voices/pt_BR-cadu-medium.onnx` carregou.
+- [ ] **Sem `WRN-011` inesperado** em uso normal: o log pode ter no máximo um
+      `WRN-011` transitório no arranque (janela de carga do modelo); depois de o
+      Piper carregar, nenhum novo `WRN-011` deve aparecer a cada frase.
 - [ ] O som sai pelo **jack de 3,5 mm do Pi** (fone ligado ao cabo TRS do gabinete),
       **não** pelo HDMI. Confirmar com `aplay -l` que existe a placa `Headphones`
       (bcm2835) e que é o nome usado em `overlay/etc/asound.conf`; `speaker-test -c2 -t wav`
@@ -272,8 +299,14 @@ Estes passos **só** podem ser confirmados no aparelho (marcados no build com
       volume máximo**: baixe o volume do fone antes do primeiro teste.
 - [ ] **Interrupção da fala** (RF-08): apertar `=` enquanto uma tecla ainda está sendo
       anunciada → o anúncio **corta** e só o resultado é falado, sem sobrepor e sem
-      `Device or resource busy` do `aplay`. Depois de um tempo de uso, `/tmp` (tmpfs,
-      ou seja, RAM) não acumula `fala-*` nem `tmp*.wav`.
+      `Device or resource busy` do `aplay` (só um `aplay` toca por vez; o ALSA da
+      imagem não tem `dmix`). Como o motor agora toca PCM **raw** pela stdin do
+      `aplay`, `/tmp` (tmpfs, RAM) **não** acumula WAVs (`fala-*` / `tmp*.wav`).
+- [ ] **Latência**: anúncio de tecla (nome vindo do **cache** de frases fixas) ≤
+      a baseline do espeak-ng (tarefa 1.1); resultado longo dentro do aceitável do
+      PRD. Anotar os números em `docs/testes/` (tarefa 6.2).
+- [ ] **Arranque não bloqueado pelo modelo** (RNF-06): "Calculadora pronta" sai de
+      imediato mesmo se o ONNX ainda estiver carregando (fallback na janela de carga).
 - [ ] Matar o app (`pkill -f software.app`) → ele **reinicia sozinho**.
 - [ ] Medir o **tempo de arranque** até a UI (referência do RNF-06).
 - [ ] `--list-outputs` confirma que **HDMI0 (LCD)** e **HDMI1 (monitor)** correspondem

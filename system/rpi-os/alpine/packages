@@ -21,7 +21,12 @@ mkinitfs          # gera o initramfs-rpi (features: base ext4 mmc, ver script)
 # --- Python + Tkinter (front ttkbootstrap) ---
 python3
 python3-tkinter   # _tkinter ligado ao Tcl/Tk do Alpine (evita recompilar Tk)
-py3-pip           # instala ttkbootstrap/pyttsx3 de software/requirements.txt
+py3-pip           # instala ttkbootstrap de software/requirements.txt
+py3-pillow        # dependencia do ttkbootstrap (pillow>=10,<13). Vem do apk, NAO
+                  # do pip: e' pacote compilado e o download dele pela rede
+                  # emulada do chroot qemu quebrava com "Connection reset by
+                  # peer". Mesmo princípio do py3-onnxruntime (design D8).
+                  # Alpine v3.24 community: 12.2.0 — dentro da faixa exigida.
 
 # --- X11 mínimo (sem desktop) ---
 xorg-server
@@ -36,8 +41,13 @@ xf86-video-fbdev  # driver de vídeo de reserva (plano B do LCD)
 font-dejavu       # glifos para a UI não ficar sem fonte
 unclutter-xfixes  # esconde o cursor no kiosk (uso é "best-effort" no .xinitrc)
 
-# --- TTS offline (pyttsx3 -> espeak-ng) + áudio ALSA no hardware do Pi ---
-espeak-ng         # motor TTS offline (voz pt-BR definida por speech.py)
+# --- TTS neural offline (Piper + voz cadu) + áudio ALSA no hardware do Pi ---
+# A voz é o Piper (piper-tts, wheel musl instalado no build) sobre o onnxruntime
+# do apk; o espeak-ng permanece como FONEMIZADOR do Piper e como FALLBACK quando
+# o modelo neural não carrega (WRN-011). Ver software/accessibility/speech.py e
+# openspec/changes/replace-tts-with-piper (design D6/D8).
+py3-onnxruntime   # runtime ONNX (community v3.24, aarch64/musl): o motor do Piper
+espeak-ng         # fonemizador do Piper + motor TTS de fallback (voz pt-BR)
 alsa-lib
 alsa-utils        # aplay/alsactl/amixer (saída HDMI ou jack; ver asound.conf)
 alsa-plugins

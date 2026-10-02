@@ -1,2 +1,8 @@
 ttkbootstrap==1.20.4
-pyttsx3==2.99
+# TTS neural offline (Piper, voz cadu). Ver openspec/changes/replace-tts-with-piper.
+# Em glibc (CI, Docker, host) o PyPI tem wheel e o pip instala direto, puxando o
+# onnxruntime. Na imagem Alpine (musl, aarch64) NÃO há wheel: o marcador abaixo
+# faz o pip PULAR o piper no build do rootfs, e o build-alpine-img.sh instala um
+# wheel musl pré-compilado com --no-deps sobre o py3-onnxruntime do apk (design
+# D7/D8) — o onnxruntime nunca vem do pip.
+piper-tts==1.8.0; platform_machine != "aarch64"

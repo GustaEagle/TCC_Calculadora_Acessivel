@@ -44,6 +44,21 @@ class ImagePackagesTest(unittest.TestCase):
         for package in ("xorg-server", "xinit", "xset", "xrandr"):
             self.assertIn(package, installed_packages())
 
+    def test_onnxruntime_is_installed_for_piper(self) -> None:
+        """The neural voice (Piper) runs on onnxruntime, which comes from the apk
+        (community), never from pip on musl - see replace-tts-with-piper (D8)."""
+        self.assertIn(
+            "py3-onnxruntime",
+            installed_packages(),
+            "sem py3-onnxruntime o Piper nao importa e a voz cai sempre no "
+            "fallback espeak-ng (WRN-011)",
+        )
+
+    def test_espeak_ng_stays_as_phonemizer_and_fallback(self) -> None:
+        """espeak-ng is kept even with Piper: it phonemizes for Piper and is the
+        fallback engine (WRN-011)."""
+        self.assertIn("espeak-ng", installed_packages())
+
     def test_comment_only_lines_are_not_read_as_packages(self) -> None:
         """The build strips them, so this parser must strip them too."""
         self.assertFalse({name for name in installed_packages() if name.startswith("#")})
