@@ -51,8 +51,16 @@ class SpokenHistoryTest(unittest.TestCase):
         state = CalculatorState()
         _run(state, "2+2")
         frase = spoken_history(recent_entries(state.history, 10))
-        self.assertIn("2+2", frase)
+        # A expressão é falada com o vocabulário do catálogo ("mais"), não crua.
+        self.assertIn("2 mais 2", frase)
         self.assertIn("igual a 4", frase)
+
+    def test_decimal_results_are_announced_with_the_spoken_separator(self) -> None:
+        """§2: o histórico também fala o "ponto" dos decimais."""
+        state = CalculatorState()
+        _run(state, "1/2")
+        frase = spoken_history(recent_entries(state.history, 10))
+        self.assertIn("igual a 0 ponto 5", frase)
 
     def test_error_codes_are_never_spoken_as_a_result(self) -> None:
         state = CalculatorState()

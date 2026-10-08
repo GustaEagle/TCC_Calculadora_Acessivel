@@ -32,10 +32,12 @@ from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import (
     HISTORY_TOKEN,
     NO_FUNCTION_SPEECH,
+    SPEAK_EXPRESSION_TOKEN,
     VOLUME_DOWN_TOKEN,
     VOLUME_UP_TOKEN,
     spoken_token,
 )
+from software.ui.shared.speech_text import spoken_expression, spoken_number
 from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
@@ -318,6 +320,10 @@ class CalculatorApp:
         # então o atalho é o mesmo no PC e na matriz 6x7.
         if primary == "Ans" and secondary is None:
             secondary = HISTORY_TOKEN
+        # Vindo do teclado de PC também não há 'shifted'; sem isto o Shift + Ans
+        # (ler a expressão atual) só funcionaria pela matriz.
+        if primary == "Ans" and shifted is None:
+            shifted = SPEAK_EXPRESSION_TOKEN
         # Idem para o AC: Ctrl + AC (Ctrl e depois Esc no PC) apaga/religa as telas.
         if primary == "AC" and secondary is None:
             secondary = BLACKOUT_TOKEN
@@ -359,6 +365,12 @@ class CalculatorApp:
 
         if token == HISTORY_TOKEN:
             self._toggle_history()
+            return
+
+        # Shift + Ans: lê a expressão atual. Leitura pura - não avalia, não
+        # altera a linha de cálculo e não recorre ao histórico (ver o método).
+        if token == SPEAK_EXPRESSION_TOKEN:
+            self._speak_current_expression()
             return
 
         # Função secundária: substitui o AC (não limpa a expressão) e já
@@ -416,7 +428,7 @@ class CalculatorApp:
 
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Resultado {result.display}")
+            self.speech.interrupt_and_say(f"Resultado {spoken_number(result.display)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
             # priority prefix (P1 -> "Erro", P2 -> "Aviso").
@@ -442,11 +454,25 @@ class CalculatorApp:
         result = self.state.recall_last_answer()
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Última resposta: {result.display}")
+            self.speech.interrupt_and_say(f"Última resposta: {spoken_number(result.display)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
+
+    def _speak_current_expression(self) -> None:
+        """Shift + Ans: lê em voz alta a expressão que está na linha de cálculo.
+
+        A fonte é SÓ self.state.expression (nunca o histórico). Não avalia, não
+        altera a expressão e não toca no resultado - apenas fala. Linha vazia é
+        anunciada com segurança. Reaproveita a conversão compartilhada
+        (speech_text), a mesma que corrige a pronúncia dos decimais.
+        """
+        expression = self.state.expression
+        if not expression.strip():
+            self.speech.interrupt_and_say("Expressão vazia")
+            return
+        self.speech.interrupt_and_say(spoken_expression(expression))
 
 
 def main() -> None:

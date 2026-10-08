@@ -350,6 +350,7 @@ def default_fixed_phrases() -> list[str]:
         "Controle ativo", "Controle desativado",
         "Shift ativo", "Shift desativado",
         "Histórico fechado", "Substituindo",
+        "Expressão vazia",
     ])
     seen: set[str] = set()
     unique: list[str] = []

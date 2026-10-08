@@ -45,7 +45,8 @@ class KeycapCatalogueTest(unittest.TestCase):
     def test_secondary_functions_come_with_the_key(self) -> None:
         self.assertEqual(entry_for_keycap("sen"), ("sen(", "asin(", None))
         self.assertEqual(entry_for_keycap("log"), ("log(", "ln(", "logbase("))
-        self.assertEqual(entry_for_keycap("Ans"), ("Ans", "HISTORY", None))
+        # Ans: Ctrl -> histórico; Shift -> ler a expressão atual (§1).
+        self.assertEqual(entry_for_keycap("Ans"), ("Ans", "HISTORY", "SPEAK_EXPR"))
         self.assertEqual(entry_for_keycap("AC"), ("AC", "BLACKOUT", None))
 
     def test_keycaps_that_differ_from_the_screen_labels(self) -> None:

@@ -22,7 +22,10 @@ LEFT_BUTTONS: list[KeypadRow] = [
     # Posição vazia na tela: a tecla "?" existe na matriz (SW25, C0L4), mas não
     # tem função no catálogo do PRD §5 - ver NO_FUNCTION_SPEECH.
     [("", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
-    [("Ctrl", "Ctrl", None, None), ("exp", "exp(", None, None), ("Shift", "Shift", None, None)],
+    # Shift e a tecla "exp" trocaram de posição; a antiga "exp" virou "DR", cuja
+    # função PRINCIPAL alterna graus/radianos. A exponencial exp( continua
+    # acessível como função de Ctrl da mesma tecla, para não sair do catálogo.
+    [("Ctrl", "Ctrl", None, None), ("Shift", "Shift", None, None), ("DR", "RAD/DEG", "exp(", None)],
 ]
 
 RIGHT_BUTTONS: list[KeypadRow] = [
@@ -30,8 +33,12 @@ RIGHT_BUTTONS: list[KeypadRow] = [
     [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, "RAD/DEG")],
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", "VOL_DOWN", None)],
+    # Tecla "." : função principal é o ponto decimal; Shift dá a vírgula (entre
+    # argumentos, ex. nCr(5,2)). A alternância DEG/RAD fica no Shift + "/".
     [("0", "0", None, None), (".", ".", None, ","), ("+", "+", "VOL_UP", None)],
-    [("Ans", "Ans", "HISTORY", None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", "BLACKOUT", None), ("DEL", "DEL", None, None)],
+    # Shift + Ans lê em voz alta a expressão atual (SPEAK_EXPR); Ctrl + Ans abre
+    # o histórico. As duas funções secundárias da MESMA tecla não se atrapalham.
+    [("Ans", "Ans", "HISTORY", "SPEAK_EXPR"), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", "BLACKOUT", None), ("DEL", "DEL", None, None)],
 ]
 
 SPOKEN_TOKEN_NAMES: dict[str, str] = {
@@ -45,7 +52,14 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
     "BLACKOUT": "desligar ou religar as telas",
     "VOL_UP": "aumentar volume", "VOL_DOWN": "diminuir volume",
+    "SPEAK_EXPR": "ler a expressão atual",
 }
+
+# Shift + Ans: lê em voz alta a expressão que está na linha de cálculo (função
+# secundária da tecla Ans). Fica aqui, junto dos outros tokens de atalho, para
+# os dois fronts e o pré-cache da voz partilharem o mesmo nome.
+SPEAK_EXPRESSION_TOKEN = "SPEAK_EXPR"
+SPEAK_EXPRESSION_SHORTCUT_LABEL = "Shift + Ans"
 
 # Volume como função secundária (Ctrl) do "+" e do "-": o modificador é o MESMO
 # nas duas teclas e não interfere no uso normal de "+" e "-" como operadores -
@@ -70,10 +84,11 @@ BLACKOUT_SHORTCUT_LABEL = "Ctrl + AC"
 
 # Teclado físico (matriz 6x7): o keycap é o texto impresso na tecla
 # (hw_platform/keypad_pinout.py). Quase todos coincidem com o rótulo do botão
-# na tela; estes três não. A tecla "," da matriz é a mesma posição do "." na
-# tela: o motor usa "." como separador decimal e "," entre argumentos
-# (nCr(5,2)), e é Shift que dá a vírgula - tal como no botão.
-_KEYCAP_TO_LABEL: dict[str, str] = {"x^-1": "x⁻¹", "Del": "DEL", ",": "."}
+# na tela; estes não. A tecla "," da matriz é a mesma posição do "." na tela: o
+# motor usa "." como separador decimal e "," entre argumentos (nCr(5,2)), e é
+# Shift que dá a vírgula - tal como no botão. A tecla de keycap "exp" passou a
+# ser o botão "DR" (alterna graus/radianos; exp( fica no Ctrl).
+_KEYCAP_TO_LABEL: dict[str, str] = {"x^-1": "x⁻¹", "Del": "DEL", ",": ".", "exp": "DR"}
 
 # A "?" é lida mas não faz nada; sem retorno, quem não vê a tela acharia que
 # a tecla está avariada.
