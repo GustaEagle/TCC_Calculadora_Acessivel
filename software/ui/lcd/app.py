@@ -29,7 +29,14 @@ from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.formatting import format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
-from software.ui.shared.keypad import HISTORY_TOKEN, NO_FUNCTION_SPEECH, spoken_token
+from software.ui.shared.keypad import (
+    HISTORY_TOKEN,
+    NO_FUNCTION_SPEECH,
+    VOLUME_DOWN_TOKEN,
+    VOLUME_UP_TOKEN,
+    spoken_token,
+)
+from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
 from software.ui.shared.video_blackout import (
@@ -73,6 +80,7 @@ class CalculatorApp:
         blackout: VideoBlackout | None = None,
         apply_video: VideoApplier | None = None,
         keypad_matrix: MatrixKeyboard | None = None,
+        volume: VolumeController | None = None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -80,6 +88,8 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+        # Mesmo gerenciador de áudio para a voz e para o volume (mixer ALSA).
+        self.volume = volume or VolumeController()
         # The blackout travels the same way, so a front built during it is born
         # dark; apply_video is the entry point's single place that touches X.
         self.blackout = blackout or VideoBlackout()
@@ -334,6 +344,12 @@ class CalculatorApp:
             self.ctrl_active = False
             self.ctrl_var.set("")
 
+        # Volume (Ctrl + "+"/"-"): ação de configuração, acima do feedback normal
+        # e abaixo do alerta de bateria. O "+"/"-" sozinho segue como operador.
+        if token in {VOLUME_UP_TOKEN, VOLUME_DOWN_TOKEN}:
+            self._change_volume(token == VOLUME_UP_TOKEN)
+            return
+
         # Depois dos modificadores: na matriz e na tela o RAD/DEG é o Shift + /.
         if token == "RAD/DEG":
             self.state.press("RAD/DEG")
@@ -389,7 +405,13 @@ class CalculatorApp:
         self.expression_var.set(self.state.expression)
 
         if result is None:
-            self.speech.say(spoken_token(token))
+            # O "limpar tudo" zera a entrada, então zera também a fila da voz:
+            # interrompe o que estiver na fila e fala só "limpar tudo", direto,
+            # do mesmo modo que a resposta é anunciada.
+            if token == "AC":
+                self.speech.interrupt_and_say(spoken_token(token))
+            else:
+                self.speech.say(spoken_token(token))
             return
 
         if result.ok:
@@ -402,6 +424,18 @@ class CalculatorApp:
             prefix = spoken_priority_prefix(result.code)
             self.result_var.set(f"{result.code}: {friendly_msg}")
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
+
+    def _change_volume(self, up: bool) -> None:
+        """Ajusta o volume do sistema e anuncia o novo nível (prioridade CONFIG).
+
+        Usa interrupt_and_say com prioridade de configuração: o anúncio do volume
+        corta o feedback de teclas/resultados, mas nunca o alerta de bateria.
+        """
+        level = self.volume.increase() if up else self.volume.decrease()
+        if level is None:
+            self.speech.interrupt_and_say("Volume indisponível", priority=SpeechService.CONFIG)
+        else:
+            self.speech.interrupt_and_say(f"Volume {level} por cento", priority=SpeechService.CONFIG)
 
     def _recall_last_answer(self) -> None:
         """Re-announce/redisplay the last full result without recalculating."""

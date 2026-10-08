@@ -86,6 +86,28 @@ Após iniciar o servidor de exemplo, o terminal pode mostrar IP, tensão da bate
 
 ---
 
+## Implementação no software
+
+O nível da bateria é lido em `software/hw_platform/ups.py` (`UpsMonitor`):
+
+- Lemos o registrador **Bus Voltage (0x02)** do INA219 no endereço **0x42**,
+  barramento **I2C1** (`/dev/i2c-1`). Esse registrador é preenchido pelo próprio
+  chip após o reset, sem precisar escrever a calibração — logo basta **ler**.
+- A leitura usa o **`i2cget`** (`i2c-tools`, já na imagem), no mesmo estilo do
+  resto do projeto (chama binários do sistema: `aplay`, `xrandr`, `amixer`), sem
+  acrescentar uma biblioteca Python de I2C. O `i2cget ... w` devolve a palavra
+  em little-endian; o INA219 é big-endian, então os bytes são trocados.
+- Tensão = `(raw >> 3) * 4 mV`; percentagem = `(V − vazio) / (cheio − vazio)`,
+  com `vazio = 3,0 V` e `cheio = 4,2 V` (duas células em paralelo). Endereço,
+  barramento e tensões de referência são ajustáveis por ambiente
+  (`CALC_UPS_I2C_BUS`, `CALC_UPS_I2C_ADDR`, `CALC_UPS_EMPTY_V`, `CALC_UPS_FULL_V`).
+- Sem I2C/`i2cget` (fora do Pi) a leitura **não é inventada**: o status volta com
+  `available=False` e o monitor de bateria simplesmente não alerta.
+
+O aviso por voz de bateria baixa fica em `software/accessibility/battery_alert.py`
+(`BatteryMonitor`): limite padrão **20 %** (`CALC_UPS_LOW_PERCENT`), com alerta
+crítico que precede qualquer outro áudio e anti-repetição configurável.
+
 ## Endereço I2C
 
 Na FAQ da wiki, o endereço indicado é **0x42**. Para verificar no sistema:

@@ -19,8 +19,10 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from software.accessibility.battery_alert import BatteryMonitor
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.hw_platform.ups import UpsMonitor
 from software.hw_platform import video_output
 from software.hw_platform.display import (
     DEFAULT_LCD_CONNECTOR,
@@ -242,6 +244,11 @@ def run_mode(
     speech = speech or SpeechService()
     blackout = VideoBlackout()
 
+    # Monitor de bateria do UPS HAT (RF-06/RF-14): uma thread por execução, presa
+    # à MESMA voz de todos os fronts, para o alerta crítico cortar qualquer áudio.
+    # Só arranca com hardware real (I2C + i2c-tools); fora do Pi não lê nada.
+    battery = start_battery_monitor(speech)
+
     matrix = open_keypad_matrix(keypad_matrix)
     try:
         next_mode: DisplayMode | None = mode
@@ -253,8 +260,28 @@ def run_mode(
         # Ctrl+C ou SIGTERM/SIGHUP (install_exit_signals).
         if matrix is not None:
             matrix.close()
+        if battery is not None:
+            battery.stop()
 
     return 0
+
+
+def start_battery_monitor(speech: SpeechService) -> BatteryMonitor | None:
+    """Liga a vigilância da bateria quando há UPS HAT para ler, senão None.
+
+    Fora do Raspberry Pi (sem barramento I2C ou sem `i2cget`) não há o que
+    monitorar: devolve None e o resto do app corre igual. O limite de bateria
+    baixa e os intervalos vêm de `accessibility/battery_alert.py` (constantes +
+    variáveis de ambiente), fáceis de ajustar depois.
+    """
+    ups = UpsMonitor(low_percent=None)
+    if not ups.available():
+        logger.info("UPS HAT não detectado (sem I2C/i2cget); monitor de bateria desligado.")
+        return None
+    monitor = BatteryMonitor(speech, ups)
+    monitor.start()
+    logger.info("Monitor de bateria do UPS HAT ativo.")
+    return monitor
 
 
 def open_keypad_matrix(choice: str) -> MatrixKeyboard | None:

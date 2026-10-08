@@ -29,8 +29,8 @@ RIGHT_BUTTONS: list[KeypadRow] = [
     [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", None, None)],
     [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, "RAD/DEG")],
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
-    [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", None, None)],
-    [("0", "0", None, None), (".", ".", None, ","), ("+", "+", None, None)],
+    [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", "VOL_DOWN", None)],
+    [("0", "0", None, None), (".", ".", None, ","), ("+", "+", "VOL_UP", None)],
     [("Ans", "Ans", "HISTORY", None), ("=", "=", "RECALL", "RECALL"), ("AC", "AC", "BLACKOUT", None), ("DEL", "DEL", None, None)],
 ]
 
@@ -44,7 +44,17 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto",
     "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
     "BLACKOUT": "desligar ou religar as telas",
+    "VOL_UP": "aumentar volume", "VOL_DOWN": "diminuir volume",
 }
+
+# Volume como função secundária (Ctrl) do "+" e do "-": o modificador é o MESMO
+# nas duas teclas e não interfere no uso normal de "+" e "-" como operadores -
+# só age quando o Ctrl está ativo, exatamente como os outros atalhos de Ctrl
+# (histórico, última resposta, telas). Escolhido Ctrl por ser a família de
+# "ações/atalhos do sistema"; o Shift fica livre para entrada alternativa.
+VOLUME_UP_TOKEN = "VOL_UP"
+VOLUME_DOWN_TOKEN = "VOL_DOWN"
+VOLUME_SHORTCUT_LABEL = "Ctrl + +  /  Ctrl + -"
 
 # O histórico abre por TECLADO (Ctrl + Ans), nunca por um botão dedicado.
 # Ans + Ctrl foi escolhido por usar só teclas que existem na matriz 6x7 do

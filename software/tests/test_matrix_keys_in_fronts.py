@@ -84,6 +84,36 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 self.assertEqual(app.state.expression, "")
                 self.assertFalse(app.shift_active, "o Shift tem de ser consumido")
 
+    def test_ctrl_plus_and_minus_change_volume_without_typing(self) -> None:
+        from software.accessibility.speech import SpeechService
+
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                app.volume = mock.MagicMock()
+                app.volume.increase.return_value = 70
+                app.volume.decrease.return_value = 60
+
+                press(app, keyboard, "Ctrl", "+")
+                app.volume.increase.assert_called_once()
+                self.assertEqual(app.state.expression, "", "Ctrl + '+' não digita operador")
+                app.speech.interrupt_and_say.assert_called_with(
+                    "Volume 70 por cento", priority=SpeechService.CONFIG
+                )
+                self.assertFalse(app.ctrl_active, "o Ctrl tem de ser consumido")
+
+                press(app, keyboard, "Ctrl", "-")
+                app.volume.decrease.assert_called_once()
+                self.assertEqual(app.state.expression, "", "Ctrl + '-' não digita operador")
+
+    def test_plus_and_minus_without_ctrl_stay_operators(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                app.volume = mock.MagicMock()
+                press(app, keyboard, "7", "+", "2", "-", "1")
+                self.assertEqual(app.state.expression, "7+2-1")
+                app.volume.increase.assert_not_called()
+                app.volume.decrease.assert_not_called()
+
     def test_question_mark_is_announced_and_types_nothing(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):

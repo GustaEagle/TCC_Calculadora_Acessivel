@@ -16,6 +16,7 @@ Ver `openspec/changes/replace-tts-with-piper/design.md` (D1–D9).
 from __future__ import annotations
 
 import io
+import itertools
 import json
 import logging
 import os
@@ -29,6 +30,20 @@ from pathlib import Path
 from typing import Callable, Protocol
 
 logger = logging.getLogger(__name__)
+
+# Níveis de prioridade do áudio (menor número = mais importante). A ordem segue
+# o PRD/pedido: alerta crítico de bateria > feedback de volume/configuração >
+# feedback de comandos e leitura de resultados (estes dois partilham o nível
+# "normal", onde o contrato temporal de interrupção já existente - um resultado
+# substitui a leitura de teclas ainda na fila - decide a ordem). Um nível mais
+# importante nunca é interrompido nem escondido por um menos importante.
+PRIORITY_CRITICAL = 0  # alerta de bateria baixa
+PRIORITY_CONFIG = 1    # volume / configuração
+PRIORITY_NORMAL = 2    # comandos, resultados e demais mensagens
+_NUM_PRIORITY_TIERS = 3
+
+# Prioridade do sentinela de parada: abaixo de tudo, para o worker encerrar já.
+_PRIORITY_STOP = -1
 
 # Nome do arquivo da voz cadu; o `.onnx.json` é o irmão de mesmo nome. A voz é
 # embutida na imagem (offline) ou baixada no Docker/host (download-voice.sh).
@@ -58,6 +73,7 @@ class SpeechMessage:
     text: str
     interrupt: bool = False
     generation: int = 0
+    priority: int = PRIORITY_NORMAL
 
 
 class SpeakProcess(Protocol):
@@ -376,8 +392,16 @@ class SpeechService:
     """Fila de TTS não-bloqueante, offline em pt-BR, com interrupção (RF-08).
 
     Por baixo usa um `PiperEngine` residente + cache de frases fixas + fallback
-    espeak-ng. A fila, o `_Generation` e a API pública são preservados.
+    espeak-ng. A fila, o `_Generation` e a API pública são preservados; o único
+    acréscimo é o parâmetro opcional `priority` em `say`/`interrupt_and_say` (e o
+    atalho `alert`), que faz um áudio importante ter precedência sobre um menos
+    importante sem nunca ser cortado por ele.
     """
+
+    # Reexpostos na classe para quem chama não precisar importar as constantes.
+    CRITICAL = PRIORITY_CRITICAL
+    CONFIG = PRIORITY_CONFIG
+    NORMAL = PRIORITY_NORMAL
 
     def __init__(
         self,
@@ -406,10 +430,20 @@ class SpeechService:
                 phrases = fixed_phrases if fixed_phrases is not None else default_fixed_phrases()
                 self._start_cache_warm(phrases)
 
-        self._queue: queue.Queue[SpeechMessage | None] = queue.Queue()
+        # Fila de PRIORIDADE: itens (priority, seq, message). O `seq` monotónico
+        # desempata dentro do mesmo nível (ordem de chegada) e evita comparar
+        # SpeechMessage. Uma mensagem crítica (bateria) é sempre servida antes de
+        # uma normal mesmo que tenha entrado depois.
+        self._queue: queue.PriorityQueue = queue.PriorityQueue()
+        self._seq = itertools.count()  # next() é atómico no CPython (GIL)
         self._current_process: SpeakProcess | None = None
+        # Prioridade do que está tocando agora (None quando ocioso): decide se um
+        # pedido de interrupção pode cortar a reprodução atual.
+        self._active_priority: int | None = None
         self._process_lock = threading.Lock()
-        self._generation = _Generation()
+        # Uma geração por nível: interromper um nível invalida só as mensagens
+        # pendentes daquele nível (e menos importantes), nunca as mais críticas.
+        self._generations = [_Generation() for _ in range(_NUM_PRIORITY_TIERS)]
         self._thread = threading.Thread(target=self._worker, daemon=True)
         self._thread.start()
 
@@ -474,52 +508,72 @@ class SpeechService:
 
     # --- API pública (inalterada) --------------------------------------------
 
-    def say(self, text: str) -> None:
+    def say(self, text: str, priority: int = PRIORITY_NORMAL) -> None:
+        """Enfileira uma fala, sem cortar nada (feedback incremental de teclas)."""
         if not text:
             return
-        self._queue.put(SpeechMessage(text=text, generation=self._generation.current()))
+        generation = self._generations[priority].current()
+        self._put(SpeechMessage(text=text, generation=generation, priority=priority), priority)
 
-    def interrupt_and_say(self, text: str) -> None:
+    def interrupt_and_say(self, text: str, priority: int = PRIORITY_NORMAL) -> None:
+        """Fala `text` já, descartando o que for de prioridade igual ou menor.
+
+        Invalida as mensagens pendentes dos níveis `priority` e menos importantes
+        (as mais importantes sobrevivem), e corta a reprodução atual só quando ela
+        não é mais importante do que este pedido. Assim um alerta crítico corta
+        tudo, mas um resultado nunca interrompe o alerta de bateria nem o volume.
+        """
         if not text:
             return
-        generation = self._generation.bump()
-        self._clear_queue()
         with self._process_lock:
-            if self._current_process is not None and self._current_process.is_alive():
+            # Invalida o nível pedido e todos os menos importantes (valor maior).
+            for tier in range(priority, _NUM_PRIORITY_TIERS):
+                self._generations[tier].bump()
+            generation = self._generations[priority].current()
+            if (
+                self._current_process is not None
+                and self._current_process.is_alive()
+                and self._active_priority is not None
+                and self._active_priority >= priority
+            ):
                 self._current_process.terminate()
-        self._queue.put(SpeechMessage(text=text, interrupt=True, generation=generation))
+        self._put(
+            SpeechMessage(text=text, interrupt=True, generation=generation, priority=priority),
+            priority,
+        )
+
+    def alert(self, text: str) -> None:
+        """Áudio crítico (bateria baixa): corta e precede qualquer outro som."""
+        self.interrupt_and_say(text, priority=PRIORITY_CRITICAL)
 
     def stop(self) -> None:
         with self._process_lock:
             if self._current_process is not None and self._current_process.is_alive():
                 self._current_process.terminate()
-        self._queue.put(None)
+        self._queue.put((_PRIORITY_STOP, next(self._seq), None))
 
-    def _clear_queue(self) -> None:
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-            except queue.Empty:
-                break
+    def _put(self, message: SpeechMessage, priority: int) -> None:
+        self._queue.put((priority, next(self._seq), message))
 
     def _worker(self) -> None:
         logger.debug("Speech worker thread started")
         while True:
-            message = self._queue.get()
+            _priority, _seq, message = self._queue.get()
             if message is None:
                 logger.debug("Received stop signal")
                 break
 
-            if self._generation.is_stale(message.generation):
-                logger.debug("Skipping stale message: '%s'", message.text)
-                continue
-
-            logger.debug("Processing message: '%s'", message.text)
-            process = self._process_factory(message.text)
             with self._process_lock:
+                if self._generations[message.priority].is_stale(message.generation):
+                    logger.debug("Skipping stale message: '%s'", message.text)
+                    continue
+                logger.debug("Processing message: '%s'", message.text)
+                process = self._process_factory(message.text)
                 self._current_process = process
+                self._active_priority = message.priority
             process.start()
             process.join()
             with self._process_lock:
                 self._current_process = None
+                self._active_priority = None
             logger.debug("Speech finished or terminated")
