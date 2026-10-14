@@ -12,7 +12,7 @@ from unittest import mock
 
 from software.hw_platform.keypad_matrix import KeyEvent
 from software.hw_platform.keypad_pinout import SWITCHES
-from software.ui.shared.keypad import NO_FUNCTION_SPEECH
+from software.ui.shared.keypad import NO_FUNCTION_SPEECH, spoken_token
 
 
 def _load(front: str):
@@ -80,7 +80,7 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 self.assertEqual(app.state.angle_mode, "rad")
                 # Indicador e voz acompanham o modo: quem não vê a tela só tem a voz.
                 self.assertEqual(app.mode_var.get(), "RAD")
-                app.speech.say.assert_called_with("Modo rad")
+                app.speech.interrupt_and_say.assert_called_with("Modo rad")
                 self.assertEqual(app.state.expression, "")
                 self.assertFalse(app.shift_active, "o Shift tem de ser consumido")
 
@@ -119,7 +119,53 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
             with self.subTest(front=name), self.front(name) as (app, keyboard):
                 press(app, keyboard, "7", "?")
                 self.assertEqual(app.state.expression, "7")
-                app.speech.say.assert_called_with(NO_FUNCTION_SPEECH)
+                app.speech.interrupt_and_say.assert_called_with(NO_FUNCTION_SPEECH)
+
+    def test_every_key_interrupts_the_previous_key_instead_of_queueing(self) -> None:
+        # RF-08 (nova regra): cada tecla corta a fala da anterior e anuncia só a
+        # si mesma. Em digitação rápida não há fila acumulada - por isso o
+        # feedback de tecla sai por interrupt_and_say, nunca por say.
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "7", "8", "9")
+                spoken = [c.args[0] for c in app.speech.interrupt_and_say.call_args_list]
+                self.assertEqual(
+                    spoken,
+                    [spoken_token("7"), spoken_token("8"), spoken_token("9")],
+                )
+                app.speech.say.assert_not_called()
+
+    def test_operator_replacement_speaks_substituindo_then_the_operator(self) -> None:
+        # Substituir um operador por outro ("7+" e depois "-"): o mesmo toque fala
+        # "Substituindo" (cortando a tecla anterior) e, logo atrás na fila, o nome
+        # do novo operador - a troca não se corta a si mesma, mas a PRÓXIMA tecla
+        # ainda corta as duas.
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "7", "+", "-")
+                self.assertEqual(app.state.expression, "7-")
+                # A 1ª fala do toque de "-" corta a fala anterior: é "Substituindo".
+                interrupted = [c.args[0] for c in app.speech.interrupt_and_say.call_args_list]
+                self.assertEqual(interrupted, ["7", spoken_token("+"), "Substituindo"])
+                # O nome do operador entra em fila ATRÁS do "Substituindo".
+                queued = [c.args[0] for c in app.speech.say.call_args_list]
+                self.assertEqual(queued, [spoken_token("-")])
+
+    def test_typing_key_closes_history_then_announces_the_key(self) -> None:
+        # Preservação: digitar com o histórico aberto (LCD) fecha-o e ainda
+        # anuncia a tecla. "Histórico fechado" é a 1ª fala do toque (corta a
+        # leitura do histórico); o nome da tecla entra em fila atrás dela.
+        with self.front("lcd") as (app, keyboard):
+            press(app, keyboard, "Ctrl", "Ans")  # abre o histórico
+            self.assertTrue(app.history_open)
+            app.speech.reset_mock()
+
+            press(app, keyboard, "5")
+            self.assertFalse(app.history_open)
+            interrupted = [c.args[0] for c in app.speech.interrupt_and_say.call_args_list]
+            queued = [c.args[0] for c in app.speech.say.call_args_list]
+            self.assertEqual(interrupted, ["Histórico fechado"])
+            self.assertEqual(queued, [spoken_token("5")])
 
     def test_run_stops_the_pump_when_the_window_closes(self) -> None:
         keyboard = FakeKeyboard()

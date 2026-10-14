@@ -89,8 +89,12 @@ class AudioOnlyCalculator:
         )
 
     def announce_token(self, token: str) -> None:
-        """Announce a single key press (used when driven key-by-key)."""
-        self.speech.say(spoken_token(token))
+        """Announce a single key press (used when driven key-by-key).
+
+        Usa interrupt_and_say: cada nova tecla corta a fala da anterior e anuncia
+        só a si mesma, sem fila acumulada (RF-08) - o mesmo contrato dos fronts.
+        """
+        self.speech.interrupt_and_say(spoken_token(token))
 
 
 def main() -> None:

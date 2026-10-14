@@ -217,7 +217,7 @@ class BlackoutIsASecondaryFunctionTest(unittest.TestCase):
 
             self.assertFalse(app.blackout.active)
             self.assertEqual(app.apply_video.calls, 0)
-            described = app.speech.say.call_args.args[0]
+            described = app.speech.interrupt_and_say.call_args.args[0]
             self.assertIn(spoken_token("AC"), described)
             self.assertIn(spoken_token(BLACKOUT_TOKEN), described)
 

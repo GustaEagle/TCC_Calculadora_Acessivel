@@ -170,6 +170,10 @@ class CalculatorApp:
 
         self.ctrl_active = False
         self.shift_active = False
+        # Coordena o feedback falado DENTRO de um único toque: a 1ª fala do toque
+        # corta a fala da tecla anterior; as demais do mesmo toque entram em fila
+        # atrás dela (ver _announce_key).
+        self._key_speech_cut = False
         # Widgets que so existem na sua faixa de layout (ver ui/shared/layout.py):
         # ficam None nas faixas menores, e os metodos abaixo tratam esse caso.
         self.buttons: dict[str, ttk.Button] = {}
@@ -575,13 +579,32 @@ class CalculatorApp:
             logger.debug("key event: char=%r -> token=%r", char, token)
             self._handle_token(token, None, None)
 
+    def _announce_key(self, text: str) -> None:
+        """Feedback falado de uma tecla, com interrupção imediata (RF-08).
+
+        A PRIMEIRA fala de um toque corta o que a tecla anterior estava falando
+        (interrupt_and_say); as falas seguintes do MESMO toque entram em fila
+        atrás dela (say), para uma sequência de um só toque - "Substituindo" +
+        operador - não se cortar a si mesma. O próximo toque reinicia o ciclo e
+        volta a cortar tudo. Em digitação rápida, só o último toque sobrevive,
+        sem fila acumulada nem áudios sobrepostos.
+        """
+        if self._key_speech_cut:
+            self.speech.say(text)
+        else:
+            self.speech.interrupt_and_say(text)
+            self._key_speech_cut = True
+
     def _on_unmapped_key(self, event: KeyEvent) -> None:
         # A "?" da matriz: lida, mas sem função no catálogo. Sem este anúncio,
         # quem não vê a tela acharia que a tecla está avariada.
         logger.info("tecla sem função: %s %s %r", event.switch, event.coord, event.keycap)
-        self.speech.say(NO_FUNCTION_SPEECH)
+        self._key_speech_cut = False
+        self._announce_key(NO_FUNCTION_SPEECH)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
+        # Novo toque: a primeira fala deste toque corta a fala da tecla anterior.
+        self._key_speech_cut = False
         # Vindo do teclado (_on_key) não há 'secondary'; sem isto o Ctrl + Ans
         # do teclado físico não abriria o histórico - só o clique no botão.
         if primary == "Ans" and secondary is None:
@@ -602,21 +625,21 @@ class CalculatorApp:
             msg = f"Função {main_name}."
             msg += f" Com Controle ativo, função {ctrl_name}."
             msg += f" Com Shift ativo, função {shift_name}."
-            self.speech.say(msg)
+            self._announce_key(msg)
             return
 
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
             self._update_keypad_labels()
-            self.speech.say("Controle ativo" if self.ctrl_active else "Controle desativado")
+            self._announce_key("Controle ativo" if self.ctrl_active else "Controle desativado")
             return
 
         if primary == "Shift":
             self.shift_active = not self.shift_active
             self.shift_var.set("SHIFT" if self.shift_active else "")
             self._update_keypad_labels()
-            self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
+            self._announce_key("Shift ativo" if self.shift_active else "Shift desativado")
             return
 
         token = primary
@@ -641,7 +664,7 @@ class CalculatorApp:
         if token == "RAD/DEG":
             self.state.press("RAD/DEG")
             self.mode_var.set(self.state.angle_mode.upper())
-            self.speech.say(f"Modo {self.state.angle_mode}")
+            self._announce_key(f"Modo {self.state.angle_mode}")
             return
 
         # Função secundária: substitui o AC (não limpa a expressão) e já
@@ -687,20 +710,18 @@ class CalculatorApp:
 
         if token in operators and self.state.expression:
             if self.state.expression[-1] in operators:
-                self.speech.say("Substituindo")
+                # "Substituindo" é a 1ª fala do toque (corta a tecla anterior); o
+                # nome do operador vem logo atrás, na mesma fila (_announce_key).
+                self._announce_key("Substituindo")
                 self.state.press("DEL")
 
         result = self.state.press(token)
         self.expression_var.set(self.state.expression)
 
         if result is None:
-            # O "limpar tudo" zera a entrada, então zera também a fila da voz:
-            # interrompe o que estiver na fila e fala só "limpar tudo", direto,
-            # do mesmo modo que a resposta é anunciada.
-            if token == "AC":
-                self.speech.interrupt_and_say(spoken_token(token))
-            else:
-                self.speech.say(spoken_token(token))
+            # Feedback da tecla: corta a fala da tecla anterior e anuncia só a si
+            # mesma (ou entra em fila atrás do "Substituindo" deste mesmo toque).
+            self._announce_key(spoken_token(token))
             return
 
         if result.ok:
