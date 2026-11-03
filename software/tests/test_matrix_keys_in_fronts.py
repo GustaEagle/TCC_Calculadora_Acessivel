@@ -12,7 +12,11 @@ from unittest import mock
 
 from software.hw_platform.keypad_matrix import KeyEvent
 from software.hw_platform.keypad_pinout import SWITCHES
-from software.ui.shared.keypad import NO_FUNCTION_SPEECH, spoken_token
+from software.ui.shared.keypad import (
+    NO_FUNCTION_SPEECH,
+    help_speech,
+    spoken_token,
+)
 
 
 def _load(front: str):
@@ -114,11 +118,61 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 app.volume.increase.assert_not_called()
                 app.volume.decrease.assert_not_called()
 
-    def test_question_mark_is_announced_and_types_nothing(self) -> None:
+    def test_question_mark_announces_the_help_and_types_nothing(self) -> None:
+        """A "?" passou de tecla sem função a tecla de AJUDA: anuncia os
+        atalhos e o modo angular, sem tocar na linha de cálculo."""
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
                 press(app, keyboard, "7", "?")
                 self.assertEqual(app.state.expression, "7")
+                app.speech.interrupt_and_say.assert_called_with(help_speech("deg"))
+
+    def test_the_help_is_the_same_in_both_fronts(self) -> None:
+        """RF-04/RF-10: paridade entre fronts (e com o modo somente áudio)."""
+        spoken: list[str] = []
+        for name in self.FRONTS:
+            with self.front(name) as (app, keyboard):
+                press(app, keyboard, "?")
+                spoken.append(app.speech.interrupt_and_say.call_args.args[0])
+        self.assertEqual(len(set(spoken)), 1, msg=f"ajuda divergente: {spoken}")
+
+    def test_the_help_leaves_every_piece_of_state_alone(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                app.volume = mock.MagicMock()
+                press(app, keyboard, "5", "nCr", "2", "=")
+                result_before = app.result_var.get()
+                ans_before = app.state.ans
+                press(app, keyboard, "?")
+                self.assertEqual(app.result_var.get(), result_before)
+                self.assertEqual(app.state.ans, ans_before)
+                self.assertEqual(app.state.angle_mode, "deg")
+                app.volume.increase.assert_not_called()
+                app.volume.decrease.assert_not_called()
+
+    def test_a_second_press_interrupts_the_help(self) -> None:
+        """RF-08: nenhuma fala bloqueia a entrada - o toque seguinte corta."""
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "?")
+                self.assertEqual(app.speech.interrupt_and_say.call_count, 2)
+                app.speech.say.assert_not_called()
+
+    def test_another_key_interrupts_the_help_and_is_processed(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "7")
+                self.assertEqual(app.state.expression, "7")
+                app.speech.interrupt_and_say.assert_called_with(spoken_token("7"))
+
+    def test_unknown_keycaps_still_announce_no_function(self) -> None:
+        """O caminho de tecla não mapeada continua a existir para teclas
+        genuinamente desconhecidas (keycap fora do mapa, defeito de hardware)."""
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, _keyboard):
+                app._on_unmapped_key(
+                    KeyEvent("ZZZ", "C0L0", 0, True, 0, 0, 0.0)
+                )
                 app.speech.interrupt_and_say.assert_called_with(NO_FUNCTION_SPEECH)
 
     def test_every_key_interrupts_the_previous_key_instead_of_queueing(self) -> None:

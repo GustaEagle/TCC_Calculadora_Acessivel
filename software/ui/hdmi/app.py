@@ -31,6 +31,7 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.core.models import CalculationResult
 from software.hw_platform.display import (
     DEFAULT_MONITOR_CONNECTOR,
     MONITOR_CONNECTOR_ENV,
@@ -50,6 +51,7 @@ from software.ui.shared.layout import (
     tier_for,
 )
 from software.ui.shared.keypad import (
+    HELP_TOKEN,
     HISTORY_TOKEN,
     LEFT_BUTTONS,
     NO_FUNCTION_SPEECH,
@@ -58,11 +60,16 @@ from software.ui.shared.keypad import (
     VOLUME_DOWN_TOKEN,
     VOLUME_UP_TOKEN,
     button_style,
+    help_speech,
     keypad_toggle_label,
     keypad_toggle_speech,
     spoken_token,
 )
-from software.ui.shared.speech_text import spoken_expression, spoken_number
+from software.ui.shared.speech_text import (
+    spoken_expression,
+    spoken_number,
+    spoken_pair,
+)
 from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
@@ -694,6 +701,14 @@ class CalculatorApp:
             self._speak_current_expression()
             return
 
+        # Tecla "?": ajuda falada - o MESMO texto do front do LCD (RF-04/RF-10
+        # exigem paridade). Ação pura: não toca na expressão, no resultado, no
+        # Ans nem no modo angular. O interrupt_and_say garante que um segundo
+        # toque na "?" (ou qualquer outra tecla) corta a ajuda (RF-08).
+        if token == HELP_TOKEN:
+            self.speech.interrupt_and_say(help_speech(self.state.angle_mode))
+            return
+
         if token == "=" and not self.state.expression:
             return
 
@@ -726,7 +741,7 @@ class CalculatorApp:
 
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Resultado {spoken_number(result.display)}")
+            self.speech.interrupt_and_say(f"Resultado {self._spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
             # priority prefix (P1 -> "Erro", P2 -> "Aviso").
@@ -785,12 +800,23 @@ class CalculatorApp:
         else:
             self.speech.interrupt_and_say(f"Volume {level} por cento", priority=SpeechService.CONFIG)
 
+    def _spoken_result(self, result: CalculationResult) -> str:
+        """Texto falado de um resultado: PAR de coordenadas ou escalar.
+
+        Mesmo critério do front do LCD: o display de um par é "(3, 4)" e
+        entregar isso ao spoken_number faria o motor neural ler os parênteses
+        e a vírgula em voz alta.
+        """
+        if isinstance(result.value, tuple) and result.value_kind:
+            return spoken_pair(result.value, result.value_kind)
+        return spoken_number(result.display)
+
     def _recall_last_answer(self) -> None:
         """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Última resposta: {spoken_number(result.display)}")
+            self.speech.interrupt_and_say(f"Última resposta: {self._spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)

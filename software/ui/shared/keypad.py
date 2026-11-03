@@ -12,6 +12,8 @@ the modifier has no alternative for that key, and an empty label is a spacer.
 
 from __future__ import annotations
 
+from software.ui.shared.video_blackout import BLACKOUT_TOKEN
+
 KeypadRow = list[tuple[str, str, str | None, str | None]]
 
 LEFT_BUTTONS: list[KeypadRow] = [
@@ -19,9 +21,13 @@ LEFT_BUTTONS: list[KeypadRow] = [
     [("sen", "sen(", "asin(", None), ("cos", "cos(", "acos(", None), ("", "", None, None)],
     [("tan", "tan(", "atan(", None), ("log", "log(", "ln(", "logbase("), ("", "", None, None)],
     [("x⁻¹", "inv(", None, None), ("^", "^", None, None)],
-    # Posição vazia na tela: a tecla "?" existe na matriz (SW25, C0L4), mas não
-    # tem função no catálogo do PRD §5 - ver NO_FUNCTION_SPEECH.
-    [("", "", None, None), ("nCr", "nCr(", "nPr(", None), ("√", "sqrt(", None, None)],
+    # Posição vazia na tela: a tecla "?" existe na matriz (SW25, C0L4) e tem
+    # função (ajuda falada, ver HELP_TOKEN), mas não tem BOTÃO - a ajuda é uma
+    # função do teclado físico, e o catálogo do PRD §5 não muda por causa dela.
+    # nCr/nPr são INFIXOS: a tecla fica ENTRE os operandos (5 nCr 2), como numa
+    # calculadora científica. Os espaços no token são para a linha de cálculo
+    # ficar legível; o motor aceita com e sem eles.
+    [("", "", None, None), ("nCr", " nCr ", " nPr ", None), ("√", "sqrt(", None, None)],
     # Shift e a tecla "exp" trocaram de posição; a antiga "exp" virou "DR", cuja
     # função PRINCIPAL alterna graus/radianos. A exponencial exp( continua
     # acessível como função de Ctrl da mesma tecla, para não sair do catálogo.
@@ -46,13 +52,14 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     "π": "pi", "e": "é", "(": "abre parênteses", ")": "fecha parênteses", "Ans": "resposta anterior",
     "sen(": "seno", "cos(": "cosseno", "tan(": "tangente", "log(": "logaritmo decimal", "ln(": "logaritmo natural",
     "sqrt(": "raiz quadrada", "asin(": "arco seno", "acos(": "arco cosseno", "atan(": "arco tangente", "!": "fatorial",
-    "nCr(": "combinação", "nPr(": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
+    " nCr ": "combinação", " nPr ": "permutação", "polar(": "polar para retangular", "rect(": "retangular para polar",
     "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "exponencial", "%": "porcento",
     "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto",
     "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
     "BLACKOUT": "desligar ou religar as telas",
     "VOL_UP": "aumentar volume", "VOL_DOWN": "diminuir volume",
     "SPEAK_EXPR": "ler a expressão atual",
+    "HELP": "ajuda",
 }
 
 # Shift + Ans: lê em voz alta a expressão que está na linha de cálculo (função
@@ -82,6 +89,74 @@ HISTORY_SHORTCUT_LABEL = "Ctrl + Ans"
 BLACKOUT_SHORTCUT_LABEL = "Ctrl + AC"
 
 
+# A tecla "?" da matriz (SW25, C0L4) é a ÚNICA livre, e é a mais bem colocada
+# para resolver um problema real: os atalhos acima existem e não há como
+# descobri-los sem ver a tela nem ler a documentação. Pressionar "?" anuncia o
+# modo angular e os atalhos; é informativa e não toca na expressão.
+HELP_TOKEN = "HELP"
+HELP_SHORTCUT_LABEL = "?"
+
+# Todos os atalhos do produto que a ajuda TEM de cobrir. É aqui que se
+# acrescenta um atalho novo, junto da declaração dos tokens acima.
+SHORTCUT_TOKENS: tuple[str, ...] = (
+    HISTORY_TOKEN,
+    SPEAK_EXPRESSION_TOKEN,
+    VOLUME_UP_TOKEN,
+    VOLUME_DOWN_TOKEN,
+    BLACKOUT_TOKEN,
+)
+
+# Fonte ÚNICA da ajuda: por atalho, a descrição, as combinações em TOKENS (não
+# em rótulos visuais) e os tokens de ação que a entrada cobre. As teclas são
+# faladas pelos nomes de SPOKEN_TOKEN_NAMES, porque um "+" lido literalmente
+# soaria "mais" no meio de uma frase sobre teclas.
+#
+# O terceiro campo é o que torna a cobertura verificável ESTRUTURALMENTE: um
+# teste compara help_covered_tokens() com SHORTCUT_TOKENS, então acrescentar um
+# atalho e esquecer a ajuda passa a ser teste vermelho - e não a lacuna
+# silenciosa que deixou os atalhos atuais indescobríveis.
+HELP_ENTRIES: tuple[tuple[str, tuple[tuple[str, str], ...], tuple[str, ...]], ...] = (
+    ("abrir o histórico", (("Ctrl", "Ans"),), (HISTORY_TOKEN,)),
+    ("ler a expressão atual", (("Shift", "Ans"),), (SPEAK_EXPRESSION_TOKEN,)),
+    (
+        "aumentar ou diminuir o volume",
+        (("Ctrl", "+"), ("Ctrl", "-")),
+        (VOLUME_UP_TOKEN, VOLUME_DOWN_TOKEN),
+    ),
+    ("desligar ou religar as telas", (("Ctrl", "AC"),), (BLACKOUT_TOKEN,)),
+)
+
+
+def help_covered_tokens() -> frozenset[str]:
+    """Tokens de atalho cobertos pela ajuda, derivados de HELP_ENTRIES."""
+    return frozenset(token for _d, _c, tokens in HELP_ENTRIES for token in tokens)
+
+_ANGLE_MODE_SPEECH = {"deg": "graus", "rad": "radianos"}
+
+
+def spoken_combination(modifier: str, key: str) -> str:
+    """Uma combinação de teclas falada: ("Ctrl", "Ans") -> "controle mais resposta anterior"."""
+    return f"{spoken_token(modifier)} mais {spoken_token(key)}"
+
+
+def help_speech(angle_mode: str) -> str:
+    """Texto da ajuda da tecla "?": modo angular + atalhos disponíveis.
+
+    Função pura (sem Tk, sem estado): os dois fronts e o modo somente áudio
+    dizem exactamente o mesmo (RF-04/RF-10), e isto é testável sem GUI.
+
+    A ordem põe primeiro o que MUDA (o modo angular) e só depois os atalhos,
+    que são fixos - assim quem já conhece a ajuda corta-a logo após a primeira
+    frase, que é a única informação de estado (RF-08).
+    """
+    mode = _ANGLE_MODE_SPEECH.get(angle_mode, angle_mode)
+    parts = [f"Ajuda. Modo {mode}."]
+    for description, combinations, _tokens in HELP_ENTRIES:
+        keys = ", ".join(spoken_combination(*combo) for combo in combinations)
+        parts.append(f"{description}: {keys}.")
+    return " ".join(parts)
+
+
 # Teclado físico (matriz 6x7): o keycap é o texto impresso na tecla
 # (hw_platform/keypad_pinout.py). Quase todos coincidem com o rótulo do botão
 # na tela; estes não. A tecla "," da matriz é a mesma posição do "." na tela: o
@@ -90,16 +165,26 @@ BLACKOUT_SHORTCUT_LABEL = "Ctrl + AC"
 # ser o botão "DR" (alterna graus/radianos; exp( fica no Ctrl).
 _KEYCAP_TO_LABEL: dict[str, str] = {"x^-1": "x⁻¹", "Del": "DEL", ",": ".", "exp": "DR"}
 
-# A "?" é lida mas não faz nada; sem retorno, quem não vê a tela acharia que
-# a tecla está avariada.
+# Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware)
+# continuam a ser anunciadas: sem retorno, quem não vê a tela acharia que a
+# tecla está avariada. A "?" já NÃO cai aqui - tem a ajuda.
 NO_FUNCTION_SPEECH = "Tecla sem função"
+
+# Teclas da matriz que não têm botão na tela e por isso não são resolvidas por
+# varrimento das filas de botões. A "?" é a única: a ajuda é função exclusiva
+# do teclado físico.
+_KEYCAP_ONLY_TOKENS: dict[str, str] = {"?": HELP_TOKEN}
 
 
 def entry_for_keycap(keycap: str) -> tuple[str, str | None, str | None] | None:
     """(primary, ctrl_secondary, shift_alternative) for a physical key.
 
-    None for a key with no function in the catalogue (the "?").
+    None only for a keycap outside the map (unknown hardware), never for the
+    "?" - that one is the help key.
     """
+    keycap_only = _KEYCAP_ONLY_TOKENS.get(keycap)
+    if keycap_only is not None:
+        return keycap_only, None, None
     label = _KEYCAP_TO_LABEL.get(keycap, keycap)
     for row in LEFT_BUTTONS + RIGHT_BUTTONS:
         for button_label, primary, secondary, shifted in row:
@@ -144,8 +229,8 @@ def button_style(token: str) -> str:
     if token in {"Ctrl", "Shift"}:
         return "warning"
 
-    # Operators and other symbols
-    if token in {"+", "-", "*", "/", "^", "nCr(", "polar(", "π", ",", "."}:
+    # Operators and other symbols (nCr é infixo, logo é operador aqui)
+    if token in {"+", "-", "*", "/", "^", " nCr ", "polar(", "π", ",", "."}:
         return "warning"
 
     # Scientific functions

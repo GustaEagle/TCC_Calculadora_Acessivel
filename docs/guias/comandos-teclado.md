@@ -29,11 +29,12 @@ Válido ao rodar `python software/app.py --force-mode hdmi` ou `--force-mode lcd
 | Tecla no PC | Comando | Efeito |
 | ----------- | ------- | ------ |
 | `Enter` | `=` | Avalia a expressão e anuncia «Resultado …» |
-| `Backspace` | `DEL` | Apaga o último caractere — funções (`sen(`, `log(`, `nCr(`, …) são apagadas como **bloco único** |
+| `Backspace` | `DEL` | Apaga o último caractere — funções (`sen(`, `log(`, …) e os operadores infixos (` nCr `, ` nPr `) são apagados como **bloco único** |
 | `Esc` | `AC` | Limpa tudo (expressão e último resultado). Com as telas apagadas, **religa-as** antes de limpar |
 | `Ctrl` (esq. ou dir.) | modificador | Liga/desliga o estado `CTRL` |
 | `Shift` (esq. ou dir.) | modificador | Liga/desliga o estado `SHIFT` |
 | `a` / `A` | `Ans` | Insere a resposta anterior — **substitui a tecla `Ans`** da matriz, que não existe no PC |
+| `?` | **Ajuda** | Anuncia o modo angular ativo e os atalhos disponíveis — a mesma tecla `?` da matriz. Não altera a expressão nem o estado; qualquer tecla corta a fala |
 | `Ctrl` depois `Esc` | **Apagar/religar telas** | O mesmo `Ctrl` + `AC` da matriz (ver [§3](#apagar-e-religar-as-telas-ctrl-depois-esc)). **No Windows, pressione em sequência** (solte o `Ctrl` antes do `Esc`): `Ctrl`+`Esc` juntos abrem o menu Iniciar |
 | `Ctrl` depois `a` | **Histórico** | LCD: abre/fecha o painel de histórico. HDMI: anuncia o histórico por voz (o painel já é permanente) |
 | `Espaço` (com o foco no botão) | **Mostrar/Ocultar teclado** | Só no HDMI: o teclado na tela começa oculto e o botão do rodapé recebe o foco inicial — `Espaço` alterna. **Não** use `Enter` (está ligado ao `=`) |
@@ -60,6 +61,7 @@ O teclado do produto tem as teclas dedicadas que faltam no PC, e a matriz entra 
 | --- | ------------- | ---------- |
 | Funções secundárias (`Ctrl`/`Shift`) | Só em `a` (`Ans`) e `Esc` (`AC`) | Em **todas** as teclas que têm uma |
 | Funções científicas (`sen`, `log`, `√`, `nCr`, …) | Sem atalho — só pelos botões na tela (HDMI) | Tecla dedicada |
+| Ajuda falada | Tecla `?` | Tecla `?` dedicada (SW25) |
 | `Ans` | Tecla `a` / `A` | Tecla dedicada |
 | Apagar/religar telas | `Ctrl`, depois `Esc` | `Ctrl`, depois `AC` |
 | Modo somente áudio | Funciona (linha digitada + `Enter`) | Não funciona |

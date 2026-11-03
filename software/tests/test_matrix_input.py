@@ -8,7 +8,11 @@ import unittest
 
 from software.hw_platform.keypad_matrix import KeyEvent
 from software.hw_platform.keypad_pinout import SWITCHES
-from software.ui.shared.keypad import NO_FUNCTION_SPEECH, entry_for_keycap
+from software.ui.shared.keypad import (
+    HELP_TOKEN,
+    NO_FUNCTION_SPEECH,
+    entry_for_keycap,
+)
 from software.ui.shared.matrix_input import MatrixInputPump
 
 
@@ -37,10 +41,12 @@ def event(keycap: str, pressed: bool = True) -> KeyEvent:
 
 
 class KeycapCatalogueTest(unittest.TestCase):
-    def test_every_switch_but_the_question_mark_has_a_catalogue_entry(self) -> None:
+    def test_every_switch_has_a_catalogue_entry(self) -> None:
+        # A "?" era a única sem entrada; passou a ser a tecla de ajuda, logo
+        # agora os 38 switches da matriz têm todos destino no software.
         missing = [sw.keycap for sw in SWITCHES if entry_for_keycap(sw.keycap) is None]
-        self.assertEqual(missing, ["?"])
-        self.assertEqual(len(SWITCHES) - len(missing), 37)
+        self.assertEqual(missing, [])
+        self.assertEqual(len(SWITCHES), 38)
 
     def test_secondary_functions_come_with_the_key(self) -> None:
         self.assertEqual(entry_for_keycap("sen"), ("sen(", "asin(", None))
@@ -55,8 +61,13 @@ class KeycapCatalogueTest(unittest.TestCase):
         # A tecla "," é a posição do "." da tela: decimal; Shift dá a vírgula.
         self.assertEqual(entry_for_keycap(","), (".", None, ","))
 
-    def test_question_mark_has_a_spoken_answer(self) -> None:
-        self.assertIsNone(entry_for_keycap("?"))
+    def test_question_mark_is_the_help_key(self) -> None:
+        self.assertEqual(entry_for_keycap("?"), (HELP_TOKEN, None, None))
+
+    def test_unmapped_keys_still_have_a_spoken_answer(self) -> None:
+        """Teclas genuinamente desconhecidas continuam a ser anunciadas - sem
+        retorno, quem não vê a tela acharia a tecla avariada."""
+        self.assertIsNone(entry_for_keycap("ZZZ"))
         self.assertTrue(NO_FUNCTION_SPEECH.strip())
 
 
@@ -95,10 +106,11 @@ class MatrixInputPumpTest(unittest.TestCase):
         self.assertEqual(self.pressed, [])
         self.assertEqual(self.unmapped, [])
 
-    def test_question_mark_goes_to_the_unmapped_handler(self) -> None:
+    def test_question_mark_is_delivered_as_the_help_token(self) -> None:
+        """A "?" deixou de passar pelo caminho de tecla não mapeada."""
         self.deliver(event("?"))
-        self.assertEqual(self.pressed, [])
-        self.assertEqual([e.keycap for e in self.unmapped], ["?"])
+        self.assertEqual(self.pressed, [(HELP_TOKEN, None, None)])
+        self.assertEqual(self.unmapped, [])
 
     def test_events_are_handled_in_arrival_order(self) -> None:
         self.deliver(event("Ctrl"), event("sen"))

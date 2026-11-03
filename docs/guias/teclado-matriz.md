@@ -88,8 +88,8 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 | `2` | `2` | — | — | `C4L3` | SW22 |
 | `3` | `3` | — | — | `C5L3` | SW23 |
 | `-` | `-` | — | — | `C6L3` | SW24 |
-| `?` | **sem função** | — | — | `C0L4` | SW25 |
-| `nCr` | `nCr(` | `nPr(` | — | `C1L4` | SW26 |
+| `?` | **ajuda falada** | — | — | `C0L4` | SW25 |
+| `nCr` | `nCr` (infixo) | `nPr` (infixo) | — | `C1L4` | SW26 |
 | `√` | `sqrt(` | — | — | `C2L4` | SW27 |
 | `0` | `0` | — | — | `C3L4` | SW28 |
 | `,` | `.` (ponto decimal) | — | `,` (separador de argumentos) | `C5L4` | SW29 |
@@ -106,11 +106,37 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 
 ### A tecla `,` e o ponto decimal
 
-A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos: `nCr(5,2)` digita-se `nCr` `5` `Shift` `,` `2` `)`.
+A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos das funções **binárias** — hoje as conversões de coordenadas: `polar(5,2)` digita-se `Pol` `5` `Shift` `,` `2` `)`.
+
+### Combinação e permutação (`nCr` / `nPr`) são **infixas**
+
+A tecla `nCr` fica **entre** os operandos, como numa calculadora científica:
+
+| Quero | Pressiono | Fica na tela | Resultado |
+| --- | --- | --- | --- |
+| combinação de 5, 2 a 2 | `5` `nCr` `2` `=` | `5 nCr 2` | `10` |
+| permutação de 5, 2 a 2 | `5` `Ctrl` `nCr` `2` `=` | `5 nPr 2` | `20` |
+
+Não é preciso vírgula nem fechar parênteses. A forma funcional `nCr(5,2)` **não é aceita** e devolve `ERR-007`.
 
 ### A tecla `?`
 
-A `?` (SW25, `C0L4`) **existe na placa** mas não tem função no catálogo do PRD §5. Ao ser pressionada, a voz diz «Tecla sem função» e nada entra na expressão — sem esse retorno, quem não vê a tela concluiria que a tecla está avariada. Na tela, a posição correspondente fica vazia.
+A `?` (SW25, `C0L4`) é a tecla de **ajuda falada**. Ao ser pressionada, a voz anuncia o **modo angular ativo** e os **atalhos** disponíveis:
+
+> «Ajuda. Modo graus. abrir o histórico: controle mais resposta anterior. ler a expressão atual: shift mais resposta anterior. aumentar ou diminuir o volume: controle mais mais, controle mais menos. desligar ou religar as telas: controle mais limpar tudo.»
+
+É a única forma de **descobrir os atalhos sem ver a tela**. A ajuda:
+
+- **não altera nada** — expressão, resultado, `Ans`, modo angular, volume e telas ficam como estavam;
+- é **interrompível** — pressionar `?` outra vez, ou qualquer outra tecla, corta a fala (RF-08);
+- é igual nos **dois fronts** e em **modo somente áudio** (RF-04/RF-10);
+- **não tem botão na tela**: é função exclusiva do teclado físico, e a posição correspondente continua vazia.
+
+No PC (desenvolvimento), a ajuda sai na própria tecla `?`.
+
+O texto da ajuda é montado a partir dos mesmos atalhos declarados em `software/ui/shared/keypad.py`, e um teste falha se um atalho for acrescentado sem entrar na ajuda — então ela não pode divergir do que existe de facto.
+
+Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware) continuam a anunciar «Tecla sem função»: sem esse retorno, quem não vê a tela concluiria que a tecla está avariada.
 
 ---
 
@@ -123,7 +149,7 @@ A `?` (SW25, `C0L4`) **existe na placa** mas não tem função no catálogo do P
 | **Graus ↔ radianos** | `Shift` → `/` | Alterna RAD/DEG; a voz confirma o modo novo |
 | **Apagar/religar telas** | `Ctrl` → `AC` | Desliga **todas** as saídas de vídeo (ver §5). Não limpa a expressão |
 | **Limpar tudo** | `AC` | Limpa expressão e último resultado. Com as telas apagadas, **religa-as** antes de limpar |
-| **Apagar um item** | `Del` | Remove o último caractere — funções (`sen(`, `log(`, `nCr(`, …) saem como **bloco único**, não letra a letra |
+| **Apagar um item** | `Del` | Remove o último caractere — funções (`sen(`, `log(`, …) e os operadores infixos (` nCr `, ` nPr `) saem como **bloco único**, não letra a letra |
 
 **Não existe tecla dedicada de histórico.** O atalho `Ctrl` + `Ans` foi escolhido por usar só teclas que já existem na matriz, de modo que o comando seja idêntico no hardware e no PC.
 

@@ -212,7 +212,7 @@ Grade vista de frente, colunas `C0…C6` da esquerda para a direita. Cada célul
 | **L4** | SW25 `?` | SW26 `nCr` | SW27 `√` | SW28 `0` | — | SW29 `,` | SW30 `+` |
 | **L5** | SW31 `Ctrl` | SW32 `exp` | SW33 `Shift` | SW34 `Ans` | SW35 `=` | SW36 `AC` | SW37 `Del` |
 
-A tecla **`?`** existe na placa mas **não tem função** no software: ela é lida e anuncia «Tecla sem função».
+A tecla **`?`** é a tecla de **ajuda falada**: anuncia o modo angular ativo e os atalhos do produto, sem alterar a expressão nem o estado (ver `docs/guias/teclado-matriz.md`).
 
 **Tempos (valores de bancada, PRD §12):** estabilização de **~1 ms** depois de ativar cada coluna, **debounce de ~20 ms**. Ambos são configuráveis no scanner e na ferramenta de bring-up; rever com o chicote definitivo.
 

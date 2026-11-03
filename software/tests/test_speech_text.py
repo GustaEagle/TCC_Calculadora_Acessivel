@@ -7,7 +7,12 @@ ENTREGUE ao motor - os dígitos preservados e o "ponto" no lugar certo - já que
 
 import unittest
 
-from software.ui.shared.speech_text import spoken_expression, spoken_number
+from software.core.models import VALUE_KIND_POLAR, VALUE_KIND_RECTANGULAR
+from software.ui.shared.speech_text import (
+    spoken_expression,
+    spoken_number,
+    spoken_pair,
+)
 
 
 class SpokenNumberTest(unittest.TestCase):
@@ -76,6 +81,60 @@ class SpokenExpressionTest(unittest.TestCase):
         self.assertEqual(spoken_expression("3.14*2"), "3 ponto 1 4 vezes 2")
         self.assertEqual(spoken_expression("-2.75+1"), "menos 2 ponto 7 5 mais 1")
         self.assertEqual(spoken_expression("10.05/5"), "10 ponto 0 5 dividido por 5")
+
+
+class SpokenPairTest(unittest.TestCase):
+    """T08: as duas frases padronizadas das conversões de coordenadas.
+
+    São fixas de propósito: quem não vê a tela distingue as componentes só
+    pela frase, logo ela não pode variar entre fronts.
+    """
+
+    def test_rectangular_pair_with_decimal(self) -> None:
+        self.assertEqual(
+            spoken_pair((1.0, 1.7320508075688772), VALUE_KIND_RECTANGULAR),
+            "x igual a 1 e y igual a 1 ponto 7 3 2 0 5 0 8 0 8",
+        )
+
+    def test_rectangular_pair_of_integers(self) -> None:
+        self.assertEqual(
+            spoken_pair((1.0, 0.0), VALUE_KIND_RECTANGULAR),
+            "x igual a 1 e y igual a 0",
+        )
+
+    def test_rectangular_pair_with_negative_component(self) -> None:
+        self.assertEqual(
+            spoken_pair((-1.0, 0.0), VALUE_KIND_RECTANGULAR),
+            "x igual a menos 1 e y igual a 0",
+        )
+
+    def test_polar_pair_with_decimal(self) -> None:
+        self.assertEqual(
+            spoken_pair((5.0, 53.13010235415598), VALUE_KIND_POLAR),
+            "real 5, ângulo 53 ponto 1 3 0 1 0 2 3 5",
+        )
+
+    def test_polar_pair_of_integers(self) -> None:
+        self.assertEqual(
+            spoken_pair((1.0, 90.0), VALUE_KIND_POLAR), "real 1, ângulo 90"
+        )
+
+    def test_pair_speech_never_reads_punctuation(self) -> None:
+        """O display de um par é "(3, 4)"; entregar isso ao TTS faria o motor
+        neural ler os parênteses e a vírgula em voz alta."""
+        for kind in (VALUE_KIND_RECTANGULAR, VALUE_KIND_POLAR):
+            text = spoken_pair((3.0, 4.5), kind)
+            self.assertNotIn("(", text)
+            self.assertNotIn(")", text)
+            # A vírgula da frase polar é separador de prosódia, não um número
+            # lido; o que não pode aparecer é a vírgula ENTRE as componentes
+            # no formato do display.
+            self.assertNotIn("3, 4", text)
+
+    def test_scalar_speech_unchanged(self) -> None:
+        """Regressão: spoken_number continua a tratar escalares como antes."""
+        self.assertEqual(spoken_number("53.13010235"), "53 ponto 1 3 0 1 0 2 3 5")
+        self.assertEqual(spoken_number("5"), "5")
 
 
 if __name__ == "__main__":

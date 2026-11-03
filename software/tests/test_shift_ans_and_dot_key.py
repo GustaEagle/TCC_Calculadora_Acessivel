@@ -137,14 +137,17 @@ class DotKeyMappingTest(unittest.TestCase):
                 app = _load(front)()
                 app.speech = mock.MagicMock()
                 try:
-                    app._handle_token("nCr(", None, None)
+                    # A vírgula serve às funções genuinamente BINÁRIAS. O nCr
+                    # já não é uma delas (passou a infixo, sem parênteses nem
+                    # vírgula); as conversões de coordenadas continuam a ser.
+                    app._handle_token("polar(", None, None)
                     app._handle_token("5", None, None)
                     app._handle_token("Shift", None, None)
                     app._handle_token(*self.entry)  # Shift + "." -> vírgula
                     app._handle_token("2", None, None)
                     app._handle_token(")", None, None)
 
-                    self.assertEqual(app.state.expression, "nCr(5,2)")
+                    self.assertEqual(app.state.expression, "polar(5,2)")
                 finally:
                     app.root.destroy()
 

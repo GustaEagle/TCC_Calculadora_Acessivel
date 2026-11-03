@@ -23,6 +23,7 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.core.models import CalculationResult
 from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
@@ -30,14 +31,20 @@ from software.ui.shared.error_messages import friendly_message, spoken_priority_
 from software.ui.shared.formatting import format_expression_for_display
 from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import (
+    HELP_TOKEN,
     HISTORY_TOKEN,
     NO_FUNCTION_SPEECH,
     SPEAK_EXPRESSION_TOKEN,
     VOLUME_DOWN_TOKEN,
     VOLUME_UP_TOKEN,
+    help_speech,
     spoken_token,
 )
-from software.ui.shared.speech_text import spoken_expression, spoken_number
+from software.ui.shared.speech_text import (
+    spoken_expression,
+    spoken_number,
+    spoken_pair,
+)
 from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
@@ -396,6 +403,15 @@ class CalculatorApp:
             self._speak_current_expression()
             return
 
+        # Tecla "?": ajuda falada. Também é ação PURA - não toca na expressão,
+        # no resultado, no Ans, no modo angular nem no histórico aberto, por
+        # isso volta aqui, antes do _close_history() mais abaixo. O
+        # interrupt_and_say dá de graça o que o RF-08 pede: um segundo toque
+        # na "?" (ou qualquer outra tecla) corta a ajuda em curso.
+        if token == HELP_TOKEN:
+            self.speech.interrupt_and_say(help_speech(self.state.angle_mode))
+            return
+
         # Função secundária: substitui o AC (não limpa a expressão) e já
         # consumiu o Ctrl acima, como qualquer outra.
         if token == BLACKOUT_TOKEN:
@@ -449,7 +465,7 @@ class CalculatorApp:
 
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Resultado {spoken_number(result.display)}")
+            self.speech.interrupt_and_say(f"Resultado {self._spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
             # priority prefix (P1 -> "Erro", P2 -> "Aviso").
@@ -457,6 +473,18 @@ class CalculatorApp:
             prefix = spoken_priority_prefix(result.code)
             self.result_var.set(f"{result.code}: {friendly_msg}")
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
+
+    def _spoken_result(self, result: CalculationResult) -> str:
+        """Texto falado de um resultado: PAR de coordenadas ou escalar.
+
+        O display de um par é "(3, 4)"; entregar isso ao spoken_number fá-lo-ia
+        voltar intacto, e o motor neural leria os parênteses e a vírgula em voz
+        alta. O sentido da conversão vem do resultado (value_kind), não de uma
+        releitura da expressão.
+        """
+        if isinstance(result.value, tuple) and result.value_kind:
+            return spoken_pair(result.value, result.value_kind)
+        return spoken_number(result.display)
 
     def _change_volume(self, up: bool) -> None:
         """Ajusta o volume do sistema e anuncia o novo nível (prioridade CONFIG).
@@ -475,7 +503,7 @@ class CalculatorApp:
         result = self.state.recall_last_answer()
         if result.ok:
             self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Última resposta: {spoken_number(result.display)}")
+            self.speech.interrupt_and_say(f"Última resposta: {self._spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)

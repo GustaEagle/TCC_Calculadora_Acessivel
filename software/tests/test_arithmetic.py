@@ -133,10 +133,14 @@ class ArithmeticTests(unittest.TestCase):
     def test_aggressive_errors(self) -> None:
         # Erros de sintaxe/parser
         self.assertEqual(self.engine.evaluate("()").code, "ERR-007")
-        self.assertEqual(self.engine.evaluate("(2+3").code, "ERR-007")
         self.assertEqual(self.engine.evaluate("2+").code, "ERR-007")
         self.assertEqual(self.engine.evaluate("sin").code, "ERR-007")
-        self.assertEqual(self.engine.evaluate("log()").code, "ERR-007")
+        # Parênteses em falta já NÃO são erro: o fecho inequívoco é implícito
+        # (ver test_paren_autoclose.py). O fecho ÓRFÃO continua a ser ERR-007.
+        self.assertEqual(self.engine.evaluate("(2+3").display, "5")
+        self.assertEqual(self.engine.evaluate("2+)").code, "ERR-007")
+        # Chamada sem argumentos é entrada INCOMPLETA (P2), não sintaxe (P1).
+        self.assertEqual(self.engine.evaluate("log()").code, "ERR-008")
         # Erros de domínio
         self.assertEqual(self.engine.evaluate("sqrt(-1)").code, "ERR-002")
         self.assertEqual(self.engine.evaluate("1/0 + 5").code, "ERR-001")

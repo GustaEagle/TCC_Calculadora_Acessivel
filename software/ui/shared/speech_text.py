@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import re
 
+from software.core.models import VALUE_KIND_POLAR
 from software.ui.shared.keypad import SPOKEN_TOKEN_NAMES, spoken_token
 
 # Um literal numérico dentro de uma expressão: "123", "1.2" ou ".5". O sinal
@@ -77,6 +78,24 @@ def spoken_number(number: str) -> str:
 
     # Não é um número simples (ex.: notação científica "1e+20"): deixa como está.
     return text
+
+
+def spoken_pair(pair: tuple[float, float], kind: str) -> str:
+    """Texto falado de um PAR de coordenadas, com a frase fixa de cada sentido.
+
+    Retangular (saída de `polar(...)`): «x igual a [valor] e y igual a [valor]»
+    Polar (saída de `rect(...)`):       «real [valor], ângulo [valor]»
+
+    As duas frases são FIXAS de propósito: quem não vê a tela só distingue as
+    componentes pela frase, logo ela não pode variar entre fronts nem entre
+    execuções. Cada componente é formatada como na tela (".10g") e passa por
+    spoken_number, que troca o separador decimal por "ponto" e lê a parte
+    fracionária dígito a dígito.
+    """
+    first, second = (spoken_number(f"{value:.10g}") for value in pair)
+    if kind == VALUE_KIND_POLAR:
+        return f"real {first}, ângulo {second}"
+    return f"x igual a {first} e y igual a {second}"
 
 
 def spoken_expression(expression: str) -> str:
