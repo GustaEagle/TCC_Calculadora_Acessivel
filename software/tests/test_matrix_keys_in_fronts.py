@@ -71,16 +71,19 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 self.assertEqual(app.state.expression, "asin(")
                 self.assertFalse(app.ctrl_active, "o Ctrl tem de ser consumido")
 
+    # O modificador Shift está no keycap "exp" desde que exp( foi para o Ctrl
+    # da tecla "e" (ver _KEYCAP_TO_LABEL). O keycap "Shift" passou a ser o
+    # "DR" (graus/radianos), por isso estes testes pressionam "exp".
     def test_shift_then_log_inserts_log_in_base(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
-                press(app, keyboard, "Shift", "log")
+                press(app, keyboard, "exp", "log")
                 self.assertEqual(app.state.expression, "logbase(")
 
     def test_shift_then_slash_toggles_the_angle_mode(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
-                press(app, keyboard, "Shift", "/")
+                press(app, keyboard, "exp", "/")
                 self.assertEqual(app.state.angle_mode, "rad")
                 # Indicador e voz acompanham o modo: quem não vê a tela só tem a voz.
                 self.assertEqual(app.mode_var.get(), "RAD")

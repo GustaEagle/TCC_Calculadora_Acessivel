@@ -6,9 +6,11 @@ físico e o de PC usam. O ponto é o comportamento integrado: o que é falado, o
 que entra (ou não) na expressão e o modo angular efetivo (DEG/RAD no Shift+"/").
 """
 
+import math
 import unittest
 from unittest import mock
 
+from software.core.engine import CalculationEngine
 from software.ui.shared.keypad import LEFT_BUTTONS, entry_for_keycap
 
 FRONTS = ("lcd", "hdmi")
@@ -173,21 +175,39 @@ class SlashKeyTogglesAngleModeTest(unittest.TestCase):
                     app.root.destroy()
 
 
-class ExpKeyIsDegRadToggleTest(unittest.TestCase):
-    """A tecla física "exp" virou "DR": principal alterna DEG/RAD; exp( no Ctrl."""
+class ModifierRowRotationTest(unittest.TestCase):
+    """Rotação dos modificadores da linha L5.
 
-    def setUp(self) -> None:
-        self.entry = entry_for_keycap("exp")  # (primary, ctrl, shift)
+    exp( saiu da linha e foi para o Ctrl da tecla "e" (Euler). Isso libertou o
+    keycap "exp", que assumiu o Shift, e empurrou o keycap "Shift" para o "DR"
+    (graus/radianos). Os keycaps impressos ficam desalinhados com a função e
+    têm de ser trocados de posição no hotswap.
+    """
 
-    def test_the_catalogue_entry_matches_the_mapping(self) -> None:
-        self.assertEqual(self.entry, ("RAD/DEG", "exp(", None))
+    def test_exp_keycap_is_now_the_shift_modifier(self) -> None:
+        self.assertEqual(entry_for_keycap("exp"), ("Shift", None, None))
 
-    def test_exp_and_shift_swapped_positions_in_the_layout(self) -> None:
-        """Última linha do bloco esquerdo: Ctrl, Shift, DR (exp e Shift trocados)."""
+    def test_shift_keycap_is_now_the_angle_mode_toggle(self) -> None:
+        self.assertEqual(entry_for_keycap("Shift"), ("RAD/DEG", None, None))
+
+    def test_ctrl_keycap_is_untouched(self) -> None:
+        self.assertEqual(entry_for_keycap("Ctrl"), ("Ctrl", None, None))
+
+    def test_the_exponential_left_the_modifier_row(self) -> None:
+        """Nenhum dos três modificadores carrega exp( em função secundária."""
+        for keycap in ("Ctrl", "exp", "Shift"):
+            with self.subTest(keycap=keycap):
+                self.assertNotIn("exp(", entry_for_keycap(keycap))
+
+    def test_physical_order_now_matches_the_on_screen_order(self) -> None:
+        """A linha L5 entrega Ctrl, Shift, DR - a mesma ordem dos botões."""
         labels = [item[0] for item in LEFT_BUTTONS[-1]]
         self.assertEqual(labels, ["Ctrl", "Shift", "DR"])
+        physical = [entry_for_keycap(kc)[0] for kc in ("Ctrl", "exp", "Shift")]
+        self.assertEqual(physical, ["Ctrl", "Shift", "RAD/DEG"])
 
-    def test_primary_press_toggles_between_deg_and_rad(self) -> None:
+    def test_angle_toggle_from_the_shift_keycap(self) -> None:
+        entry = entry_for_keycap("Shift")
         for front in FRONTS:
             with self.subTest(front=front):
                 app = _load(front)()
@@ -195,12 +215,12 @@ class ExpKeyIsDegRadToggleTest(unittest.TestCase):
                 try:
                     self.assertEqual(app.state.angle_mode, "deg")
 
-                    app._handle_token(*self.entry)  # 1º acionamento
+                    app._handle_token(*entry)  # 1º acionamento
                     self.assertEqual(app.state.angle_mode, "rad")
                     self.assertEqual(app.mode_var.get(), "RAD")
                     self.assertEqual(app.state.engine.angle_mode, "rad")
 
-                    app._handle_token(*self.entry)  # 2º acionamento
+                    app._handle_token(*entry)  # 2º acionamento
                     self.assertEqual(app.state.angle_mode, "deg")
                     self.assertEqual(app.mode_var.get(), "DEG")
 
@@ -209,20 +229,63 @@ class ExpKeyIsDegRadToggleTest(unittest.TestCase):
                 finally:
                     app.root.destroy()
 
-    def test_ctrl_still_inserts_the_exponential(self) -> None:
+    def test_exp_keycap_activates_the_shift_state(self) -> None:
+        """O keycap "exp" tem de ligar o Shift de verdade: pressioná-lo e
+        depois "." dá a vírgula, que é função de Shift do ponto."""
+        for front in FRONTS:
+            with self.subTest(front=front):
+                app = _load(front)()
+                app.speech = mock.MagicMock()
+                try:
+                    app._handle_token(*entry_for_keycap("exp"))
+                    app._handle_token(*entry_for_keycap(","))  # Shift + "." -> ","
+                    self.assertEqual(app.state.expression, ",")
+                    self.assertEqual(app.state.angle_mode, "deg")
+                finally:
+                    app.root.destroy()
+
+
+class EulerKeyCarriesTheExponentialTest(unittest.TestCase):
+    """exp( passou a ser a função de Ctrl da tecla "e": a constante e a
+    exponencial pertencem ao mesmo conceito, então ficam na mesma tecla."""
+
+    def setUp(self) -> None:
+        self.entry = entry_for_keycap("e")  # (primary, ctrl, shift)
+
+    def test_the_catalogue_entry_matches_the_mapping(self) -> None:
+        self.assertEqual(self.entry, ("e", "exp(", None))
+
+    def test_primary_press_still_inserts_the_constant(self) -> None:
+        for front in FRONTS:
+            with self.subTest(front=front):
+                app = _load(front)()
+                app.speech = mock.MagicMock()
+                try:
+                    app._handle_token(*self.entry)
+                    self.assertEqual(app.state.expression, "e")
+                finally:
+                    app.root.destroy()
+
+    def test_ctrl_inserts_the_exponential(self) -> None:
         for front in FRONTS:
             with self.subTest(front=front):
                 app = _load(front)()
                 app.speech = mock.MagicMock()
                 try:
                     app._handle_token("Ctrl", None, None)
-                    app._handle_token(*self.entry)  # Ctrl + DR -> exp(
+                    app._handle_token(*self.entry)  # Ctrl + e -> exp(
                     app._handle_token("2", None, None)
 
                     self.assertEqual(app.state.expression, "exp(2")
                     self.assertEqual(app.state.angle_mode, "deg", "Ctrl não pode alternar o modo")
                 finally:
                     app.root.destroy()
+
+    def test_the_exponential_still_evaluates(self) -> None:
+        """A exponencial continua no catálogo do PRD §5, só mudou de tecla."""
+        engine = CalculationEngine()
+        self.assertAlmostEqual(engine.evaluate("exp(1)").value, math.e)
+        self.assertEqual(engine.evaluate("exp(0)").display, "1")
 
 
 if __name__ == "__main__":

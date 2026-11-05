@@ -28,14 +28,22 @@ LEFT_BUTTONS: list[KeypadRow] = [
     # calculadora científica. Os espaços no token são para a linha de cálculo
     # ficar legível; o motor aceita com e sem eles.
     [("", "", None, None), ("nCr", " nCr ", " nPr ", None), ("√", "sqrt(", None, None)],
-    # Shift e a tecla "exp" trocaram de posição; a antiga "exp" virou "DR", cuja
-    # função PRINCIPAL alterna graus/radianos. A exponencial exp( continua
-    # acessível como função de Ctrl da mesma tecla, para não sair do catálogo.
-    [("Ctrl", "Ctrl", None, None), ("Shift", "Shift", None, None), ("DR", "RAD/DEG", "exp(", None)],
+    # Última linha de modificadores/modo. A exponencial saiu daqui: exp( passou
+    # a ser a função de Ctrl da tecla "e" (Euler), onde fica junto da constante
+    # a que pertence. Isso libertou a tecla de keycap "exp", que passou a ser o
+    # Shift, e empurrou o Shift antigo para o "DR" (alterna graus/radianos).
+    # Efeito colateral bom: com essa rotação a ordem FÍSICA da linha L5 da
+    # matriz (Ctrl, exp->Shift, Shift->DR) passou a coincidir com a ordem destes
+    # botões na tela - antes a tela mostrava Ctrl, Shift, DR e o hardware
+    # entregava Ctrl, DR, Shift. Ver _KEYCAP_TO_LABEL.
+    [("Ctrl", "Ctrl", None, None), ("Shift", "Shift", None, None), ("DR", "RAD/DEG", None, None)],
 ]
 
 RIGHT_BUTTONS: list[KeypadRow] = [
-    [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", None, None)],
+    # Tecla "e" (Euler): a constante na função principal e a exponencial exp(
+    # no Ctrl. As duas pertencem ao mesmo conceito matemático, então ficam na
+    # mesma tecla - e é por isso que a antiga tecla "exp" ficou livre.
+    [("(", "(", None, None), (")", ")", None, None), ("%", "%", None, None), ("e", "e", "exp(", None)],
     [("7", "7", None, None), ("8", "8", None, None), ("9", "9", None, None), ("/", "/", None, "RAD/DEG")],
     [("4", "4", None, None), ("5", "5", None, None), ("6", "6", None, None), ("*", "*", None, None)],
     [("1", "1", None, None), ("2", "2", None, None), ("3", "3", None, None), ("-", "-", "VOL_DOWN", None)],
@@ -160,10 +168,22 @@ def help_speech(angle_mode: str) -> str:
 # Teclado físico (matriz 6x7): o keycap é o texto impresso na tecla
 # (hw_platform/keypad_pinout.py). Quase todos coincidem com o rótulo do botão
 # na tela; estes não. A tecla "," da matriz é a mesma posição do "." na tela: o
-# motor usa "." como separador decimal e "," entre argumentos (nCr(5,2)), e é
-# Shift que dá a vírgula - tal como no botão. A tecla de keycap "exp" passou a
-# ser o botão "DR" (alterna graus/radianos; exp( fica no Ctrl).
-_KEYCAP_TO_LABEL: dict[str, str] = {"x^-1": "x⁻¹", "Del": "DEL", ",": ".", "exp": "DR"}
+# motor usa "." como separador decimal e "," entre argumentos (polar(5,2)), e é
+# Shift que dá a vírgula - tal como no botão.
+#
+# Os modificadores da linha L5 estão ROTACIONADOS em relação ao keycap impresso:
+# com exp( realojada no Ctrl da tecla "e", a tecla de keycap "exp" ficou sem
+# função e assumiu o Shift, e o keycap "Shift" assumiu o "DR" (graus/radianos).
+# Os keycaps impressos ficam portanto desalinhados com a função e precisam de
+# ser trocados de posição no hotswap (e reetiquetados em Braille) - a ordem
+# FÍSICA resultante, Ctrl / Shift / DR, é a mesma dos botões na tela.
+_KEYCAP_TO_LABEL: dict[str, str] = {
+    "x^-1": "x⁻¹",
+    "Del": "DEL",
+    ",": ".",
+    "exp": "Shift",
+    "Shift": "DR",
+}
 
 # Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware)
 # continuam a ser anunciadas: sem retorno, quem não vê a tela acharia que a

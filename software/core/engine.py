@@ -37,7 +37,7 @@ class CalculationEngine:
         "sin": 1, "cos": 1, "tan": 1,
         "asin": 1, "acos": 1, "atan": 1,
         "log": 1, "ln": 1, "logbase": 2,
-        "sqrt": 1, "fact": 1, "inv": 1,
+        "sqrt": 1, "fact": 1, "inv": 1, "exp": 1,
         "__ncr": 2, "__npr": 2,
         "polar": 2, "rect": 2,
     }
@@ -417,6 +417,7 @@ class CalculationEngine:
             "sqrt": self._sqrt,
             "fact": self._factorial,
             "inv": self._inverse,
+            "exp": self._exponential,
             # Alvos da reescrita infixa (_rewrite_infix_combinatorics): o "__"
             # é intencional, para o utilizador não poder chamá-los diretamente.
             "__ncr": self._ncr,
@@ -480,6 +481,18 @@ class CalculationEngine:
         if value == 0:
             raise ZeroDivisionError
         return 1 / value
+
+    def _exponential(self, value: float) -> float:
+        """e elevado a `value`.
+
+        O token exp( já existia no teclado, no catálogo falado e na lista de
+        blocos do DEL, mas nenhuma linha do motor o implementava: pressionar a
+        tecla devolvia ERR-007 com a mensagem interna 'exp'. Não é função nova
+        no §5 - é a notação funcional de "e^x", que o motor já calculava pelo
+        operador de potência. Um argumento grande estoura em OverflowError, que
+        o evaluate() já traduz para ERR-006 ("resultado muito grande").
+        """
+        return math.exp(value)
 
     def _ncr(self, n: float, r: float) -> float:
         n_int, r_int = self._validate_combinatorics(n, r)

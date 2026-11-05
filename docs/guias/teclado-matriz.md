@@ -69,7 +69,7 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 | `(` | `(` | — | — | `C3L0` | SW3 |
 | `)` | `)` | — | — | `C4L0` | SW4 |
 | `%` | `%` | — | — | `C5L0` | SW5 |
-| `e` | `e` | — | — | `C6L0` | SW6 |
+| `e` | `e` (Euler) | **`exp(`** | — | `C6L0` | SW6 |
 | `sen` | `sen(` | `asin(` | — | `C0L1` | SW7 |
 | `cos` | `cos(` | `acos(` | — | `C1L1` | SW8 |
 | `7` | `7` | — | — | `C3L1` | SW9 |
@@ -87,22 +87,24 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 | `1` | `1` | — | — | `C3L3` | SW21 |
 | `2` | `2` | — | — | `C4L3` | SW22 |
 | `3` | `3` | — | — | `C5L3` | SW23 |
-| `-` | `-` | — | — | `C6L3` | SW24 |
+| `-` | `-` | **Volume −** | — | `C6L3` | SW24 |
 | `?` | **ajuda falada** | — | — | `C0L4` | SW25 |
 | `nCr` | `nCr` (infixo) | `nPr` (infixo) | — | `C1L4` | SW26 |
 | `√` | `sqrt(` | — | — | `C2L4` | SW27 |
 | `0` | `0` | — | — | `C3L4` | SW28 |
 | `,` | `.` (ponto decimal) | — | `,` (separador de argumentos) | `C5L4` | SW29 |
-| `+` | `+` | — | — | `C6L4` | SW30 |
+| `+` | `+` | **Volume +** | — | `C6L4` | SW30 |
 | `Ctrl` | liga/desliga `CTRL` | — | — | `C0L5` | SW31 |
-| `exp` | `exp(` | — | — | `C1L5` | SW32 |
-| `Shift` | liga/desliga `SHIFT` | — | — | `C2L5` | SW33 |
-| `Ans` | resposta anterior | **Histórico** | — | `C3L5` | SW34 |
+| `exp` | liga/desliga `SHIFT` | — | — | `C1L5` | SW32 |
+| `Shift` | **RAD/DEG** (alterna graus/radianos) | — | — | `C2L5` | SW33 |
+| `Ans` | resposta anterior | **Histórico** | **Ler a expressão** | `C3L5` | SW34 |
 | `=` | calcula | **Última resposta** | **Última resposta** | `C4L5` | SW35 |
 | `AC` | limpa tudo | **Apaga/religa as telas** | — | `C5L5` | SW36 |
 | `Del` | apaga o último item | — | — | `C6L5` | SW37 |
 
-**Sem função secundária:** `x!`, `x⁻¹`, `^`, `√`, `exp`, `%`, `e`, `(`, `)`, `Del`, os dígitos e `+ - *`.
+**Sem função secundária:** `x!`, `x⁻¹`, `^`, `√`, `%`, `(`, `)`, `Del`, os dígitos e `*`.
+
+> **Keycaps desalinhados na linha L5.** A exponencial `exp(` passou a ser a função de `Ctrl` da tecla `e` (Euler), onde fica junto da constante a que pertence. Isso libertou a tecla impressa `exp`, que assumiu o **`Shift`**, e empurrou a tecla impressa `Shift` para o **RAD/DEG**. Os keycaps impressos precisam de ser **trocados de posição** no hotswap (e reetiquetados em Braille). A ordem resultante — `Ctrl`, `Shift`, RAD/DEG — é a mesma dos botões na tela, que antes não coincidia.
 
 ### A tecla `,` e o ponto decimal
 
@@ -146,9 +148,11 @@ Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware) con
 | ------- | ------ | --------- |
 | **Histórico** | `Ctrl` → `Ans` | Últimos cálculos **bem-sucedidos** (10 no HDMI, 6 no LCD), do mais recente ao mais antigo. No LCD abre um painel; qualquer outra tecla o fecha |
 | **Última resposta** | `Ctrl` → `=` ou `Shift` → `=` | Reanuncia o último resultado **completo** (sem o truncamento do display), **sem recalcular** e **sem tocar** na expressão em curso |
-| **Graus ↔ radianos** | `Shift` → `/` | Alterna RAD/DEG; a voz confirma o modo novo |
+| **Graus ↔ radianos** | tecla `Shift` (keycap), ou `Shift` → `/` | Alterna RAD/DEG; a voz confirma o modo novo. Tem agora tecla **dedicada** (a impressa `Shift`); o `Shift` → `/` continua a funcionar |
 | **Apagar/religar telas** | `Ctrl` → `AC` | Desliga **todas** as saídas de vídeo (ver §5). Não limpa a expressão |
 | **Limpar tudo** | `AC` | Limpa expressão e último resultado. Com as telas apagadas, **religa-as** antes de limpar |
+| **Volume** | `Ctrl` → `+` ou `Ctrl` → `-` | Aumenta / diminui o volume da voz |
+| **Ler a expressão** | `Shift` → `Ans` | Reanuncia a expressão em curso, sem calcular nem alterá-la |
 | **Apagar um item** | `Del` | Remove o último caractere — funções (`sen(`, `log(`, …) e os operadores infixos (` nCr `, ` nPr `) saem como **bloco único**, não letra a letra |
 
 **Não existe tecla dedicada de histórico.** O atalho `Ctrl` + `Ans` foi escolhido por usar só teclas que já existem na matriz, de modo que o comando seja idêntico no hardware e no PC.
