@@ -13,8 +13,11 @@ from unittest import mock
 from software.hw_platform.keypad_matrix import KeyEvent
 from software.hw_platform.keypad_pinout import SWITCHES
 from software.ui.shared.keypad import (
+    HELP_CANCELLED_SPEECH,
+    HELP_PROMPT_SPEECH,
     NO_FUNCTION_SPEECH,
-    help_speech,
+    entry_for_keycap,
+    key_description,
     spoken_token,
 )
 
@@ -121,52 +124,79 @@ class MatrixKeysInFrontsTest(unittest.TestCase):
                 app.volume.increase.assert_not_called()
                 app.volume.decrease.assert_not_called()
 
-    def test_question_mark_announces_the_help_and_types_nothing(self) -> None:
-        """A "?" passou de tecla sem função a tecla de AJUDA: anuncia os
-        atalhos e o modo angular, sem tocar na linha de cálculo."""
+    def test_question_mark_arms_the_lookup_mode(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
-                press(app, keyboard, "7", "?")
-                self.assertEqual(app.state.expression, "7")
-                app.speech.interrupt_and_say.assert_called_with(help_speech("deg"))
-
-    def test_the_help_is_the_same_in_both_fronts(self) -> None:
-        """RF-04/RF-10: paridade entre fronts (e com o modo somente áudio)."""
-        spoken: list[str] = []
-        for name in self.FRONTS:
-            with self.front(name) as (app, keyboard):
                 press(app, keyboard, "?")
-                spoken.append(app.speech.interrupt_and_say.call_args.args[0])
-        self.assertEqual(len(set(spoken)), 1, msg=f"ajuda divergente: {spoken}")
+                self.assertTrue(app.help_active)
+                app.speech.interrupt_and_say.assert_called_with(HELP_PROMPT_SPEECH)
+                self.assertEqual(app.state.expression, "")
 
-    def test_the_help_leaves_every_piece_of_state_alone(self) -> None:
+    def test_the_next_key_is_described_and_not_inserted(self) -> None:
+        """O defeito relatado em bancada: a tecla seguinte entrava na
+        expressão. Agora ela é DESCRITA e a expressão fica intacta."""
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "7", "?", "log")
+                self.assertEqual(app.state.expression, "7")
+                app.speech.interrupt_and_say.assert_called_with(
+                    key_description(*entry_for_keycap("log"))
+                )
+                self.assertFalse(app.help_active, "o modo é de um só uso")
+
+    def test_a_digit_after_the_question_mark_is_described_not_typed(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "7")
+                self.assertEqual(app.state.expression, "")
+                app.speech.interrupt_and_say.assert_called_with(
+                    key_description(*entry_for_keycap("7"))
+                )
+
+    def test_a_second_question_mark_cancels_the_mode(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "?")
+                self.assertFalse(app.help_active)
+                app.speech.interrupt_and_say.assert_called_with(HELP_CANCELLED_SPEECH)
+                press(app, keyboard, "7")
+                self.assertEqual(app.state.expression, "7", "cancelado, o 7 entra")
+
+    def test_the_mode_is_one_shot(self) -> None:
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "7", "8")
+                self.assertEqual(app.state.expression, "8", "só o 7 foi consultado")
+
+    def test_describing_a_modifier_does_not_arm_it(self) -> None:
+        """"?" seguido de Ctrl descreve o Ctrl em vez de o ligar."""
+        for name in self.FRONTS:
+            with self.subTest(front=name), self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "Ctrl")
+                self.assertFalse(app.ctrl_active)
+                self.assertFalse(app.help_active)
+
+    def test_lookup_touches_no_state(self) -> None:
         for name in self.FRONTS:
             with self.subTest(front=name), self.front(name) as (app, keyboard):
                 app.volume = mock.MagicMock()
                 press(app, keyboard, "5", "nCr", "2", "=")
                 result_before = app.result_var.get()
                 ans_before = app.state.ans
-                press(app, keyboard, "?")
+                press(app, keyboard, "?", "Shift")
                 self.assertEqual(app.result_var.get(), result_before)
                 self.assertEqual(app.state.ans, ans_before)
                 self.assertEqual(app.state.angle_mode, "deg")
                 app.volume.increase.assert_not_called()
-                app.volume.decrease.assert_not_called()
 
-    def test_a_second_press_interrupts_the_help(self) -> None:
-        """RF-08: nenhuma fala bloqueia a entrada - o toque seguinte corta."""
+    def test_the_description_is_the_same_in_both_fronts(self) -> None:
+        """RF-04/RF-10: paridade entre fronts."""
+        spoken = []
         for name in self.FRONTS:
-            with self.subTest(front=name), self.front(name) as (app, keyboard):
-                press(app, keyboard, "?", "?")
-                self.assertEqual(app.speech.interrupt_and_say.call_count, 2)
-                app.speech.say.assert_not_called()
-
-    def test_another_key_interrupts_the_help_and_is_processed(self) -> None:
-        for name in self.FRONTS:
-            with self.subTest(front=name), self.front(name) as (app, keyboard):
-                press(app, keyboard, "?", "7")
-                self.assertEqual(app.state.expression, "7")
-                app.speech.interrupt_and_say.assert_called_with(spoken_token("7"))
+            with self.front(name) as (app, keyboard):
+                press(app, keyboard, "?", "Ans")
+                spoken.append(app.speech.interrupt_and_say.call_args.args[0])
+        self.assertEqual(len(set(spoken)), 1, msg=f"descrição divergente: {spoken}")
 
     def test_unknown_keycaps_still_announce_no_function(self) -> None:
         """O caminho de tecla não mapeada continua a existir para teclas

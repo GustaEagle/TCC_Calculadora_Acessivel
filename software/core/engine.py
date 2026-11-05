@@ -146,6 +146,13 @@ class CalculationEngine:
         # e.g. '09' -> '9', but '0.9' remains '0.9'
         text = re.sub(r"(?<!\.)\b0+(\d+)", r"\1", text)
 
+        # 4.1 Mantissa seguida da tecla EXP: "3 EXP 8" é 3x10^8, e no teclado a
+        # tecla insere "exp(" logo após a mantissa, produzindo "3exp(8". Sem
+        # esta multiplicação implícita o ast.parse recusaria "3exp(8)". Um
+        # "exp(" que não venha depois de um número/grupo fica intacto e vale
+        # 10^x sozinho.
+        text = re.sub(r"(\d+(?:\.\d+)?|\)|\bpi\b|\be\b)\s*exp\(", r"\1*exp(", text)
+
         # 5. Fecho automático dos parênteses em falta. Corre AQUI, no fim,
         # porque _replace_factorials, _replace_percentages e a reescrita de
         # log2( -> logbase(2, injetam parênteses equilibrados: contá-los antes
@@ -323,10 +330,12 @@ class CalculationEngine:
         vez, evita que o front reinterprete a string da expressão (§8).
         """
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            # O sentido é o DESTINO da conversão (convenção Casio): polar()
+            # produz um par polar, rect() produz um par retangular.
             if node.func.id == "polar":
-                return VALUE_KIND_RECTANGULAR
-            if node.func.id == "rect":
                 return VALUE_KIND_POLAR
+            if node.func.id == "rect":
+                return VALUE_KIND_RECTANGULAR
         return None
 
     def _scalar(self, value: float | tuple[float, float]) -> float:
@@ -417,13 +426,15 @@ class CalculationEngine:
             "sqrt": self._sqrt,
             "fact": self._factorial,
             "inv": self._inverse,
-            "exp": self._exponential,
+            "exp": self._power_of_ten,
             # Alvos da reescrita infixa (_rewrite_infix_combinatorics): o "__"
             # é intencional, para o utilizador não poder chamá-los diretamente.
             "__ncr": self._ncr,
             "__npr": self._npr,
-            "polar": self._polar_to_rect,
-            "rect": self._rect_to_polar,
+            # Convenção Casio: o token diz o DESTINO. polar( recebe (x,y) e
+            # devolve (r,ângulo); rect( recebe (r,ângulo) e devolve (x,y).
+            "polar": self._to_polar,
+            "rect": self._to_rect,
         }
 
     def _angle_to_radians(self, value: float) -> float:
@@ -482,17 +493,18 @@ class CalculationEngine:
             raise ZeroDivisionError
         return 1 / value
 
-    def _exponential(self, value: float) -> float:
-        """e elevado a `value`.
+    def _power_of_ten(self, value: float) -> float:
+        """10 elevado a `value`: a tecla EXP de entrada em notação científica.
 
-        O token exp( já existia no teclado, no catálogo falado e na lista de
-        blocos do DEL, mas nenhuma linha do motor o implementava: pressionar a
-        tecla devolvia ERR-007 com a mensagem interna 'exp'. Não é função nova
-        no §5 - é a notação funcional de "e^x", que o motor já calculava pelo
-        operador de potência. Um argumento grande estoura em OverflowError, que
-        o evaluate() já traduz para ERR-006 ("resultado muito grande").
+        No teclado de uma calculadora, "EXP" (ou "EE") NÃO é a exponencial de
+        base e - é a entrada do expoente de base dez: "3 EXP 8" é 3x10^8. Por
+        isso não acrescenta função ao catálogo do PRD §5: é notação de ENTRADA
+        de número, e o e^x continua acessível por "e ^ x".
+
+        Um expoente grande estoura em OverflowError, que o evaluate() já
+        traduz para ERR-006 ("resultado muito grande").
         """
-        return math.exp(value)
+        return 10.0**value
 
     def _ncr(self, n: float, r: float) -> float:
         n_int, r_int = self._validate_combinatorics(n, r)
@@ -517,16 +529,12 @@ class CalculationEngine:
         """
         return 0.0 if abs(value) < 1e-12 else value
 
-    def _polar_to_rect(self, radius: float, angle: float) -> tuple[float, float]:
-        """Polar -> retangular: devolve AS DUAS componentes (x, y)."""
-        radians = self._angle_to_radians(angle)
-        return (
-            self._snap_to_zero(radius * math.cos(radians)),
-            self._snap_to_zero(radius * math.sin(radians)),
-        )
+    def _to_polar(self, x_value: float, y_value: float) -> tuple[float, float]:
+        """Pol(x, y) -> (r, ângulo): converte PARA polar.
 
-    def _rect_to_polar(self, x_value: float, y_value: float) -> tuple[float, float]:
-        """Retangular -> polar: devolve AS DUAS componentes (r, ângulo).
+        Segue a convenção das calculadoras científicas (Casio e afins): o "Pol"
+        recebe coordenadas retangulares e devolve as polares. O nome do token
+        diz o DESTINO da conversão, não a entrada.
 
         O ângulo sai por atan2 (e não atan(y/x)) pelo quadrante correto e por
         não dividir por zero quando x = 0, e é convertido para a unidade do
@@ -535,6 +543,14 @@ class CalculationEngine:
         radius = math.hypot(x_value, y_value)
         angle = self._angle_from_radians(math.atan2(y_value, x_value))
         return self._snap_to_zero(radius), self._snap_to_zero(angle)
+
+    def _to_rect(self, radius: float, angle: float) -> tuple[float, float]:
+        """Rec(r, ângulo) -> (x, y): converte PARA retangular."""
+        radians = self._angle_to_radians(angle)
+        return (
+            self._snap_to_zero(radius * math.cos(radians)),
+            self._snap_to_zero(radius * math.sin(radians)),
+        )
 
     def _format_value(self, value: float | tuple[float, float]) -> str:
         if isinstance(value, tuple):

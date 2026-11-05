@@ -28,16 +28,23 @@ from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
-from software.ui.shared.formatting import format_expression_for_display
+from software.ui.shared.formatting import (
+    clip_display_line,
+    format_expression_for_display,
+    format_result_for_display,
+)
 from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.keypad import (
+    HELP_CANCELLED_SPEECH,
+    HELP_INDICATOR,
+    HELP_PROMPT_SPEECH,
     HELP_TOKEN,
     HISTORY_TOKEN,
     NO_FUNCTION_SPEECH,
     SPEAK_EXPRESSION_TOKEN,
     VOLUME_DOWN_TOKEN,
     VOLUME_UP_TOKEN,
-    help_speech,
+    key_description,
     spoken_token,
 )
 from software.ui.shared.speech_text import (
@@ -68,6 +75,9 @@ WINDOW_HEIGHT = 480
 FONT_SIZES = {
     "expression": 44,
     "result": 96,
+    # Um par de coordenadas ocupa DUAS linhas; a 96pt elas não caberiam na
+    # altura reservada ao resultado, então o par usa um corpo menor.
+    "result_pair": 48,
     "indicator": 14,
     "history": 22,
 }
@@ -75,6 +85,7 @@ FONT_SIZES = {
 # Truncamento do display para as fontes acima nos 800x480.
 MAX_EXPRESSION_CHARS = 26
 MAX_RESULT_CHARS = 14
+MAX_PAIR_CHARS = 26
 
 _HISTORY_VISIBLE_ROWS = 6
 
@@ -117,6 +128,8 @@ class CalculatorApp:
 
         self.ctrl_active = False
         self.shift_active = False
+        # Modo de consulta da tecla "?": a próxima tecla é descrita, não executada.
+        self.help_active = False
         self.history_open = False
         # Coordena o feedback falado DENTRO de um único toque: a 1ª fala do toque
         # corta a fala da tecla anterior; as demais do mesmo toque entram em fila
@@ -129,6 +142,7 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
+        self.help_var = ttk.StringVar(value="")
 
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
@@ -160,6 +174,10 @@ class CalculatorApp:
         self.style.configure(
             "Display.TLabel", font=("Segoe UI", FONT_SIZES["expression"]), padding=8,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+        self.style.configure(
+            "ResultPair.TLabel", font=("Segoe UI", FONT_SIZES["result_pair"], "bold"), padding=8,
+            anchor="e", justify="right",
         )
         self.style.configure(
             "Result.TLabel", font=("Segoe UI", FONT_SIZES["result"], "bold"), padding=8,
@@ -207,6 +225,7 @@ class CalculatorApp:
         ttk.Label(indicators, textvariable=self.mode_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        ttk.Label(indicators, textvariable=self.help_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
 
         # Display e histórico ocupam a MESMA célula; o histórico é levantado por
         # cima quando aberto (Ctrl + Ans) e baixado ao fechar.
@@ -226,10 +245,11 @@ class CalculatorApp:
             style="Display.TLabel", bootstyle="inverse-secondary",
         ).grid(row=0, column=0, sticky=NSEW)
 
-        ttk.Label(
+        self.result_label = ttk.Label(
             self.display, textvariable=self.result_disp_var, anchor=E,
             style="Result.TLabel", bootstyle="inverse-secondary",
-        ).grid(row=1, column=0, sticky=NSEW)
+        )
+        self.result_label.grid(row=1, column=0, sticky=NSEW)
 
         self.history_view = ttk.Frame(self.stack, bootstyle="secondary", padding=12)
         self.history_view.grid(row=0, column=0, sticky=NSEW)
@@ -245,10 +265,16 @@ class CalculatorApp:
         else:
             self.expression_disp_var.set(expr)
 
-        if len(res) > MAX_RESULT_CHARS:
-            self.result_disp_var.set(".." + res[-(MAX_RESULT_CHARS - 2):])
-        else:
-            self.result_disp_var.set(res)
+        # Um par vem em duas linhas: cada uma é cortada por si, com o corpo
+        # menor e o limite próprio. Antes, o par era uma linha só de 16+
+        # caracteres e a truncagem cortava a cabeça, escondendo o primeiro
+        # valor - a voz anunciava x e y, a tela mostrava só o y.
+        pair = "\n" in res
+        limit = MAX_PAIR_CHARS if pair else MAX_RESULT_CHARS
+        self.result_label.configure(style="ResultPair.TLabel" if pair else "Result.TLabel")
+        self.result_disp_var.set(
+            "\n".join(clip_display_line(line, limit) for line in res.split("\n"))
+        )
 
     # ------------------------------------------------------------------
     # Histórico (só por teclado: Ctrl + Ans)
@@ -358,6 +384,26 @@ class CalculatorApp:
         if primary == "AC" and secondary is None:
             secondary = BLACKOUT_TOKEN
 
+        # Tecla "?": modificador de consulta. Liga o modo e a PRÓXIMA tecla é
+        # descrita em vez de executada. Pressionar "?" outra vez cancela.
+        if primary == HELP_TOKEN:
+            self.help_active = not self.help_active
+            self.help_var.set(HELP_INDICATOR if self.help_active else "")
+            self._announce_key(
+                HELP_PROMPT_SPEECH if self.help_active else HELP_CANCELLED_SPEECH
+            )
+            return
+
+        # Modo de consulta ativo: descreve esta tecla e NÃO a executa - nada
+        # entra na expressão. Vem antes de tudo (até dos modificadores) para
+        # que "?" seguido de Ctrl ou Shift também seja descrito, e não ligue o
+        # modificador por acidente.
+        if self.help_active:
+            self.help_active = False
+            self.help_var.set("")
+            self._announce_key(key_description(primary, secondary, shifted))
+            return
+
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
@@ -401,15 +447,6 @@ class CalculatorApp:
         # altera a linha de cálculo e não recorre ao histórico (ver o método).
         if token == SPEAK_EXPRESSION_TOKEN:
             self._speak_current_expression()
-            return
-
-        # Tecla "?": ajuda falada. Também é ação PURA - não toca na expressão,
-        # no resultado, no Ans, no modo angular nem no histórico aberto, por
-        # isso volta aqui, antes do _close_history() mais abaixo. O
-        # interrupt_and_say dá de graça o que o RF-08 pede: um segundo toque
-        # na "?" (ou qualquer outra tecla) corta a ajuda em curso.
-        if token == HELP_TOKEN:
-            self.speech.interrupt_and_say(help_speech(self.state.angle_mode))
             return
 
         # Função secundária: substitui o AC (não limpa a expressão) e já
@@ -464,7 +501,7 @@ class CalculatorApp:
             return
 
         if result.ok:
-            self.result_var.set(result.display)
+            self.result_var.set(format_result_for_display(result))
             self.speech.interrupt_and_say(f"Resultado {self._spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
@@ -502,7 +539,7 @@ class CalculatorApp:
         """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
-            self.result_var.set(result.display)
+            self.result_var.set(format_result_for_display(result))
             self.speech.interrupt_and_say(f"Última resposta: {self._spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)

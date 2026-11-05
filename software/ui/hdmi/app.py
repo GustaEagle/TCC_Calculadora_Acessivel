@@ -41,7 +41,12 @@ from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
 from software.hw_platform import video_output
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
-from software.ui.shared.formatting import FUNCTION_DISPLAY_SYMBOLS, format_expression_for_display
+from software.ui.shared.formatting import (
+    FUNCTION_DISPLAY_SYMBOLS,
+    clip_display_line,
+    format_expression_for_display,
+    format_result_for_display,
+)
 from software.ui.shared.history import recent_entries, spoken_history
 from software.ui.shared.layout import (
     LayoutTier,
@@ -51,6 +56,9 @@ from software.ui.shared.layout import (
     tier_for,
 )
 from software.ui.shared.keypad import (
+    HELP_CANCELLED_SPEECH,
+    HELP_INDICATOR,
+    HELP_PROMPT_SPEECH,
     HELP_TOKEN,
     HISTORY_TOKEN,
     LEFT_BUTTONS,
@@ -60,7 +68,7 @@ from software.ui.shared.keypad import (
     VOLUME_DOWN_TOKEN,
     VOLUME_UP_TOKEN,
     button_style,
-    help_speech,
+    key_description,
     keypad_toggle_label,
     keypad_toggle_speech,
     spoken_token,
@@ -177,6 +185,8 @@ class CalculatorApp:
 
         self.ctrl_active = False
         self.shift_active = False
+        # Modo de consulta da tecla "?": a próxima tecla é descrita, não executada.
+        self.help_active = False
         # Coordena o feedback falado DENTRO de um único toque: a 1ª fala do toque
         # corta a fala da tecla anterior; as demais do mesmo toque entram em fila
         # atrás dela (ver _announce_key).
@@ -194,6 +204,7 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
+        self.help_var = ttk.StringVar(value="")
         # Teclado na tela começa VISÍVEL onde couber (faixas média/completa):
         # a entrada real é o teclado físico (RF-05), mas mostrar as teclas ajuda
         # quem enxerga parcialmente a localizar a operação. O botão do rodapé
@@ -271,6 +282,13 @@ class CalculatorApp:
             "Display.TLabel", font=("Segoe UI", self.fonts["expression"]), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
         )
+        # Um par de coordenadas ocupa DUAS linhas; usa cerca de metade do corpo
+        # do resultado escalar para caber na altura reservada.
+        self.style.configure(
+            "ResultPair.TLabel",
+            font=("Segoe UI", max(16, self.fonts["result"] // 2), "bold"),
+            padding=10, anchor="e", justify="right",
+        )
         self.style.configure(
             "Result.TLabel", font=("Segoe UI", self.fonts["result"], "bold"), padding=10,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
@@ -315,10 +333,18 @@ class CalculatorApp:
         else:
             self.expression_disp_var.set(expr)
 
-        if len(res) > max_res:
-            self.result_disp_var.set(".." + res[-(max_res - 2):])
-        else:
-            self.result_disp_var.set(res)
+        # Um par vem em duas linhas: cada uma é cortada por si, e a truncagem
+        # preserva a CABEÇA (ver clip_display_line) em vez de esconder o
+        # primeiro valor, como acontecia antes.
+        pair = "\n" in res
+        limit = max_res * 2 if pair else max_res
+        if self.result_label is not None:
+            self.result_label.configure(
+                style="ResultPair.TLabel" if pair else "Result.TLabel"
+            )
+        self.result_disp_var.set(
+            "\n".join(clip_display_line(line, limit) for line in res.split("\n"))
+        )
 
     # ------------------------------------------------------------------
     # Layout
@@ -357,6 +383,7 @@ class CalculatorApp:
         ttk.Label(top_bar, textvariable=self.mode_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=6)
         ttk.Label(top_bar, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=6)
         ttk.Label(top_bar, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=6)
+        ttk.Label(top_bar, textvariable=self.help_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=6)
 
         # Main area: calculator on the left, persistent history on the right.
         # Weights (not pixel widths) are what make this track the window size.
@@ -624,15 +651,26 @@ class CalculatorApp:
         if primary == "AC" and secondary is None:
             secondary = BLACKOUT_TOKEN
 
-        if self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}:
-            main_name = spoken_token(primary)
-            ctrl_name = spoken_token(secondary) if secondary else "Nenhuma"
-            shift_name = spoken_token(shifted) if shifted else "Nenhuma"
+        # Tecla "?": modificador de consulta. Liga o modo e a PRÓXIMA tecla é
+        # descrita em vez de executada. Pressionar "?" outra vez cancela.
+        if primary == HELP_TOKEN:
+            self.help_active = not self.help_active
+            self.help_var.set(HELP_INDICATOR if self.help_active else "")
+            self._announce_key(
+                HELP_PROMPT_SPEECH if self.help_active else HELP_CANCELLED_SPEECH
+            )
+            return
 
-            msg = f"Função {main_name}."
-            msg += f" Com Controle ativo, função {ctrl_name}."
-            msg += f" Com Shift ativo, função {shift_name}."
-            self._announce_key(msg)
+        # Modo de consulta ativo (pela "?" ou pelo antigo Ctrl + Shift juntos):
+        # descreve esta tecla e NÃO a executa. Vem antes dos modificadores para
+        # que "?" seguido de Ctrl ou Shift também seja descrito.
+        if self.help_active or (
+            self.ctrl_active and self.shift_active and primary not in {"Ctrl", "Shift"}
+        ):
+            if self.help_active:
+                self.help_active = False
+                self.help_var.set("")
+            self._announce_key(key_description(primary, secondary, shifted))
             return
 
         if primary == "Ctrl":
@@ -701,14 +739,6 @@ class CalculatorApp:
             self._speak_current_expression()
             return
 
-        # Tecla "?": ajuda falada - o MESMO texto do front do LCD (RF-04/RF-10
-        # exigem paridade). Ação pura: não toca na expressão, no resultado, no
-        # Ans nem no modo angular. O interrupt_and_say garante que um segundo
-        # toque na "?" (ou qualquer outra tecla) corta a ajuda (RF-08).
-        if token == HELP_TOKEN:
-            self.speech.interrupt_and_say(help_speech(self.state.angle_mode))
-            return
-
         if token == "=" and not self.state.expression:
             return
 
@@ -740,7 +770,7 @@ class CalculatorApp:
             return
 
         if result.ok:
-            self.result_var.set(result.display)
+            self.result_var.set(format_result_for_display(result))
             self.speech.interrupt_and_say(f"Resultado {self._spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
@@ -815,7 +845,7 @@ class CalculatorApp:
         """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
-            self.result_var.set(result.display)
+            self.result_var.set(format_result_for_display(result))
             self.speech.interrupt_and_say(f"Última resposta: {self._spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)

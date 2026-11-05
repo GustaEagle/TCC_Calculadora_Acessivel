@@ -245,9 +245,14 @@ class ModifierRowRotationTest(unittest.TestCase):
                     app.root.destroy()
 
 
-class EulerKeyCarriesTheExponentialTest(unittest.TestCase):
-    """exp( passou a ser a função de Ctrl da tecla "e": a constante e a
-    exponencial pertencem ao mesmo conceito, então ficam na mesma tecla."""
+class EulerKeyCarriesTheExpKeyTest(unittest.TestCase):
+    """exp( é a função de Ctrl da tecla "e".
+
+    A tecla EXP é entrada de expoente de base DEZ (3 EXP 8 = 3x10^8), não a
+    exponencial de base e - essa continua acessível por "e ^ x", na primária
+    desta mesma tecla. O realojamento foi o que libertou o keycap "exp" para
+    assumir o Shift (ver ModifierRowRotationTest).
+    """
 
     def setUp(self) -> None:
         self.entry = entry_for_keycap("e")  # (primary, ctrl, shift)
@@ -266,7 +271,7 @@ class EulerKeyCarriesTheExponentialTest(unittest.TestCase):
                 finally:
                     app.root.destroy()
 
-    def test_ctrl_inserts_the_exponential(self) -> None:
+    def test_ctrl_inserts_the_exp_token(self) -> None:
         for front in FRONTS:
             with self.subTest(front=front):
                 app = _load(front)()
@@ -281,11 +286,18 @@ class EulerKeyCarriesTheExponentialTest(unittest.TestCase):
                 finally:
                     app.root.destroy()
 
-    def test_the_exponential_still_evaluates(self) -> None:
-        """A exponencial continua no catálogo do PRD §5, só mudou de tecla."""
+    def test_exp_is_a_power_of_ten(self) -> None:
+        """2 x exp(2) = 200, não 14,78: EXP é expoente de base dez."""
         engine = CalculationEngine()
-        self.assertAlmostEqual(engine.evaluate("exp(1)").value, math.e)
+        self.assertEqual(engine.evaluate("2*exp(2)").display, "200")
+        self.assertEqual(engine.evaluate("3exp(8)").display, "300000000")
         self.assertEqual(engine.evaluate("exp(0)").display, "1")
+
+    def test_the_euler_exponential_is_still_reachable(self) -> None:
+        """e^x não se perdeu: é a primária desta tecla com o operador ^."""
+        engine = CalculationEngine()
+        self.assertAlmostEqual(engine.evaluate("e^1").value, math.e)
+        self.assertAlmostEqual(engine.evaluate("e^2").value, math.e**2)
 
 
 if __name__ == "__main__":

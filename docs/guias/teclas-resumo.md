@@ -36,8 +36,8 @@ separador de argumentos) com `Shift`.
 | `sen(` `cos(` `tan(` | `asin(` `acos(` `atan(` | — |
 | `log(` | `ln(` | `logbase(` |
 | `π` | `e` | — |
-| `e` (Euler) | `exp(` | — |
-| `polar(` | `rect(` | — |
+| `e` (Euler) | `EXP` (×10ˣ) | — |
+| `Pol(` → para polar | `Rec(` → para retangular | — |
 | `nCr` | `nPr` | — |
 | `!` `inv(` `sqrt(` | — | — |
 
@@ -52,15 +52,19 @@ separador de argumentos) com `Shift`.
 | `/` | `/` | — | **RAD ↔ DEG** |
 | `+` `-` | operadores | **volume + / −** | — |
 | `,` | `.` decimal | — | `,` separador |
-| `?` | **ajuda falada** | — | — |
+| `?` | **consulta de tecla** | — | — |
 | `exp` (keycap) | liga/desliga `SHIFT` | — | — |
 | `Shift` (keycap) | **RAD ↔ DEG** | — | — |
 
 > **Os keycaps `exp` e `Shift` não fazem o que está impresso neles.** Com a
-> exponencial `exp(` realojada no `Ctrl` da tecla `e`, a tecla impressa `exp`
-> ficou livre e assumiu o `Shift`; a impressa `Shift` assumiu o RAD/DEG. Troque
-> os dois keycaps de posição no hotswap para a legenda voltar a bater com a
-> função.
+> tecla `EXP` realojada no `Ctrl` da tecla `e`, a tecla impressa `exp` ficou
+> livre e assumiu o `Shift`; a impressa `Shift` assumiu o RAD/DEG. Troque os
+> dois keycaps de posição no hotswap para a legenda voltar a bater com a função.
+
+> **`Pol` e `Rec` dizem o destino da conversão.** `Pol(x,y)` devolve
+> `(r, ângulo)` e `Rec(r,ângulo)` devolve `(x, y)` — como numa Casio. Os dois
+> valores aparecem em **duas linhas** na tela. **`EXP` é expoente de base dez**
+> (`3 EXP 8` = 3×10⁸); a exponencial de Euler é `e` `^` `x`.
 
 ---
 

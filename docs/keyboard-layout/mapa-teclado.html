@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Mapa da matriz 6x7 do teclado da calculadora acessivel (TCC).
+
+  GERADO a partir de software/hw_platform/keypad_pinout.py (posicoes e keycaps)
+  e software/ui/shared/keypad.py (funcoes e nomes falados). Se o codigo mudar,
+  este ficheiro fica desatualizado: regere-o em vez de o editar a mao - os dados
+  estao no array KEYS no fim do ficheiro.
+
+  Abre por duplo-clique, sem servidor. A unica dependencia externa sao as fontes
+  do Google Fonts; sem rede, caem para a pilha de fallback declarada.
+-->
+<title>Mapa da Matriz 6×7</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Asap:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: referência de bancada em coluna única — a grade 6×7 é o herói, com
+     o seletor de modificador imitando o toggle real do produto; depois o aviso
+     dos keycaps desalinhados e a tabela completa dos 38 switches. */
+  :root {
+    --bg: #eceff3;
+    --surface: #ffffff;
+    --surface-2: #f5f7f9;
+    --ink: #16202b;
+    --muted: #5c6b7a;
+    --line: #d2dae2;
+    --mod: #c4342c;      /* Cherry MX Red: camada dos modificadores */
+    --ctrl: #0f6e78;     /* camada Ctrl */
+    --shift: #6d4a9c;    /* camada Shift */
+    --warn: #8f5c10;     /* keycap impresso != função */
+    --warn-bg: #fbf0dc;
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Asap", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131a21;
+      --surface: #1b242d;
+      --surface-2: #212c36;
+      --ink: #e6edf3;
+      --muted: #93a4b4;
+      --line: #2d3a46;
+      --mod: #ef6b60;
+      --ctrl: #4fb3bd;
+      --shift: #a98bd6;
+      --warn: #d9a441;
+      --warn-bg: #2e2518;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131a21;
+    --surface: #1b242d;
+    --surface-2: #212c36;
+    --ink: #e6edf3;
+    --muted: #93a4b4;
+    --line: #2d3a46;
+    --mod: #ef6b60;
+    --ctrl: #4fb3bd;
+    --shift: #a98bd6;
+    --warn: #d9a441;
+    --warn-bg: #2e2518;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 56px;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(1.6rem, 4.6vw, 2.3rem); font-weight: 700; letter-spacing: -0.015em; }
+  h2 { font-size: 1.12rem; font-weight: 600; letter-spacing: -0.005em; }
+  h3 { font-size: 0.95rem; font-weight: 600; }
+  p { margin: 0; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .lede { color: var(--muted); max-width: 62ch; margin-top: 10px; }
+
+  header.page { display: flex; flex-direction: column; gap: 4px; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    margin-top: 18px; font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted);
+  }
+  .meta-row b { color: var(--ink); font-weight: 500; }
+
+  section { margin-top: 40px; }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; margin-bottom: 14px; }
+  .sec-head p { color: var(--muted); font-size: 0.88rem; }
+
+  /* ---- seletor de camada (espelha o toggle real: pressiona, solta, age) ---- */
+  .layers { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .layer-btn {
+    font: 500 0.85rem/1 var(--font-body);
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px; border-radius: 7px; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .layer-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .layer-btn[data-k="p"] .dot { background: var(--ink); }
+  .layer-btn[data-k="ct"] .dot { background: var(--ctrl); }
+  .layer-btn[data-k="sh"] .dot { background: var(--shift); }
+  .layer-btn[aria-pressed="true"] { border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor; }
+  .layer-btn[aria-pressed="true"][data-k="ct"] { color: var(--ctrl); }
+  .layer-btn[aria-pressed="true"][data-k="sh"] { color: var(--shift); }
+  .layer-btn .n { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+  .opt {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: 0.85rem; color: var(--muted); margin-top: 4px;
+  }
+  .opt input { accent-color: var(--warn); width: 15px; height: 15px; }
+
+  /* ---- grade física ---- */
+  .board-scroll { overflow-x: auto; margin-top: 16px; padding-bottom: 6px; }
+  .board {
+    min-width: 600px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 30px repeat(7, 1fr);
+    gap: 7px;
+  }
+  .colhead, .rowhead {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rowhead { justify-content: flex-end; padding-right: 4px; }
+
+  .key {
+    position: relative;
+    aspect-ratio: 1 / 0.92;
+    border: 1px solid var(--line);
+    border-bottom-width: 3px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 4px 3px; cursor: pointer; text-align: center;
+    font-family: var(--font-display);
+    transition: transform 0.08s ease, border-color 0.12s ease;
+  }
+  .key:hover { transform: translateY(-1px); }
+  .key:active { transform: translateY(1px); border-bottom-width: 1px; }
+  .key .fn {
+    font-size: 0.86rem; font-weight: 600; line-height: 1.1;
+    word-break: break-word; max-width: 100%;
+  }
+  .key .sw {
+    position: absolute; top: 3px; left: 5px;
+    font-family: var(--font-mono); font-size: 0.56rem; color: var(--muted);
+  }
+  .key .cap {
+    font-family: var(--font-mono); font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .key[data-mod="1"] { border-color: var(--mod); color: var(--mod); }
+  .key[data-layer="ct"] { border-color: var(--ctrl); color: var(--ctrl); }
+  .key[data-layer="sh"] { border-color: var(--shift); color: var(--shift); }
+  .key[data-void="1"] { opacity: 0.3; }
+  .key[data-void="1"] .fn { font-weight: 500; color: var(--muted); }
+  .key.sel { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .key:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .empty {
+    aspect-ratio: 1 / 0.92; border: 1px dashed var(--line); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); opacity: 0.6;
+  }
+  /* keycap impresso diverge da função */
+  body.show-caps .key[data-mismatch="1"] {
+    border-color: var(--warn);
+    background: var(--warn-bg);
+  }
+  body.show-caps .key[data-mismatch="1"] .cap { color: var(--warn); font-weight: 500; }
+  .key .swapmark { display: none; }
+  body.show-caps .key[data-mismatch="1"] .swapmark {
+    display: block; position: absolute; top: 3px; right: 5px;
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--warn);
+  }
+
+  /* ---- painel de detalhe ---- */
+  .detail {
+    margin-top: 16px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px;
+  }
+  .detail .dh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+  .detail .dh .cap-big { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; }
+  .detail .dh .coords { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); }
+  .fns { display: grid; gap: 8px; margin-top: 14px; }
+  .fn-row {
+    display: grid; grid-template-columns: 74px 1fr; gap: 4px 12px;
+    align-items: start; padding-top: 8px; border-top: 1px solid var(--line);
+  }
+  .fn-row:first-child { border-top: 0; padding-top: 0; }
+  .fn-row .mod-label {
+    font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.08em; padding-top: 3px;
+  }
+  .fn-row[data-k="p"] .mod-label { color: var(--muted); }
+  .fn-row[data-k="ct"] .mod-label { color: var(--ctrl); }
+  .fn-row[data-k="sh"] .mod-label { color: var(--shift); }
+  .fn-row .tok { font-family: var(--font-mono); font-size: 0.86rem; font-weight: 500; }
+  .fn-row .voice { color: var(--muted); font-size: 0.84rem; }
+  .fn-row .voice::before { content: "fala: "; font-family: var(--font-mono); font-size: 0.72rem; }
+  .fn-row .none { color: var(--muted); font-size: 0.86rem; }
+
+  /* ---- avisos ---- */
+  .callout {
+    border: 1px solid var(--warn); background: var(--warn-bg);
+    border-radius: 10px; padding: 16px; display: grid; gap: 10px;
+  }
+  .callout h3 { color: var(--warn); }
+  .swap {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    font-family: var(--font-mono); font-size: 0.82rem;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); background: var(--surface);
+    border-radius: 6px; padding: 5px 9px;
+  }
+  .chip b { font-family: var(--font-display); font-weight: 600; }
+  .arrow { color: var(--warn); font-weight: 600; }
+
+  /* ---- tabela ---- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface-2);
+    font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); font-weight: 500; white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.mono { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  td.tok { font-family: var(--font-mono); font-size: 0.8rem; }
+  td.ct { color: var(--ctrl); }
+  td.sh { color: var(--shift); }
+  td .dash { color: var(--muted); opacity: 0.6; }
+  tr[data-mismatch="1"] td.cap { color: var(--warn); font-weight: 500; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 0.8rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 11px; height: 11px; border-radius: 3px; border: 1px solid currentColor; display: inline-block; }
+
+  footer.page { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.82rem; display: grid; gap: 6px; }
+  footer.page code { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .fn-row { grid-template-columns: 1fr; }
+    .fn-row .mod-label { padding-top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .key { transition: none; }
+    .key:hover, .key:active { transform: none; }
+  }
+</style>
+<style>
+  /* Reset base (num artifact isto vinha do esqueleto de publicacao). */
+  html { color-scheme: light dark; }
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <p class="eyebrow">Calculadora acessível · TCC</p>
+    <h1>Mapa da matriz 6×7</h1>
+    <p class="lede">
+      As 38 teclas do teclado físico: o que cada uma faz sozinha, com <b>Ctrl</b> e com
+      <b>Shift</b>, a posição elétrica na grade e o nome que a voz anuncia. Gerado a partir de
+      <code>keypad_pinout.py</code> e <code>keypad.py</code>.
+    </p>
+    <p class="lede">
+      No próprio aparelho, a tecla <b>?</b> faz isto por voz: pressione <b>?</b> e depois
+      qualquer tecla, e a calculadora descreve as três funções dela <b>sem a executar</b>.
+      É um toggle de um só uso, como o <b>Ctrl</b> e o <b>Shift</b>.
+    </p>
+    <div class="meta-row">
+      <span><b>38</b> switches</span>
+      <span><b>6×7</b> grade · <b>4</b> posições vazias</span>
+      <span><b>13</b> funções de Ctrl</span>
+      <span><b>5</b> de Shift</span>
+      <span>Cherry MX Red · hotswap · GPIO direto</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>Grade física</h2>
+      <p>Os modificadores são <b>toggle</b>, não de segurar: escolha a camada como no produto.</p>
+    </div>
+
+    <div class="layers" role="group" aria-label="Camada de modificador">
+      <button class="layer-btn" data-k="p" aria-pressed="true" type="button">
+        <span class="dot"></span> Sozinha <span class="n">38</span>
+      </button>
+      <button class="layer-btn" data-k="ct" aria-pressed="false" type="button">
+        <span class="dot"></span> Com Ctrl <span class="n">13</span>
+      </button>
+      <button class="layer-btn" data-k="sh" aria-pressed="false" type="button">
+        <span class="dot"></span> Com Shift <span class="n">5</span>
+      </button>
+    </div>
+    <label class="opt">
+      <input type="checkbox" id="capsToggle">
+      Destacar os keycaps a <b>trocar de posição</b> no hotswap
+    </label>
+
+    <div class="board-scroll">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="legend">
+      <span><i style="color:var(--mod)"></i> modificador / modo</span>
+      <span><i style="color:var(--ctrl)"></i> camada Ctrl</span>
+      <span><i style="color:var(--shift)"></i> camada Shift</span>
+      <span><i style="color:var(--warn)"></i> keycap impresso ≠ função</span>
+      <span><i style="border-style:dashed"></i> sem switch montado</span>
+    </div>
+
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Keycaps a trocar de posição</h2>
+    </div>
+    <div class="callout">
+      <h3>Duas legendas da linha L5 deixaram de bater com a função</h3>
+      <p>
+        A tecla <b>EXP</b> (expoente de base dez, <code>×10^x</code>) passou a ser a função
+        de <b>Ctrl</b> da tecla <b>e</b> (Euler). Isso libertou a tecla impressa
+        <b>exp</b>, que assumiu o <b>Shift</b>, e empurrou a impressa <b>Shift</b>
+        para a alternância <b>RAD/DEG</b>.
+      </p>
+      <div class="swap">
+        <span class="chip">SW32 · C1L5 <b>exp</b></span>
+        <span class="arrow">→ agora é Shift</span>
+      </div>
+      <div class="swap">
+        <span class="chip">SW33 · C2L5 <b>Shift</b></span>
+        <span class="arrow">→ agora é RAD/DEG</span>
+      </div>
+      <p>
+        Troque os dois keycaps de posição no hotswap e reetiquete em Braille. A ordem
+        resultante da linha — <b>Ctrl, Shift, RAD/DEG</b> — passa a ser a mesma dos botões na
+        tela, que antes não coincidia.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Duas convenções que valem decorar</h2>
+    </div>
+    <div class="callout" style="border-color:var(--line);background:var(--surface)">
+      <h3 style="color:var(--ink)">O nome da tecla diz o <em>destino</em> da conversão</h3>
+      <p>
+        Convenção das calculadoras científicas: <b>Pol</b> recebe retangulares e devolve
+        polares; <b>Rec</b> faz o inverso. As duas devolvem <b>os dois valores</b>,
+        mostrados em duas linhas.
+      </p>
+      <div class="swap">
+        <span class="chip"><b>Pol(3, 4)</b></span>
+        <span class="arrow">→ r = 5 · θ = 53,13</span>
+      </div>
+      <div class="swap">
+        <span class="chip"><b>Rec(5, 53.13)</b></span>
+        <span class="arrow">→ x = 3 · y = 4</span>
+      </div>
+
+      <h3 style="color:var(--ink);margin-top:6px">A tecla <code>EXP</code> é expoente de base dez</h3>
+      <p>
+        <code>EXP</code> (no <b>Ctrl</b> da tecla <b>e</b>) é entrada de notação científica,
+        como em qualquer teclado de calculadora — não a exponencial de Euler. Essa continua
+        na função <b>principal</b> da mesma tecla, com o operador de potência.
+      </p>
+      <div class="swap">
+        <span class="chip"><b>3</b> · Ctrl + <b>e</b> · <b>8</b></span>
+        <span class="arrow">→ 3 × 10⁸ = 300000000</span>
+      </div>
+      <div class="swap">
+        <span class="chip"><b>e</b> · <b>^</b> · <b>2</b></span>
+        <span class="arrow">→ e² = 7,389056099</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Catálogo completo</h2>
+      <p>38 switches, na ordem do mapa de hardware.</p>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>SW</th><th>Posição</th><th>Keycap</th>
+            <th>Sozinha</th><th>Com Ctrl</th><th>Com Shift</th><th>Voz (sozinha)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="page">
+    <p>
+      Posições e keycaps: <code>software/hw_platform/keypad_pinout.py</code>.
+      Funções e nomes falados: <code>software/ui/shared/keypad.py</code>.
+    </p>
+    <p>
+      As quatro posições vazias (<code>C2L1</code>, <code>C2L2</code>, <code>C2L3</code>,
+      <code>C4L4</code>) não têm switch montado: sinal nelas é defeito de hardware, nunca tecla.
+    </p>
+  </footer>
+</div>
+
+<script>
+const KEYS = [{"sw": 0, "c": 0, "l": 0, "coord": "C0L0", "keycap": "Pol", "label": "Pol", "p": "polar(", "ct": "rect(", "sh": null, "spP": "converter para polar", "spC": "converter para retangular", "spS": null}, {"sw": 1, "c": 1, "l": 0, "coord": "C1L0", "keycap": "x!", "label": "x!", "p": "!", "ct": null, "sh": null, "spP": "fatorial", "spC": null, "spS": null}, {"sw": 2, "c": 2, "l": 0, "coord": "C2L0", "keycap": "Pi", "label": "Pi", "p": "π", "ct": "e", "sh": null, "spP": "pi", "spC": "é", "spS": null}, {"sw": 3, "c": 3, "l": 0, "coord": "C3L0", "keycap": "(", "label": "(", "p": "(", "ct": null, "sh": null, "spP": "abre parênteses", "spC": null, "spS": null}, {"sw": 4, "c": 4, "l": 0, "coord": "C4L0", "keycap": ")", "label": ")", "p": ")", "ct": null, "sh": null, "spP": "fecha parênteses", "spC": null, "spS": null}, {"sw": 5, "c": 5, "l": 0, "coord": "C5L0", "keycap": "%", "label": "%", "p": "%", "ct": null, "sh": null, "spP": "porcento", "spC": null, "spS": null}, {"sw": 6, "c": 6, "l": 0, "coord": "C6L0", "keycap": "e", "label": "e", "p": "e", "ct": "exp(", "sh": null, "spP": "é", "spC": "vezes dez elevado a", "spS": null}, {"sw": 7, "c": 0, "l": 1, "coord": "C0L1", "keycap": "sen", "label": "sen", "p": "sen(", "ct": "asin(", "sh": null, "spP": "seno", "spC": "arco seno", "spS": null}, {"sw": 8, "c": 1, "l": 1, "coord": "C1L1", "keycap": "cos", "label": "cos", "p": "cos(", "ct": "acos(", "sh": null, "spP": "cosseno", "spC": "arco cosseno", "spS": null}, {"sw": 9, "c": 3, "l": 1, "coord": "C3L1", "keycap": "7", "label": "7", "p": "7", "ct": null, "sh": null, "spP": "7", "spC": null, "spS": null}, {"sw": 10, "c": 4, "l": 1, "coord": "C4L1", "keycap": "8", "label": "8", "p": "8", "ct": null, "sh": null, "spP": "8", "spC": null, "spS": null}, {"sw": 11, "c": 5, "l": 1, "coord": "C5L1", "keycap": "9", "label": "9", "p": "9", "ct": null, "sh": null, "spP": "9", "spC": null, "spS": null}, {"sw": 12, "c": 6, "l": 1, "coord": "C6L1", "keycap": "/", "label": "/", "p": "/", "ct": null, "sh": "RAD/DEG", "spP": "dividido por", "spC": null, "spS": "alternância entre graus e radianos"}, {"sw": 13, "c": 0, "l": 2, "coord": "C0L2", "keycap": "tan", "label": "tan", "p": "tan(", "ct": "atan(", "sh": null, "spP": "tangente", "spC": "arco tangente", "spS": null}, {"sw": 14, "c": 1, "l": 2, "coord": "C1L2", "keycap": "log", "label": "log", "p": "log(", "ct": "ln(", "sh": "logbase(", "spP": "logaritmo decimal", "spC": "logaritmo natural", "spS": "logaritmo na base x"}, {"sw": 15, "c": 3, "l": 2, "coord": "C3L2", "keycap": "4", "label": "4", "p": "4", "ct": null, "sh": null, "spP": "4", "spC": null, "spS": null}, {"sw": 16, "c": 4, "l": 2, "coord": "C4L2", "keycap": "5", "label": "5", "p": "5", "ct": null, "sh": null, "spP": "5", "spC": null, "spS": null}, {"sw": 17, "c": 5, "l": 2, "coord": "C5L2", "keycap": "6", "label": "6", "p": "6", "ct": null, "sh": null, "spP": "6", "spC": null, "spS": null}, {"sw": 18, "c": 6, "l": 2, "coord": "C6L2", "keycap": "*", "label": "*", "p": "*", "ct": null, "sh": null, "spP": "vezes", "spC": null, "spS": null}, {"sw": 19, "c": 0, "l": 3, "coord": "C0L3", "keycap": "x^-1", "label": "x⁻¹", "p": "inv(", "ct": null, "sh": null, "spP": "inverso", "spC": null, "spS": null}, {"sw": 20, "c": 1, "l": 3, "coord": "C1L3", "keycap": "^", "label": "^", "p": "^", "ct": null, "sh": null, "spP": "elevado a", "spC": null, "spS": null}, {"sw": 21, "c": 3, "l": 3, "coord": "C3L3", "keycap": "1", "label": "1", "p": "1", "ct": null, "sh": null, "spP": "1", "spC": null, "spS": null}, {"sw": 22, "c": 4, "l": 3, "coord": "C4L3", "keycap": "2", "label": "2", "p": "2", "ct": null, "sh": null, "spP": "2", "spC": null, "spS": null}, {"sw": 23, "c": 5, "l": 3, "coord": "C5L3", "keycap": "3", "label": "3", "p": "3", "ct": null, "sh": null, "spP": "3", "spC": null, "spS": null}, {"sw": 24, "c": 6, "l": 3, "coord": "C6L3", "keycap": "-", "label": "-", "p": "-", "ct": "VOL_DOWN", "sh": null, "spP": "menos", "spC": "diminuir volume", "spS": null}, {"sw": 25, "c": 0, "l": 4, "coord": "C0L4", "keycap": "?", "label": "?", "p": "HELP", "ct": null, "sh": null, "spP": "ajuda", "spC": null, "spS": null}, {"sw": 26, "c": 1, "l": 4, "coord": "C1L4", "keycap": "nCr", "label": "nCr", "p": " nCr ", "ct": " nPr ", "sh": null, "spP": "combinação", "spC": "permutação", "spS": null}, {"sw": 27, "c": 2, "l": 4, "coord": "C2L4", "keycap": "√", "label": "√", "p": "sqrt(", "ct": null, "sh": null, "spP": "raiz quadrada", "spC": null, "spS": null}, {"sw": 28, "c": 3, "l": 4, "coord": "C3L4", "keycap": "0", "label": "0", "p": "0", "ct": null, "sh": null, "spP": "0", "spC": null, "spS": null}, {"sw": 29, "c": 5, "l": 4, "coord": "C5L4", "keycap": ",", "label": ".", "p": ".", "ct": null, "sh": ",", "spP": "ponto", "spC": null, "spS": "vírgula"}, {"sw": 30, "c": 6, "l": 4, "coord": "C6L4", "keycap": "+", "label": "+", "p": "+", "ct": "VOL_UP", "sh": null, "spP": "mais", "spC": "aumentar volume", "spS": null}, {"sw": 31, "c": 0, "l": 5, "coord": "C0L5", "keycap": "Ctrl", "label": "Ctrl", "p": "Ctrl", "ct": null, "sh": null, "spP": "controle", "spC": null, "spS": null}, {"sw": 32, "c": 1, "l": 5, "coord": "C1L5", "keycap": "exp", "label": "Shift", "p": "Shift", "ct": null, "sh": null, "spP": "shift", "spC": null, "spS": null}, {"sw": 33, "c": 2, "l": 5, "coord": "C2L5", "keycap": "Shift", "label": "DR", "p": "RAD/DEG", "ct": null, "sh": null, "spP": "alternância entre graus e radianos", "spC": null, "spS": null}, {"sw": 34, "c": 3, "l": 5, "coord": "C3L5", "keycap": "Ans", "label": "Ans", "p": "Ans", "ct": "HISTORY", "sh": "SPEAK_EXPR", "spP": "resposta anterior", "spC": "histórico", "spS": "ler a expressão atual"}, {"sw": 35, "c": 4, "l": 5, "coord": "C4L5", "keycap": "=", "label": "=", "p": "=", "ct": "RECALL", "sh": "RECALL", "spP": "calcular", "spC": "última resposta", "spS": "última resposta"}, {"sw": 36, "c": 5, "l": 5, "coord": "C5L5", "keycap": "AC", "label": "AC", "p": "AC", "ct": "BLACKOUT", "sh": null, "spP": "limpar tudo", "spC": "desligar ou religar as telas", "spS": null}, {"sw": 37, "c": 6, "l": 5, "coord": "C6L5", "keycap": "Del", "label": "DEL", "p": "DEL", "ct": null, "sh": null, "spP": "apagar", "spC": null, "spS": null}];
+const EMPTY = [[2, 1], [2, 2], [2, 3], [4, 4]];
+</script>
+<script>
+  (function () {
+    var COLS = 7, ROWS = 6;
+
+    // Tokens de AÇÃO: não entram na expressão, então aparecem com um rótulo
+    // curto em vez do token cru, que não diria nada a quem lê a página.
+    var ACTION = {
+      "HELP": "Ajuda", "RAD/DEG": "RAD/DEG", "HISTORY": "Histórico",
+      "BLACKOUT": "Telas", "VOL_UP": "Vol +", "VOL_DOWN": "Vol −",
+      "SPEAK_EXPR": "Ler expr.", "RECALL": "Últ. resp.",
+      "Ctrl": "Ctrl", "Shift": "Shift", "AC": "AC", "DEL": "DEL"
+    };
+    var MODIFIER = { "Ctrl": 1, "Shift": 1, "RAD/DEG": 1 };
+
+    // Keycaps cuja FUNÇÃO mudou de tecla, e que por isso precisam de ser
+    // trocados de posição no hotswap. Não confundir com os keycaps que apenas
+    // grafam a mesma função de outra forma ("x^-1" -> "x⁻¹", "," -> ".",
+    // "Del" -> "DEL"): esses estão no lugar certo e não são aviso nenhum.
+    var ROTATED = { "exp": 1, "Shift": 1 };
+
+    // Notação convencional na tela, igual à de ui/shared/formatting.py: o
+    // utilizador vê "Pol(" e "√(", não o token interno do motor.
+    var SYMBOL = {
+      "sqrt(": "√(", "inv(": "x⁻¹(", "logbase(": "log_b(",
+      "polar(": "Pol(", "rect(": "Rec(", "exp(": "×10^(",
+      "asin(": "sen⁻¹(", "acos(": "cos⁻¹(", "atan(": "tan⁻¹("
+    };
+
+    function pretty(tok) {
+      if (!tok) return null;
+      if (ACTION[tok]) return ACTION[tok];
+      if (SYMBOL[tok]) return SYMBOL[tok];
+      return tok.trim();
+    }
+
+    var byPos = {};
+    KEYS.forEach(function (k) { byPos[k.c + "," + k.l] = k; });
+    var emptySet = {};
+    EMPTY.forEach(function (p) { emptySet[p[0] + "," + p[1]] = true; });
+
+    var layer = "p";
+    var selected = KEYS.filter(function (k) { return k.keycap === "exp"; })[0] || KEYS[0];
+
+    var board = document.getElementById("board");
+    var detail = document.getElementById("detail");
+    var tbody = document.getElementById("tbody");
+
+    function mismatch(k) { return !!ROTATED[k.keycap]; }
+
+    function buildBoard() {
+      var html = '<div class="colhead"></div>';
+      for (var c = 0; c < COLS; c++) html += '<div class="colhead">C' + c + "</div>";
+      for (var l = 0; l < ROWS; l++) {
+        html += '<div class="rowhead">L' + l + "</div>";
+        for (var c2 = 0; c2 < COLS; c2++) {
+          var key = byPos[c2 + "," + l];
+          if (!key) {
+            html += '<div class="empty" title="sem switch montado">·</div>';
+            continue;
+          }
+          var tok = key[layer];
+          var label = pretty(tok);
+          var isVoid = !label;
+          var mod = !isVoid && MODIFIER[tok] ? "1" : "0";
+          html +=
+            '<button class="key" type="button"' +
+            ' data-sw="' + key.sw + '"' +
+            ' data-layer="' + (isVoid ? "none" : layer) + '"' +
+            ' data-mod="' + mod + '"' +
+            ' data-void="' + (isVoid ? "1" : "0") + '"' +
+            ' data-mismatch="' + (mismatch(key) ? "1" : "0") + '"' +
+            ' aria-label="' + key.coord + " " + (label || "sem função nesta camada") + '">' +
+            '<span class="sw">' + key.sw + "</span>" +
+            '<span class="swapmark">⇄</span>' +
+            '<span class="fn">' + (label || "—") + "</span>" +
+            '<span class="cap">' + key.keycap + "</span>" +
+            "</button>";
+        }
+      }
+      board.innerHTML = html;
+      // A seleção é marcada depois de montar, para não duplicar o atributo class.
+      var sel = board.querySelector('.key[data-sw="' + selected.sw + '"]');
+      if (sel) sel.classList.add("sel");
+    }
+
+    function row(k, kind, modLabel) {
+      var tok = k[kind];
+      var voice = kind === "p" ? k.spP : kind === "ct" ? k.spC : k.spS;
+      var body = tok
+        ? '<span class="tok">' + pretty(tok) + "</span>" +
+          (voice ? '<span class="voice">' + voice + "</span>" : "")
+        : '<span class="none">— sem função</span>';
+      return (
+        '<div class="fn-row" data-k="' + kind + '">' +
+        '<span class="mod-label">' + modLabel + "</span>" +
+        "<span>" + body + "</span>" +
+        "</div>"
+      );
+    }
+
+    function buildDetail() {
+      var k = selected;
+      detail.innerHTML =
+        '<div class="dh">' +
+        '<span class="cap-big">' + k.keycap + "</span>" +
+        '<span class="coords">SW' + k.sw + " · " + k.coord + "</span>" +
+        (mismatch(k)
+          ? '<span class="coords" style="color:var(--warn)">legenda impressa ≠ função</span>'
+          : "") +
+        "</div>" +
+        '<div class="fns">' +
+        row(k, "p", "Sozinha") +
+        row(k, "ct", "Ctrl") +
+        row(k, "sh", "Shift") +
+        "</div>";
+    }
+
+    function cell(tok, voice, cls) {
+      if (!tok) return '<td class="tok ' + cls + '"><span class="dash">—</span></td>';
+      return '<td class="tok ' + cls + '">' + pretty(tok) + "</td>";
+    }
+
+    function buildTable() {
+      var html = "";
+      KEYS.forEach(function (k) {
+        html +=
+          '<tr data-mismatch="' + (mismatch(k) ? "1" : "0") + '">' +
+          '<td class="mono">SW' + k.sw + "</td>" +
+          '<td class="mono">' + k.coord + "</td>" +
+          '<td class="cap">' + k.keycap + "</td>" +
+          cell(k.p, k.spP, "") +
+          cell(k.ct, k.spC, "ct") +
+          cell(k.sh, k.spS, "sh") +
+          '<td style="color:var(--muted)">' + (k.spP || "—") + "</td>" +
+          "</tr>";
+      });
+      tbody.innerHTML = html;
+    }
+
+    board.addEventListener("click", function (e) {
+      var btn = e.target.closest(".key");
+      if (!btn) return;
+      var sw = Number(btn.getAttribute("data-sw"));
+      var hit = KEYS.filter(function (k) { return k.sw === sw; })[0];
+      if (!hit) return;
+      selected = hit;
+      var old = board.querySelector(".key.sel");
+      if (old) old.classList.remove("sel");
+      btn.classList.add("sel");
+      buildDetail();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".layer-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        layer = btn.getAttribute("data-k");
+        Array.prototype.forEach.call(document.querySelectorAll(".layer-btn"), function (b) {
+          b.setAttribute("aria-pressed", String(b === btn));
+        });
+        buildBoard();
+      });
+    });
+
+    document.getElementById("capsToggle").addEventListener("change", function (e) {
+      document.body.classList.toggle("show-caps", e.target.checked);
+    });
+
+    buildBoard();
+    buildDetail();
+    buildTable();
+  })();
+</script>
+
+</body>
+</html>

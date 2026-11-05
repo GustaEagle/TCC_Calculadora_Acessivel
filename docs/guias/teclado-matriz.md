@@ -63,13 +63,13 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 
 | Tecla | Sozinha | Com `Ctrl` | Com `Shift` | Posição | Switch |
 | ----- | ------- | ---------- | ----------- | ------- | ------ |
-| `Pol` | `polar(` | `rect(` | — | `C0L0` | SW0 |
+| `Pol` | `Pol(` → **para polar** | `Rec(` → **para retangular** | — | `C0L0` | SW0 |
 | `x!` | `!` | — | — | `C1L0` | SW1 |
 | `Pi` | `π` | `e` | — | `C2L0` | SW2 |
 | `(` | `(` | — | — | `C3L0` | SW3 |
 | `)` | `)` | — | — | `C4L0` | SW4 |
 | `%` | `%` | — | — | `C5L0` | SW5 |
-| `e` | `e` (Euler) | **`exp(`** | — | `C6L0` | SW6 |
+| `e` | `e` (Euler) | **`EXP`** (×10ˣ) | — | `C6L0` | SW6 |
 | `sen` | `sen(` | `asin(` | — | `C0L1` | SW7 |
 | `cos` | `cos(` | `acos(` | — | `C1L1` | SW8 |
 | `7` | `7` | — | — | `C3L1` | SW9 |
@@ -88,7 +88,7 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 | `2` | `2` | — | — | `C4L3` | SW22 |
 | `3` | `3` | — | — | `C5L3` | SW23 |
 | `-` | `-` | **Volume −** | — | `C6L3` | SW24 |
-| `?` | **ajuda falada** | — | — | `C0L4` | SW25 |
+| `?` | **consulta de tecla** | — | — | `C0L4` | SW25 |
 | `nCr` | `nCr` (infixo) | `nPr` (infixo) | — | `C1L4` | SW26 |
 | `√` | `sqrt(` | — | — | `C2L4` | SW27 |
 | `0` | `0` | — | — | `C3L4` | SW28 |
@@ -104,11 +104,33 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 
 **Sem função secundária:** `x!`, `x⁻¹`, `^`, `√`, `%`, `(`, `)`, `Del`, os dígitos e `*`.
 
-> **Keycaps desalinhados na linha L5.** A exponencial `exp(` passou a ser a função de `Ctrl` da tecla `e` (Euler), onde fica junto da constante a que pertence. Isso libertou a tecla impressa `exp`, que assumiu o **`Shift`**, e empurrou a tecla impressa `Shift` para o **RAD/DEG**. Os keycaps impressos precisam de ser **trocados de posição** no hotswap (e reetiquetados em Braille). A ordem resultante — `Ctrl`, `Shift`, RAD/DEG — é a mesma dos botões na tela, que antes não coincidia.
+> **Keycaps desalinhados na linha L5.** A tecla `EXP` passou a ser a função de `Ctrl` da tecla `e` (Euler). Isso libertou a tecla impressa `exp`, que assumiu o **`Shift`**, e empurrou a tecla impressa `Shift` para o **RAD/DEG**. Os keycaps impressos precisam de ser **trocados de posição** no hotswap (e reetiquetados em Braille). A ordem resultante — `Ctrl`, `Shift`, RAD/DEG — é a mesma dos botões na tela, que antes não coincidia.
 
 ### A tecla `,` e o ponto decimal
 
-A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos das funções **binárias** — hoje as conversões de coordenadas: `polar(5,2)` digita-se `Pol` `5` `Shift` `,` `2` `)`.
+A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos das funções **binárias** — hoje as conversões de coordenadas: `Pol(3,4)` digita-se `Pol` `3` `Shift` `,` `4` `)`.
+
+### Conversões de coordenadas: `Pol` e `Rec`
+
+Convenção das calculadoras científicas — o nome diz o **destino** da conversão:
+
+| Quero | Pressiono | Resultado na tela |
+| --- | --- | --- |
+| retangular → polar | `Pol` `3` `Shift` `,` `4` `)` `=` | `r = 5` / `θ = 53.13010235` |
+| polar → retangular | `Ctrl` `Pol` `5` `Shift` `,` `53.13` `)` `=` | `x = 3` / `y = 4` |
+
+As duas devolvem **os dois valores**, exibidos em **duas linhas** (antes o par ia numa linha só, estourava o limite do display e o primeiro valor era cortado). O ângulo respeita o modo `DEG`/`RAD` ativo. A voz anuncia «real 5, ângulo 53 ponto 1 3 …» e «x igual a 3 e y igual a 4».
+
+### A tecla `EXP` (`Ctrl` + `e`) é expoente de base dez
+
+`EXP` é a entrada de **notação científica**, como em qualquer teclado de calculadora — não a exponencial de base *e*:
+
+| Digito | Significa | Resultado |
+| --- | --- | --- |
+| `3` `Ctrl` `e` `8` | 3 × 10⁸ | `300000000` |
+| `2` `×` `Ctrl` `e` `2` | 2 × 10² | `200` |
+
+A exponencial de Euler continua acessível pela **primária** da mesma tecla com o operador de potência: `e` `^` `2`.
 
 ### Combinação e permutação (`nCr` / `nPr`) são **infixas**
 
@@ -123,20 +145,28 @@ Não é preciso vírgula nem fechar parênteses. A forma funcional `nCr(5,2)` **
 
 ### A tecla `?`
 
-A `?` (SW25, `C0L4`) é a tecla de **ajuda falada**. Ao ser pressionada, a voz anuncia o **modo angular ativo** e os **atalhos** disponíveis:
+A `?` (SW25, `C0L4`) é a tecla de **consulta**: responde «o que faz esta tecla?».
 
-> «Ajuda. Modo graus. abrir o histórico: controle mais resposta anterior. ler a expressão atual: shift mais resposta anterior. aumentar ou diminuir o volume: controle mais mais, controle mais menos. desligar ou religar as telas: controle mais limpar tudo.»
+1. Pressione `?` — a voz diz «Ajuda. Pressione uma tecla.» e o indicador `AJUDA` acende.
+2. Pressione **qualquer** tecla — a voz descreve as **três** funções dela, e a tecla **não é executada**.
+3. O modo desliga-se sozinho. Pressionar `?` outra vez antes disso **cancela**.
 
-É a única forma de **descobrir os atalhos sem ver a tela**. A ajuda:
+> `?` depois `log` → «Função logaritmo decimal. Com Controle ativo, função logaritmo natural. Com Shift ativo, função logaritmo na base x.»
+
+É um **toggle de um só uso**, como o `Ctrl` e o `Shift` — e não "segurar `?` e pressionar": o scanner varre a matriz coluna a coluna e não identifica duas teclas pressionadas ao mesmo tempo (ver §6).
+
+Descrever tecla a tecla é a forma de **descobrir os atalhos sem ver a tela**, e cobre-os melhor do que a lista fixa que esta tecla lia antes: `?` depois `Ans` diz que o `Ctrl` abre o histórico e o `Shift` lê a expressão, e o mesmo vale para todas as outras teclas.
+
+A consulta:
 
 - **não altera nada** — expressão, resultado, `Ans`, modo angular, volume e telas ficam como estavam;
-- é **interrompível** — pressionar `?` outra vez, ou qualquer outra tecla, corta a fala (RF-08);
+- descreve também os **modificadores**: `?` depois `Ctrl` descreve o `Ctrl` em vez de o ligar;
 - é igual nos **dois fronts** e em **modo somente áudio** (RF-04/RF-10);
 - **não tem botão na tela**: é função exclusiva do teclado físico, e a posição correspondente continua vazia.
 
-No PC (desenvolvimento), a ajuda sai na própria tecla `?`.
+No PC (desenvolvimento), a consulta sai na própria tecla `?`. No front HDMI, o antigo `Ctrl` + `Shift` juntos continua a fazer o mesmo.
 
-O texto da ajuda é montado a partir dos mesmos atalhos declarados em `software/ui/shared/keypad.py`, e um teste falha se um atalho for acrescentado sem entrar na ajuda — então ela não pode divergir do que existe de facto.
+Os nomes que a consulta anuncia saem do mesmo catálogo falado (`SPOKEN_TOKEN_NAMES`) que a tecla usa quando é acionada a sério, então a descrição não pode divergir do comportamento real.
 
 Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware) continuam a anunciar «Tecla sem função»: sem esse retorno, quem não vê a tela concluiria que a tecla está avariada.
 

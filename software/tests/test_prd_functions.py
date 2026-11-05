@@ -52,17 +52,17 @@ class PRDFunctionsTest(unittest.TestCase):
         self.assertEqual(self.engine.evaluate("10 nPr 3").value, 720)
 
     def test_conversions(self) -> None:
-        # As conversões devolvem AS DUAS componentes: antes desta mudança
-        # polar() dava só o x e rect() só o raio, descartando a outra metade.
-        # Polar -> Rect: polar(radius, angle) -> (x, y)
-        x_value, y_value = self.engine.evaluate("polar(10, 60)").value
-        self.assertAlmostEqual(x_value, 5.0)
-        self.assertAlmostEqual(y_value, 8.660254037844387)
-
-        # Rect -> Polar: rect(x, y) -> (radius, angle)
-        radius, angle = self.engine.evaluate("rect(3, 4)").value
+        # Convenção Casio: o token diz o DESTINO. As duas devolvem AS DUAS
+        # componentes - antes só devolviam uma, e no sentido trocado.
+        # Pol(x, y) -> (r, ângulo)
+        radius, angle = self.engine.evaluate("polar(3, 4)").value
         self.assertAlmostEqual(radius, 5.0)
         self.assertAlmostEqual(angle, 53.13010235415598)
+
+        # Rec(r, ângulo) -> (x, y)
+        x_value, y_value = self.engine.evaluate("rect(10, 60)").value
+        self.assertAlmostEqual(x_value, 5.0)
+        self.assertAlmostEqual(y_value, 8.660254037844387)
 
     def test_domain_errors(self) -> None:
         # Div by zero
