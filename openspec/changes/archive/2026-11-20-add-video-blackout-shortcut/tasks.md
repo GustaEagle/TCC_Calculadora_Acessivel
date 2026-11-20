@@ -56,3 +56,7 @@
 
 - [x] 8.1 Correr a suíte completa como o CI: `xvfb-run -a python -m unittest discover -s software/tests -t . -v`. Verificar: todos os testes passam, incluindo os pré-existentes.
 - [x] 8.2 Validar a mudança: `openspec validate add-video-blackout-shortcut --strict`. Verificar: sem erros.
+
+---
+
+> **Arquivada com 7 tarefas por executar.** As tarefas deixadas sem marca acima são verificações manuais no hardware (Raspberry Pi), e **não foram executadas** antes do arquivamento, a pedido da equipe. Não foram marcadas como feitas para o registo não afirmar o que ninguém mediu. Se alguma falhar quando for testada, reabra uma change nova em vez de editar esta.

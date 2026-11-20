@@ -106,3 +106,12 @@ Fecho de parênteses (simples, aninhado, órfão, múltiplos em falta); infixa d
 **Sem impacto**
 
 Dependências (nenhuma nova; `math.comb`, `math.perm`, `math.atan2` são da biblioteca padrão), pinagem e scanner da matriz, seleção de saída de vídeo, UPS, volume, e o pipeline de CI (continua `python -m unittest`).
+
+## Revisões após o teste em hardware
+
+O teste de bancada, feito depois da implementação inicial, corrigiu quatro pontos deste documento. As **specs** desta change já refletem o estado final; o texto acima descreve o que foi proposto no início.
+
+- **Pol/Rec estavam invertidos.** A proposta dizia `polar(r, θ)` → `(x, y)` e `rect(x, y)` → `(r, θ)`. Em hardware, `Pol(3,4)` dava `(2.99, 0.21)`: o X saía perto de 3 e parecia quase certo, o Y não. Adotou-se a convenção das calculadoras científicas, em que o nome diz o **destino**: `Pol(x,y)` → `(r, θ)` e `Rec(r,θ)` → `(x, y)`.
+- **O par era cortado na tela.** Numa linha só (`(5, 53.13010235)`, 16 caracteres) excedia o limite de 14 do LCD, e a truncagem mantinha a cauda: aparecia `..53.13010235)` e o primeiro valor sumia. O par passou a **duas linhas rotuladas**, com a truncagem a preservar a cabeça.
+- **`EXP` não é a exponencial de base *e*.** A proposta implementava `exp(x)` = eˣ, e `2 × exp(2)` dava 14,78. `EXP` num teclado de calculadora é o expoente de base dez: `2 × exp(2)` = 200. A exponencial de Euler continua em `e ^ x`.
+- **A `?` virou modificador de consulta.** A proposta fazia a `?` ler uma lista fixa de atalhos, e a tecla seguinte entrava na expressão. Passou a «o que faz esta tecla?»: `?` e depois qualquer tecla descreve as três funções dela, sem a executar. É um toggle de uso único, porque o scanner da matriz não identifica duas teclas pressionadas ao mesmo tempo. Isto obrigou a **modificar** o requisito da `?` na spec `keypad-matrix`, que dizia que a tecla não tinha função.

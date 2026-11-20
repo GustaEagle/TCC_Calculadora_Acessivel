@@ -2,9 +2,7 @@
 
 ## Purpose
 TBD - created by archiving change add-hdmi-ui. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Front-end dedicado ao monitor HDMI
 O sistema SHALL fornecer um front-end visual próprio para o monitor externo HDMI (`software/ui_hdmi/`), com layout projetado para tela maior (tipografia, área de histórico e alvo de foco/toque redimensionados), reutilizando o motor de cálculo de `software/core/` e o serviço de voz de `software/accessibility/speech.py` sem modificá-los.
 
@@ -81,4 +79,5 @@ Toda entrada e resultado anunciados pelo front-end HDMI SHALL seguir o mesmo cat
 
 #### Scenario: Entrada exclusivamente por teclado físico
 - **WHEN** o front-end HDMI está ativo
-- **THEN** ele aceita entrada apenas do teclado físico mapeado por `software/hw_platform/keyboard.py` (RF-05), sem exigir mouse ou toque na tela para operação completa.
+- **THEN** ele aceita entrada do teclado físico do produto, a matriz 6x7 lida por GPIO (capacidade `keypad-matrix`), pelo mesmo tratamento de tokens do front do LCD, sem exigir mouse ou toque na tela para operação completa (RF-05); o teclado de PC mapeado por `software/hw_platform/keyboard.py` continua aceito como meio de desenvolvimento e testes.
+

@@ -1,5 +1,8 @@
-## ADDED Requirements
+# expression-normalization Specification
 
+## Purpose
+TBD - created by archiving change fix-math-functions-and-help-key. Update Purpose after archive.
+## Requirements
 ### Requirement: Fecho automático de parênteses inequívocos
 
 Quando a expressão submetida tiver mais abre-parênteses que fecha-parênteses e **nenhum** fecha-parênteses órfão, o motor SHALL acrescentar os fecha-parênteses em falta antes de avaliar, produzindo o resultado como se o utilizador os tivesse digitado. O fecho SHALL ser aplicado **depois** de todas as reescritas de normalização, para contabilizar os parênteses que o próprio motor introduz (fatorial, percentagem, `logbase`).
@@ -182,6 +185,49 @@ A tecla `nCr` SHALL inserir o token infixo `nCr` como função primária e `nPr`
 - **WHEN** o utilizador pressiona `Shift` e a tecla `.`
 - **THEN** o token `,` é inserido, por continuar a ser necessário às conversões de coordenadas
 
+### Requirement: A tecla EXP é expoente de base dez
+
+O token `exp(` SHALL valer **10 elevado ao argumento**. É a tecla `EXP` de uma calculadora científica, entrada de **notação científica**: `3 EXP 8` é 3×10⁸. SHALL NOT ser a exponencial de base *e*, que continua acessível pelo operador de potência (`e^x`).
+
+Uma mantissa imediatamente antes de `exp(` — número, constante, `Ans` já substituído ou grupo entre parênteses — SHALL ser lida como **multiplicação implícita**, porque a tecla insere `exp(` logo depois da mantissa (`3exp(8`). Um `exp(` sem mantissa à esquerda vale `10^x` sozinho.
+
+Não acrescenta nenhuma operação ao catálogo do PRD §5: é notação de entrada de número. Um expoente grande demais SHALL devolver `ERR-006` (resultado muito grande).
+
+#### Scenario: EXP como expoente de base dez
+
+- **WHEN** `evaluate("2*exp(2)")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"200"`, e SHALL NOT ser `14.778` (que seria 2×e²)
+
+#### Scenario: Mantissa seguida da tecla EXP
+
+- **WHEN** `evaluate("3exp(8)")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"300000000"`
+
+#### Scenario: Mantissa em grupo
+
+- **WHEN** `evaluate("(1+1)exp(2)")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"200"`
+
+#### Scenario: EXP sem mantissa
+
+- **WHEN** `evaluate("exp(0)")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"1"`
+
+#### Scenario: EXP com o parêntese por fechar
+
+- **WHEN** `evaluate("2*exp(2")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"200"`, pelo fecho automático de parênteses
+
+#### Scenario: A exponencial de Euler continua acessível
+
+- **WHEN** `evaluate("e^2")` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"7.389056099"`
+
+#### Scenario: Expoente grande demais
+
+- **WHEN** `evaluate("exp(400)")` é chamado
+- **THEN** o resultado é um erro com `code` igual a `"ERR-006"`
+
 ### Requirement: Normalização independente da interface
 
 Toda a normalização descrita nesta capacidade SHALL residir em `software/core/engine.py` e SHALL NOT importar nenhuma stack de UI (Tkinter, ttkbootstrap) nem depender de um front ativo, conforme a separação de camadas do PRD §8.
@@ -190,3 +236,4 @@ Toda a normalização descrita nesta capacidade SHALL residir em `software/core/
 
 - **WHEN** `software.core.engine` é importado num processo sem display e sem as dependências gráficas instaladas
 - **THEN** a importação é bem-sucedida e todas as avaliações desta capacidade funcionam
+

@@ -2,9 +2,7 @@
 
 ## Purpose
 TBD - created by archiving change add-alpine-rpi-image. Update Purpose after archive.
-
 ## Requirements
-
 ### Requirement: Imagem bootável reprodutível gerada por script
 
 O sistema SHALL fornecer, sob `system/rpi-os/alpine/`, o material de build que gera uma imagem de SO bootável para o Raspberry Pi 4B **executando apenas um script**, sem passos de configuração manual no aparelho. A imagem `.img` resultante MUST NOT ser versionada no Git — apenas os scripts, listas de pacotes e arquivos de configuração que a produzem.
@@ -53,17 +51,22 @@ A imagem SHALL prover um ambiente X11 mínimo (servidor X + inicialização via 
 
 ### Requirement: TTS offline em português embutido
 
-A imagem SHALL incluir `espeak-ng` (e **não** o `espeak` clássico) e a cadeia de áudio necessária para que o `pyttsx3` sintetize voz em **português do Brasil** de forma **offline** (sem qualquer dependência de rede/nuvem), preservando o feedback por voz de entradas e resultados.
+A imagem SHALL incluir o motor **Piper** (`piper-tts` sobre `onnxruntime`) com a voz **`pt_BR-cadu-medium`** embutida, e a cadeia de áudio necessária para sintetizar voz em **português do Brasil** de forma **offline** (sem qualquer dependência de rede/nuvem), preservando o feedback por voz de entradas e resultados. O `onnxruntime` SHALL vir do repositório do Alpine (`py3-onnxruntime`), e o modelo de voz SHALL ser embutido na imagem com integridade verificada (sha256). O `espeak-ng` SHALL permanecer na imagem como fonemizador do Piper e como motor de **fallback**; o `pyttsx3` SHALL NOT ser exigido.
 
 #### Scenario: Anúncio por voz sem rede
 
 - **WHEN** o dispositivo está sem conexão de rede e o usuário realiza uma operação na calculadora
-- **THEN** a entrada e/ou o resultado são anunciados por voz em português do Brasil, usando o motor local
+- **THEN** a entrada e/ou o resultado são anunciados por voz em português do Brasil (voz `cadu`), usando o motor local Piper, sem acessar a rede
 
 #### Scenario: Motor de voz inicializa corretamente
 
 - **WHEN** a aplicação inicia o serviço de TTS na imagem
-- **THEN** a voz padrão inicializa via `espeak-ng` sem falhar (não ocorre o erro de `SetVoiceByName` observado com o `espeak` clássico)
+- **THEN** o modelo `cadu` é carregado a partir da imagem e a síntese ocorre sem falha; se o Piper estiver indisponível, o sistema degrada para `espeak-ng` sem travar a entrada
+
+#### Scenario: Voz embutida e verificada, sem download em execução
+
+- **WHEN** a imagem é construída
+- **THEN** o modelo `pt_BR-cadu-medium` (`.onnx` + `.onnx.json`) é incluído com sha256 verificado, e nenhum componente de voz é baixado quando o dispositivo está em uso
 
 ### Requirement: Recuperação automática da aplicação
 
@@ -82,3 +85,4 @@ Para favorecer o tempo de arranque (RNF-06), a imagem SHALL evitar serviços des
 
 - **WHEN** o conjunto de serviços habilitados no arranque da imagem é inspecionado
 - **THEN** não há ambiente de desktop nem display manager habilitados; apenas os serviços necessários para autologin no console, vídeo (X mínimo), áudio e a aplicação estão ativos
+
