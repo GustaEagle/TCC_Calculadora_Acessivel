@@ -250,7 +250,9 @@ class RawPlaybackProcessTest(unittest.TestCase):
             head.decode().split("|"),
             ["-q", "-t", "raw", "-f", "S16_LE", "-c", "1", "-r", "22050", "-"],
         )
-        self.assertEqual(data, b"\x01\x02\x03\x04")
+        # O PCM chega intacto, depois do silêncio inicial (T01: o início da
+        # fala era cortado pela abertura a frio do dispositivo).
+        self.assertEqual(data, speech._silence(speech.LEADING_SILENCE_MS, 22050) + b"\x01\x02\x03\x04")
 
     def test_terminate_kills_the_aplay(self) -> None:
         pidfile = Path(self._tmp) / "pid"
@@ -283,7 +285,7 @@ def _alive(pid: int) -> bool:
 class DefaultFixedPhrasesTest(unittest.TestCase):
     def test_covers_key_names_digits_and_errors(self) -> None:
         phrases = default_fixed_phrases()
-        self.assertIn("seno", phrases)                 # nome de tecla (SPOKEN_TOKEN_NAMES)
+        self.assertIn("seno, abre parênteses", phrases)  # nome de tecla (SPOKEN_TOKEN_NAMES)
         self.assertIn("7", phrases)                    # dígito
         self.assertIn("Calculadora pronta", phrases)   # anúncio fixo
         self.assertTrue(any(p.startswith("Erro 001.") for p in phrases))  # §13

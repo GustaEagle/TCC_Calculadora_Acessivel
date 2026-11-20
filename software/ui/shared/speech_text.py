@@ -4,10 +4,10 @@ Reúne num só lugar a transformação que a voz precisa, reaproveitando o
 vocabulário que já existe em ui/shared/keypad.py (SPOKEN_TOKEN_NAMES /
 spoken_token): operadores, funções e símbolos viram as mesmas palavras que o
 feedback tecla-a-tecla já usa, e os números decimais ganham o separador falado
-"ponto" com a parte fracionária lida dígito a dígito.
+"vírgula" (convenção pt-BR) com a parte fracionária lida dígito a dígito.
 
-Porquê o "ponto": o motor neural (Piper) e o espeak-ng leem "1.2" como "um
-dois" - engolindo o separador. Trocar o "." por " ponto " e espaçar os dígitos
+Porquê falar o separador: o motor neural (Piper) e o espeak-ng leem "1.2" como
+"um dois" - engolindo-o. Trocar o "." por " vírgula " e espaçar os dígitos
 da parte decimal ("4 5 6") faz o motor dizer "quatro cinco seis" em vez de
 "quatrocentos e cinquenta e seis", preservando TODOS os dígitos (inclusive os
 zeros à esquerda/intermediários da parte decimal).
@@ -26,6 +26,12 @@ import re
 
 from software.core.models import VALUE_KIND_POLAR
 from software.ui.shared.keypad import SPOKEN_TOKEN_NAMES, spoken_token
+
+# Separador decimal falado (T02). "vírgula" é a convenção pt-BR; o separador de
+# ARGUMENTOS passa a "ponto e vírgula" (ui/shared/keypad.py), senão "3 vírgula
+# 4" seria ambíguo entre o decimal 3,4 e dois argumentos. A TELA continua a
+# mostrar o ponto: só a fala muda.
+DECIMAL_SEPARATOR_SPEECH = "vírgula"
 
 # Um literal numérico dentro de uma expressão: "123", "1.2" ou ".5". O sinal
 # não entra aqui - numa expressão ele é o operador "-" (um token à parte), e
@@ -53,9 +59,9 @@ _EXPRESSION_TOKENS = sorted(
 
 
 def spoken_number(number: str) -> str:
-    """Texto falado de UM número (resultado ou literal), com "ponto" no decimal.
+    """Texto falado de UM número (resultado ou literal), com "vírgula" no decimal.
 
-    Inteiros e negativos são preservados; o separador decimal vira "ponto" e a
+    Inteiros e negativos são preservados; o separador decimal vira "vírgula" e a
     parte decimal é lida dígito a dígito. Qualquer coisa que não seja um número
     decimal/inteiro simples (notação científica, tupla, texto) volta intacta.
     """
@@ -66,10 +72,10 @@ def spoken_number(number: str) -> str:
     decimal = _DECIMAL_RE.match(text)
     if decimal:
         sign = "menos " if decimal.group("sign") else ""
-        # ".5" -> "zero ponto cinco": uma parte inteira vazia soa como zero.
+        # ".5" -> "zero vírgula cinco": uma parte inteira vazia soa como zero.
         integer_part = decimal.group("int") or "0"
         fraction = " ".join(decimal.group("frac"))  # espaça p/ leitura dígito a dígito
-        return f"{sign}{integer_part} ponto {fraction}"
+        return f"{sign}{integer_part} {DECIMAL_SEPARATOR_SPEECH} {fraction}"
 
     integer = _INTEGER_RE.match(text)
     if integer:
@@ -89,13 +95,28 @@ def spoken_pair(pair: tuple[float, float], kind: str) -> str:
     As duas frases são FIXAS de propósito: quem não vê a tela só distingue as
     componentes pela frase, logo ela não pode variar entre fronts nem entre
     execuções. Cada componente é formatada como na tela (".10g") e passa por
-    spoken_number, que troca o separador decimal por "ponto" e lê a parte
+    spoken_number, que troca o separador decimal por "vírgula" e lê a parte
     fracionária dígito a dígito.
     """
     first, second = (spoken_number(f"{value:.10g}") for value in pair)
     if kind == VALUE_KIND_POLAR:
         return f"real {first}, ângulo {second}"
     return f"x igual a {first} e y igual a {second}"
+
+
+def spoken_result(result) -> str:
+    """Texto falado de um resultado: PAR de coordenadas ou escalar.
+
+    ÚNICA para o front do LCD, o do monitor externo e o modo somente áudio
+    (RF-04/RF-10). Antes cada front tinha a sua cópia, e o modo somente áudio
+    tinha ficado com a antiga - entregava o display da tupla "(5, 53.13)" ao
+    spoken_number, que o devolve intacto, e o motor de voz lia a pontuação.
+    """
+    value = getattr(result, "value", None)
+    kind = getattr(result, "value_kind", None)
+    if isinstance(value, tuple) and kind:
+        return spoken_pair(value, kind)
+    return spoken_number(result.display)
 
 
 def spoken_expression(expression: str) -> str:

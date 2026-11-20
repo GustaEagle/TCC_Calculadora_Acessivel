@@ -15,6 +15,38 @@ from software.core.models import (
 )
 
 
+# Nome PROTEGIDO com que o valor de Ans entra na expressão, avaliado como
+# constante. Colar o valor no texto (str(ans)) falhava de duas formas: "Ans^2"
+# com Ans = -3 virava "-3.0**2" = -9 (o menos saía do grupo), e um Ans grande
+# como 1e+20 seria re-tokenizado pela multiplicação implícita como 1*e+20. O
+# "__" garante que o utilizador não o escreve - o teclado não tem "_".
+ANS_NAME = "__ans"
+
+# "Ans" como palavra, mas também colado a um número ("3Ans" = 3 x Ans): entre o
+# dígito e o "A" não há fronteira de palavra, e o "\bAns\b" deixava-o escapar.
+# Não casa dentro do próprio ANS_NAME, porque o "_" antes do "ans" o exclui.
+_ANS_PATTERN = r"(?<![A-Za-z_])Ans(?![A-Za-z0-9_])"
+
+# Tokens da normalização: número, identificador ou um caractere qualquer.
+_TOKEN_RE = re.compile(r"\d+(?:\.\d+)?|\.\d+|[a-z_][a-z0-9_]*|\S")
+_IDENTIFIER_RE = re.compile(r"[a-z_][a-z0-9_]*")
+_NUMBER_TOKEN_RE = re.compile(r"\d+(?:\.\d+)?|\.\d+")
+_CONSTANT_PIECE_RE = re.compile(r"pi|e|\d+(?:\.\d+)?")
+
+
+def _split_constants(token: str) -> list[str] | None:
+    """Desfaz "e3", "pi2", "pie" em constantes e número; None se não der."""
+    parts: list[str] = []
+    index = 0
+    while index < len(token):
+        match = _CONSTANT_PIECE_RE.match(token, index)
+        if match is None:
+            return None
+        parts.append(match.group())
+        index = match.end()
+    return parts if len(parts) > 1 else None
+
+
 class CalculationDomainError(ValueError):
     """Domain error tagged with the PRD error code."""
 
@@ -54,6 +86,8 @@ class CalculationEngine:
         if not original:
             return CalculationResult.error(original, "ERR-008", "Expressao incompleta", "P2")
 
+        # O valor de Ans é lido como CONSTANTE (ANS_NAME), não colado no texto.
+        self._ans = ans
         try:
             normalized = self._normalize(original, ans)
             tree = ast.parse(normalized, mode="eval")
@@ -81,7 +115,7 @@ class CalculationEngine:
         
         # 0. Handle Ans (case insensitive)
         if ans is not None:
-            text = re.sub(r"\bAns\b", str(ans), text, flags=re.IGNORECASE)
+            text = re.sub(_ANS_PATTERN, ANS_NAME, text, flags=re.IGNORECASE)
 
         # 0.1 Handle scientific tokens that contain characters used in basic arithmetic
         text = text.replace("x^-1", "inv").replace("X^-1", "inv")
@@ -125,7 +159,7 @@ class CalculationEngine:
         if text.strip().lower() == "inv":
             if ans is None:
                 raise CalculationDomainError("WRN-010", "Sem resposta anterior", "P2")
-            text = f"inv({ans})"
+            text = f"inv({ANS_NAME})"
 
         text = re.sub(r"\bsen\s*\(", "sin(", text, flags=re.IGNORECASE)
         text = re.sub(r"\bsen-1\s*\(", "asin(", text, flags=re.IGNORECASE)
@@ -134,10 +168,10 @@ class CalculationEngine:
         text = re.sub(r"\bln\s*\(", "ln(", text, flags=re.IGNORECASE)
         text = re.sub(r"\blog(\d+)\s*\(", r"logbase(\1, ", text, flags=re.IGNORECASE)
 
-        if re.search(r"\bAns\b", text, flags=re.IGNORECASE):
+        if re.search(_ANS_PATTERN, text, flags=re.IGNORECASE):
             if ans is None:
                 raise CalculationDomainError("WRN-010", "Sem resposta anterior", "P2")
-            text = re.sub(r"\bAns\b", str(ans), text, flags=re.IGNORECASE)
+            text = re.sub(_ANS_PATTERN, ANS_NAME, text, flags=re.IGNORECASE)
 
         text = self._replace_factorials(text)
         text = self._replace_percentages(text)
@@ -153,6 +187,14 @@ class CalculationEngine:
         # 10^x sozinho.
         text = re.sub(r"(\d+(?:\.\d+)?|\)|\bpi\b|\be\b)\s*exp\(", r"\1*exp(", text)
 
+        # 4.2 Multiplicação implícita (T07): "2(3)", "2sqrt(9)", "2pi", "(2)(3)".
+        # Corre DEPOIS da canonicalização dos nomes (sin(, fact(, (50/100)...)
+        # e da mantissa do EXP, e ANTES do fecho de parênteses e da reescrita
+        # infixa do nCr - que não são tocados porque "ncr" não é operando.
+        # Também é o que impede "2e3" de chegar ao ast.parse como literal
+        # científico do Python: vira "2*e*3".
+        text = self._insert_implicit_multiplication(text)
+
         # 5. Fecho automático dos parênteses em falta. Corre AQUI, no fim,
         # porque _replace_factorials, _replace_percentages e a reescrita de
         # log2( -> logbase(2, injetam parênteses equilibrados: contá-los antes
@@ -164,6 +206,54 @@ class CalculationEngine:
         # nunca encontra um grupo sem fecho (design.md §2).
         text = self._rewrite_infix_combinatorics(text)
 
+        return text
+
+    def _insert_implicit_multiplication(self, text: str) -> str:
+        """Insere "*" entre dois operandos colados, como numa calculadora.
+
+        Operando à ESQUERDA: número, ")", constante (pi, e, Ans).
+        Operando à DIREITA: "(", função do catálogo, constante, e número - este
+        só quando a esquerda não é número (dois números colados seriam um só).
+        Um identificador desconhecido feito de constantes e de um número
+        ("e3", "pi2", "pie") é desfeito nas suas partes: é o caso "2e3", que o
+        Python leria como 2000 em notação científica. Quem pressiona 2, e, 3
+        quer 2*e*3; a potência de dez tem tecla própria (EXP).
+
+        A PRIORIDADE fica igual à da multiplicação explícita, da esquerda para
+        a direita (1/2(3) = 1.5). Está em aberto até a equipe definir a
+        calculadora de referência - ver o design da change.
+        """
+        functions = set(self.ARITY)
+        constants = {"pi", "e", ANS_NAME}
+        tokens: list[tuple[str, int]] = []  # (token, posição do fim)
+        for match in _TOKEN_RE.finditer(text):
+            token = match.group()
+            if _IDENTIFIER_RE.fullmatch(token) and token not in functions | constants:
+                parts = _split_constants(token)
+                if parts is not None:
+                    offset = match.start()
+                    for part in parts:
+                        offset += len(part)
+                        tokens.append((part, offset))
+                    continue
+            tokens.append((token, match.end()))
+
+        def is_number(token: str) -> bool:
+            return bool(_NUMBER_TOKEN_RE.fullmatch(token))
+
+        inserts: list[int] = []
+        for (left, end), (right, _r_end) in zip(tokens, tokens[1:]):
+            left_ok = is_number(left) or left == ")" or left in constants
+            right_ok = (
+                right == "("
+                or right in functions
+                or right in constants
+                or (is_number(right) and not is_number(left))
+            )
+            if left_ok and right_ok:
+                inserts.append(end)
+        for position in reversed(inserts):
+            text = text[:position] + "*" + text[position:]
         return text
 
     def _close_parentheses(self, text: str) -> str:
@@ -306,7 +396,7 @@ class CalculationEngine:
 
     def _replace_percentages(self, text: str) -> str:
         # Handles postfix percentage cases: 50% -> (50/100)
-        pattern = re.compile(r"(\b\d+(?:\.\d+)?\b|\bpi\b|\be\b|\([^()]*\))%", re.IGNORECASE)
+        pattern = re.compile(r"(\b\d+(?:\.\d+)?\b|\bpi\b|\be\b|\b{ANS}\b|\([^()]*\))%".replace("{ANS}", ANS_NAME), re.IGNORECASE)
         previous = None
         while previous != text:
             previous = text
@@ -315,7 +405,7 @@ class CalculationEngine:
 
     def _replace_factorials(self, text: str) -> str:
         # Handles common postfix factorial cases used by the on-screen keyboard.
-        pattern = re.compile(r"(\b\d+(?:\.\d+)?\b|\bpi\b|\be\b|\([^()]*\))!", re.IGNORECASE)
+        pattern = re.compile(r"(\b\d+(?:\.\d+)?\b|\bpi\b|\be\b|\b{ANS}\b|\([^()]*\))!".replace("{ANS}", ANS_NAME), re.IGNORECASE)
         previous = None
         while previous != text:
             previous = text
@@ -410,7 +500,10 @@ class CalculationEngine:
         raise CalculationDomainError("ERR-007", "Expressao invalida")
 
     def _constants(self) -> dict[str, float]:
-        return {"pi": math.pi, "e": math.e}
+        constants = {"pi": math.pi, "e": math.e}
+        if getattr(self, "_ans", None) is not None:
+            constants[ANS_NAME] = float(self._ans)
+        return constants
 
     def _functions(self) -> dict[str, Callable[..., float | tuple[float, float]]]:
         return {

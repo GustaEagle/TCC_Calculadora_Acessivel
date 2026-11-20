@@ -12,6 +12,8 @@ the modifier has no alternative for that key, and an empty label is a spacer.
 
 from __future__ import annotations
 
+import re
+
 from software.ui.shared.video_blackout import BLACKOUT_TOKEN
 
 KeypadRow = list[tuple[str, str, str | None, str | None]]
@@ -69,7 +71,11 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     # A tecla EXP do teclado é entrada de expoente de base DEZ (3 EXP 8 =
     # 3x10^8), não a exponencial de base e - essa fica em "e ^ x".
     "logbase(": "logaritmo na base x", "inv(": "inverso", "exp(": "vezes dez elevado a", "%": "porcento",
-    "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift", ",": "vírgula", ".": "ponto",
+    "x^-1": "inverso", "Ctrl": "controle", "Shift": "shift",
+    # Pt-BR: a vírgula é o DECIMAL (a tecla "." insere o ponto decimal do motor,
+    # e é falada como "vírgula"); o separador de ARGUMENTOS fica "ponto e
+    # vírgula", senão "Pol 3 vírgula 4" seria ambíguo com o decimal 3,4.
+    ",": "ponto e vírgula", ".": "vírgula",
     "RAD/DEG": "alternância entre graus e radianos", "HISTORY": "histórico",
     "BLACKOUT": "desligar ou religar as telas",
     "VOL_UP": "aumentar volume", "VOL_DOWN": "diminuir volume",
@@ -80,6 +86,40 @@ SPOKEN_TOKEN_NAMES: dict[str, str] = {
     # propósito: o motor de voz já os lê como números.
     "=": "calcular", "RECALL": "última resposta",
 }
+
+# Funções com parênteses anunciam a ABERTURA (T03): sem isto, "sqrt(9)" era
+# lido "raiz quadrada 9 fecha parênteses" - o fecho era dito e a abertura não,
+# e quem ouve não sabia onde o grupo tinha começado. Aplicado AQUI, no
+# catálogo, para o retorno da tecla, a leitura da expressão e a consulta da
+# tecla "?" usarem o mesmo nome e não poderem divergir.
+OPENING_PARENTHESIS_SPEECH = SPOKEN_TOKEN_NAMES["("]
+for _token, _name in list(SPOKEN_TOKEN_NAMES.items()):
+    if _token.endswith("(") and _token != "(":
+        SPOKEN_TOKEN_NAMES[_token] = f"{_name}, {OPENING_PARENTHESIS_SPEECH}"
+del _token, _name
+
+# Dicionário de pronúncia (T01): o texto ENTREGUE AO MOTOR DE VOZ pode diferir do
+# nome do catálogo quando a voz pronuncia mal uma palavra. Só muda o que vai ao
+# TTS - o rótulo dos botões, o símbolo na expressão e os nomes deste catálogo
+# ficam como estão.
+#
+# Começa VAZIO de propósito. O "impa tudo" no lugar de "limpar tudo" perdeu o
+# primeiro fonema, o que aponta para o início do áudio a ser cortado e não para
+# a pronúncia - isso trata-se com o silêncio inicial (accessibility/speech.py).
+# Só entra aqui o que a escuta no Pi confirmar como PRONÚNCIA, cada entrada com
+# a palavra e como soava.
+TTS_PRONUNCIATION: dict[str, str] = {}
+
+
+def tts_text(text: str) -> str:
+    """Texto entregue ao motor de voz, com o dicionário de pronúncia aplicado.
+
+    A substituição é por palavra inteira, para "pi" não mudar dentro de "piso".
+    """
+    for spoken, pronounced in TTS_PRONUNCIATION.items():
+        text = re.sub(rf"(?<!\w){re.escape(spoken)}(?!\w)", pronounced, text)
+    return text
+
 
 # Shift + Ans: lê em voz alta a expressão que está na linha de cálculo (função
 # secundária da tecla Ans). Fica aqui, junto dos outros tokens de atalho, para

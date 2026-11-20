@@ -1,7 +1,7 @@
 # Documento de requisitos de produto (PRD)
 
 **Projeto:** calculadora científica acessível (hardware + software embarcado)  
-**Versão do documento:** 1.7
+**Versão do documento:** 1.8
 **Status:** rascunho iterativo — evoluir junto ao TCC e à implementação  
 **Referências:** `TCC.txt` (texto legado de materiais/métodos e escopo de funções); `prompt-prd-raspberry.md` (briefing original, não versionado); planejamento temporal em [cronograma/cronograma.md](../../cronograma/cronograma.md); fluxo Git e equipe em [desenvolvimento/GITHUB_WORKFLOW.md](../desenvolvimento/GITHUB_WORKFLOW.md); backlog operacional em [desenvolvimento/Sprints.md](../desenvolvimento/Sprints.md); memória de sessão em [desenvolvimento/CONTEXT.md](../desenvolvimento/CONTEXT.md); índice de documentação em [docs/README.md](../README.md); mapa de pastas do repositório em [desenvolvimento/REPO_STRUCTURE.md](../desenvolvimento/REPO_STRUCTURE.md); Waveshare (notas + CAD) em [waveshare/README.md](../waveshare/README.md); GPIO do Pi 4 em [raspberry-pi-4b/README.md](../raspberry-pi-4b/README.md).
 
@@ -102,6 +102,12 @@ Conforme a seção **2.5 — Recursos disponíveis** de `TCC.txt`, o produto dev
 > o **destino** da conversão. Ambas devolvem **os dois valores**, exibidos em
 > duas linhas. Registado aqui porque a ambiguidade do sentido produziu
 > resultados errados no teste em hardware.
+
+> **Números complexos (avaliação da T08):** o catálogo lista apenas as
+> **conversões** de coordenadas, já implementadas. Aritmética complexa (o literal
+> `i`, soma e produto de complexos, módulo, argumento, conjugado) seria um
+> conjunto de **funções novas**, e fica fora do escopo. Só deve abrir-se uma
+> mudança para ela se o TCC rever esta seção.
 
 > **Nota sobre a tecla `EXP`:** é entrada de **notação científica**
 > (`3 EXP 8` = 3×10⁸), ou seja notação de entrada de número, e **não** uma
@@ -349,3 +355,4 @@ Nenhum código novo foi criado e o catálogo matemático da **seção 5** não m
 | 1.5 | 2026-09-10 | §13.2: novo **WRN-013** (P2) — telas desligadas/religadas por comando do utilizador (`Ctrl` + `AC`, função secundária de `AC` — a matriz 6x7 não tem tecla livre; `AC` sozinho religa), distinto do WRN-012 (troca automática de saída, RF-09). Sem alteração do catálogo da §5. Versão 1.5. |
 | 1.6 | 2026-11-02 | §13.3: registo do estado de implementação dos códigos — **ERR-009** passa a ser emitido (aridade das conversões de coordenadas), **ERR-008** passa a cobrir aridade incompleta, e o prefixo falado passa a derivar da **prioridade** (o `ERR-008` é P2, logo «Aviso 008»). Sem códigos novos e **sem** alteração do catálogo da §5. Versão 1.6. |
 | 1.7 | 2026-11-04 | §5: fixado o **sentido** das conversões de coordenadas na convenção das calculadoras científicas (`Pol(x,y)`→`(r,ângulo)`, `Rec(r,ângulo)`→`(x,y)`) — a ambiguidade anterior produzia resultados errados em bancada; registado que as duas devolvem **os dois valores**. Registada também a tecla **`EXP`** como notação científica (×10ˣ), não como função nova. Sem alteração do conjunto de operações da §5. Versão 1.7. |
+| 1.8 | 2026-11-20 | §5: registrada a avaliação da T08 — aritmética complexa fica fora do catálogo. Fala: decimais com «vírgula», separador de argumentos «ponto e vírgula», funções anunciam a abertura de parênteses. Entrada: multiplicação implícita como **notação** (`2(3)`, `2π`), sem operação nova. Sem alteração do conjunto de operações da §5. Versão 1.8. |

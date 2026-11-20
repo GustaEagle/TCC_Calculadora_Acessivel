@@ -27,7 +27,8 @@ import threading
 import wave
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Protocol
+import array
+from typing import Callable, Iterable, Iterator, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,56 @@ DEFAULT_ONNX_THREADS = int(os.environ.get("CALC_PIPER_THREADS", "2"))
 
 # Binários do sistema (sobrescritíveis para teste — ver `tts-fake-aplay-testing`).
 _APLAY = os.environ.get("CALC_APLAY", "aplay")
+
+# Silêncio no início de TODA frase (T01). O dispositivo de saída é aberto a frio
+# a cada frase, e saídas HDMI descartam os primeiros milissegundos de um fluxo:
+# o "limpar tudo" chegava como "impa tudo", sem o primeiro fonema, com o texto
+# certo. 120 ms é o valor de partida; o definitivo sai da medição no Pi. Zero
+# desliga.
+LEADING_SILENCE_MS = 120
+
+# Aparar o silêncio que o Piper deixa no FIM de cada frase do cache, para os
+# pedaços concatenados de um resultado ("Resultado", "vírgula", dígitos) não
+# ficarem separados por pausas longas. Mantém uma cauda curta.
+_TRIM_KEEP_MS = 40
+_TRIM_THRESHOLD = 300  # amplitude S16 abaixo da qual a amostra conta como silêncio
+
+# Maior sequência de palavras procurada no cache ao dividir uma frase
+# ("e y igual a" tem 4).
+_MAX_CACHED_WORDS = 4
+
+
+def _silence(ms: int, sample_rate: int) -> bytes:
+    """PCM S16LE mono nulo com a duração pedida."""
+    return b"\x00\x00" * int(sample_rate * ms / 1000)
+
+
+def _trim_trailing_silence(pcm: bytes, sample_rate: int) -> bytes:
+    """Remove o silêncio do fim do PCM, deixando _TRIM_KEEP_MS de cauda."""
+    samples = array.array("h")
+    samples.frombytes(pcm[: len(pcm) // 2 * 2])
+    end = len(samples)
+    while end > 0 and abs(samples[end - 1]) < _TRIM_THRESHOLD:
+        end -= 1
+    if end == 0:
+        return pcm  # tudo silêncio: não é um caso a aparar
+    keep = min(len(samples), end + int(sample_rate * _TRIM_KEEP_MS / 1000))
+    return samples[:keep].tobytes()
+
+
+def _resample(pcm: bytes, source_rate: int, target_rate: int) -> bytes:
+    """Reamostragem simples (vizinho mais próximo) para um pedaço com outra taxa.
+
+    Só acontece quando um pedaço cai no fallback espeak-ng a meio de uma frase
+    tocada pelo Piper; um único aplay tem uma única taxa.
+    """
+    if source_rate == target_rate:
+        return pcm
+    samples = array.array("h")
+    samples.frombytes(pcm[: len(pcm) // 2 * 2])
+    count = int(len(samples) * target_rate / source_rate)
+    ratio = source_rate / target_rate
+    return array.array("h", (samples[int(i * ratio)] for i in range(count))).tobytes()
 _ESPEAK = os.environ.get("CALC_ESPEAK", "espeak-ng")
 _ESPEAK_VOICE = "pt-br"
 
@@ -244,8 +295,12 @@ class _RawPlaybackProcess:
     começar, a reprodução é simplesmente descartada.
     """
 
-    def __init__(self, produce: Callable[[], tuple[bytes, int]]) -> None:
-        # produce() -> (pcm_bytes, sample_rate); roda na thread do start().
+    def __init__(
+        self,
+        produce: Callable[[], tuple[bytes, int] | Iterable[tuple[bytes, int]]],
+    ) -> None:
+        # produce() -> (pcm, sample_rate), ou um iterável de pedaços (pcm, rate)
+        # na ordem da frase. Roda fora da thread do chamador.
         self._produce = produce
         self._proc: subprocess.Popen | None = None
         self._thread: threading.Thread | None = None
@@ -257,33 +312,86 @@ class _RawPlaybackProcess:
         self._thread = threading.Thread(target=self._run, name="tts-play", daemon=True)
         self._thread.start()
 
+    def _chunks(self) -> Iterator[tuple[bytes, int]]:
+        """Pedaços da frase, na ordem. Um iterável é consumido numa thread à
+        parte, para a síntese dos pedaços seguintes correr ENQUANTO os primeiros
+        tocam (T04); uma tupla única é a frase inteira, como antes."""
+        result = self._produce()
+        if isinstance(result, tuple):
+            yield result
+            return
+        pieces: queue.Queue = queue.Queue()
+        done = object()
+
+        def pump() -> None:
+            try:
+                for piece in result:
+                    if self._terminated.is_set():
+                        break
+                    pieces.put(piece)
+            except Exception:
+                logger.exception("Falha ao produzir um pedaço da fala")
+            finally:
+                pieces.put(done)
+
+        threading.Thread(target=pump, name="tts-synth", daemon=True).start()
+        while True:
+            piece = pieces.get()
+            if piece is done:
+                return
+            yield piece
+
     def _run(self) -> None:
+        proc: subprocess.Popen | None = None
+        sample_rate = _CADU_SAMPLE_RATE
         try:
             if self._terminated.is_set():
                 return
-            pcm, sample_rate = self._produce()
-            if self._terminated.is_set() or not pcm:
-                return
-            cmd = [_APLAY, "-q", "-t", "raw", "-f", "S16_LE", "-c", "1",
-                   "-r", str(sample_rate), "-"]
-            kwargs = dict(
-                stdin=subprocess.PIPE,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            if hasattr(os, "setsid"):
-                kwargs["start_new_session"] = True  # grupo próprio: terminate() só mata o aplay
-            with self._lock:
+            for pcm, chunk_rate in self._chunks():
                 if self._terminated.is_set():
                     return
-                self._proc = subprocess.Popen(cmd, **kwargs)
-            try:
-                self._proc.communicate(pcm)
-            except (BrokenPipeError, OSError):
-                pass  # aplay morto (terminate) no meio da escrita
+                if not pcm:
+                    continue
+                if proc is None:
+                    # UM aplay por frase, aberto com o primeiro pedaço pronto:
+                    # reabrir o dispositivo a cada pedaço reintroduziria o
+                    # corte do início que o silêncio inicial evita.
+                    sample_rate = chunk_rate
+                    cmd = [_APLAY, "-q", "-t", "raw", "-f", "S16_LE", "-c", "1",
+                           "-r", str(sample_rate), "-"]
+                    kwargs = dict(
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    if hasattr(os, "setsid"):
+                        kwargs["start_new_session"] = True  # grupo próprio: terminate() só mata o aplay
+                    with self._lock:
+                        if self._terminated.is_set():
+                            return
+                        proc = subprocess.Popen(cmd, **kwargs)
+                        self._proc = proc
+                    # O silêncio entra UMA vez, no início da frase.
+                    pcm = _silence(LEADING_SILENCE_MS, sample_rate) + pcm
+                else:
+                    pcm = _resample(pcm, chunk_rate, sample_rate)
+                try:
+                    proc.stdin.write(pcm)
+                    proc.stdin.flush()
+                except (BrokenPipeError, OSError, ValueError):
+                    return  # aplay morto (terminate) no meio da escrita
         except Exception:
             logger.exception("Falha ao reproduzir áudio")
         finally:
+            if proc is not None:
+                try:
+                    proc.stdin.close()
+                except (BrokenPipeError, OSError, ValueError):
+                    pass
+                try:
+                    proc.wait()
+                except OSError:
+                    pass
             self._done.set()
 
     def join(self, timeout: float | None = None) -> None:
@@ -313,6 +421,21 @@ class _RawPlaybackProcess:
                 except OSError:
                     pass
         self._done.set()
+
+
+def _pronounced(text: str) -> str:
+    """Texto entregue ao motor, com o dicionário de pronúncia (T01) aplicado.
+
+    Um ponto ÚNICO, usado pela síntese na hora, pelo aquecimento do cache e pelo
+    fallback espeak-ng - assim a correção vale igual nos três. A chave do cache
+    continua a ser o texto original. Import tardio de `ui.shared`, como em
+    default_fixed_phrases: sem o catálogo, o texto segue inalterado.
+    """
+    try:
+        from software.ui.shared.keypad import tts_text
+    except Exception:
+        return text
+    return tts_text(text)
 
 
 def default_fixed_phrases() -> list[str]:
@@ -351,6 +474,11 @@ def default_fixed_phrases() -> list[str]:
         "Shift ativo", "Shift desativado",
         "Histórico fechado", "Substituindo",
         "Expressão vazia",
+        # Pedaços dos resultados (T04): o prefixo e os rótulos dos pares saem do
+        # cache, e só os cardinais vão à síntese. Os dígitos, "vírgula",
+        # "ponto e vírgula" e "menos" já entram pelos nomes de tecla acima.
+        "Resultado", "Última resposta:",
+        "x igual a", "e y igual a", "real", "ângulo",
     ])
     seen: set[str] = set()
     unique: list[str] = []
@@ -451,7 +579,62 @@ class SpeechService:
     # --- motor + cache + fallback --------------------------------------------
 
     def _default_factory(self, text: str) -> SpeakProcess:
-        return _RawPlaybackProcess(lambda: self._produce(text))
+        return _RawPlaybackProcess(lambda: self._produce_chunks(text))
+
+    def _segments(self, text: str) -> list[tuple[bool, str]]:
+        """Divide a frase em (vem_do_cache, texto), na ordem.
+
+        Procura no cache a MAIOR sequência de palavras a partir de cada posição
+        ("e y igual a" antes de "e"); o que não está no cache é juntado em
+        trechos contíguos, sintetizados de uma vez para não estragar a prosódia
+        dos cardinais. Uma palavra com pontuação final ("5,") também casa sem
+        ela, para os rótulos e dígitos dos pares saírem do cache.
+        """
+        words = text.split()
+        segments: list[tuple[bool, str]] = []
+        pending: list[str] = []
+        index = 0
+        while index < len(words):
+            found = None
+            for size in range(min(_MAX_CACHED_WORDS, len(words) - index), 0, -1):
+                phrase = " ".join(words[index:index + size])
+                for candidate in (phrase, phrase.rstrip(",.:;")):
+                    if candidate and candidate in self._cache:
+                        found = (candidate, size)
+                        break
+                if found:
+                    break
+            if found is None:
+                pending.append(words[index])
+                index += 1
+                continue
+            if pending:
+                segments.append((False, " ".join(pending)))
+                pending = []
+            segments.append((True, found[0]))
+            index += found[1]
+        if pending:
+            segments.append((False, " ".join(pending)))
+        return segments
+
+    def _produce_chunks(self, text: str) -> Iterator[tuple[bytes, int]]:
+        """Pedaços (pcm, rate) da frase, gerados preguiçosamente (T04).
+
+        Frase inteira no cache, ou motor ainda não pronto: um pedaço só, pelo
+        caminho de sempre. Caso contrário, o que está no cache sai dele sem
+        síntese (o prefixo "Resultado", "vírgula" e os dígitos da parte
+        fracionária, lida dígito a dígito) e só o resto vai ao Piper - assim a
+        fala começa antes de a síntese do número terminar.
+        """
+        engine = self._engine
+        if engine is None or not engine.is_ready or text in self._cache:
+            yield self._produce(text)
+            return
+        for cached, piece in self._segments(text):
+            if cached:
+                yield self._cache[piece], self._cache_rate
+            else:
+                yield self._produce(piece)
 
     def _produce(self, text: str) -> tuple[bytes, int]:
         """(PCM, sample_rate) para a frase: cache, senão Piper, senão espeak-ng."""
@@ -461,7 +644,7 @@ class SpeechService:
             if cached is not None:
                 return cached, self._cache_rate
             try:
-                pcm = engine.synthesize(text)
+                pcm = engine.synthesize(_pronounced(text))
                 if pcm:
                     return pcm, engine.sample_rate
             except Exception:
@@ -470,7 +653,7 @@ class SpeechService:
             # Motor ausente ou com falha de carga: degradação real -> WRN-011.
             # (Enquanto o modelo ainda carrega é transitório e não avisa.)
             self._log_degraded_once()
-        return _espeak_pcm(text)
+        return _espeak_pcm(_pronounced(text))
 
     def _log_degraded_once(self) -> None:
         with self._degraded_lock:
@@ -500,9 +683,9 @@ class SpeechService:
             if not text or text in self._cache:
                 continue
             try:
-                pcm = engine.synthesize(text)
+                pcm = engine.synthesize(_pronounced(text))
                 if pcm:
-                    self._cache[text] = pcm
+                    self._cache[text] = _trim_trailing_silence(pcm, self._cache_rate)
             except Exception:
                 logger.exception("Falha ao pré-sintetizar '%s'", text)
         logger.info("Cache de voz aquecido: %d frases", len(self._cache))

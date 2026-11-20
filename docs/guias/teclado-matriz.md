@@ -119,7 +119,7 @@ Convenção das calculadoras científicas — o nome diz o **destino** da conver
 | retangular → polar | `Pol` `3` `Shift` `,` `4` `)` `=` | `r = 5` / `θ = 53.13010235` |
 | polar → retangular | `Ctrl` `Pol` `5` `Shift` `,` `53.13` `)` `=` | `x = 3` / `y = 4` |
 
-As duas devolvem **os dois valores**, exibidos em **duas linhas** (antes o par ia numa linha só, estourava o limite do display e o primeiro valor era cortado). O ângulo respeita o modo `DEG`/`RAD` ativo. A voz anuncia «real 5, ângulo 53 ponto 1 3 …» e «x igual a 3 e y igual a 4».
+As duas devolvem **os dois valores**, exibidos em **duas linhas** (antes o par ia numa linha só, estourava o limite do display e o primeiro valor era cortado). O ângulo respeita o modo `DEG`/`RAD` ativo. A voz anuncia «real 5, ângulo 53 vírgula 1 3 …» e «x igual a 3 e y igual a 4».
 
 ### A tecla `EXP` (`Ctrl` + `e`) é expoente de base dez
 
@@ -171,6 +171,38 @@ Os nomes que a consulta anuncia saem do mesmo catálogo falado (`SPOKEN_TOKEN_NA
 Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware) continuam a anunciar «Tecla sem função»: sem esse retorno, quem não vê a tela concluiria que a tecla está avariada.
 
 ---
+
+### O que a voz diz
+
+| Na tela | A voz diz | Por quê |
+| --- | --- | --- |
+| `1.2` | «1 **vírgula** 2» | Convenção pt-BR. A tela continua a mostrar o ponto |
+| `0.05` | «0 vírgula 0 5» | A parte fracionária é lida **dígito a dígito**, para não perder zeros |
+| `-3.5` | «menos 3 vírgula 5» | |
+| `Pol(3,4)` | «converter para polar, abre parênteses 3 **ponto e vírgula** 4 fecha parênteses» | O separador de argumentos é «ponto e vírgula», senão «3 vírgula 4» seria o decimal 3,4 |
+| tecla `√` | «raiz quadrada, **abre parênteses**» | Toda função com parênteses anuncia a abertura, que depois é fechada por «fecha parênteses» |
+| tecla `.` | «vírgula» | É o que ela insere: o separador decimal |
+
+Toda frase começa por um silêncio curto (`LEADING_SILENCE_MS`, em `accessibility/speech.py`). A saída de áudio é aberta a frio a cada frase e cortava o primeiro fonema: «limpar tudo» chegava como «**impa** tudo». Se alguma palavra ainda soar mal com o início preservado, a correção vai para o dicionário `TTS_PRONUNCIATION` (`ui/shared/keypad.py`), que muda só o que vai à voz e não o que aparece na tela.
+
+O resultado do `=` começa a soar antes de a frase inteira estar sintetizada. O prefixo «Resultado», a «vírgula» e os dígitos da parte fracionária saem de um cache pronto no arranque, e só a parte inteira é sintetizada na hora.
+
+### Multiplicação implícita
+
+Um número colado a um parêntese, a uma função, a uma constante ou ao `Ans` multiplica, como numa calculadora comercial:
+
+| Digito | Resultado |
+| --- | --- |
+| `2(3)` | 6 |
+| `2√(9)` | 6 |
+| `(2)(3)` | 6 |
+| `2π` | 6,283… |
+| `3Ans` (Ans = 4) | 12 |
+| `2` `e` `3` | 16,309… (2 × *e* × 3) |
+
+O último caso dava **2000** antes, sem aviso, porque era lido como notação científica. Para uma potência de dez use a tecla `EXP` (`Ctrl` + `e`).
+
+Duas coisas ainda dependem do modelo de calculadora que a equipe vai usar como referência, e por isso estão em aberto: a porcentagem depois de uma soma (`50+10%`, que hoje dá 50,1) e a prioridade da multiplicação implícita contra a divisão (`1÷2(3)`, que hoje dá 1,5, da esquerda para a direita).
 
 ## 4. Comandos que não inserem símbolo
 

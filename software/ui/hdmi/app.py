@@ -75,8 +75,7 @@ from software.ui.shared.keypad import (
 )
 from software.ui.shared.speech_text import (
     spoken_expression,
-    spoken_number,
-    spoken_pair,
+    spoken_result,
 )
 from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import BUTTON_PALETTE, DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
@@ -771,7 +770,7 @@ class CalculatorApp:
 
         if result.ok:
             self.result_var.set(format_result_for_display(result))
-            self.speech.interrupt_and_say(f"Resultado {self._spoken_result(result)}")
+            self.speech.interrupt_and_say(f"Resultado {spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
             # priority prefix (P1 -> "Erro", P2 -> "Aviso").
@@ -830,23 +829,13 @@ class CalculatorApp:
         else:
             self.speech.interrupt_and_say(f"Volume {level} por cento", priority=SpeechService.CONFIG)
 
-    def _spoken_result(self, result: CalculationResult) -> str:
-        """Texto falado de um resultado: PAR de coordenadas ou escalar.
-
-        Mesmo critério do front do LCD: o display de um par é "(3, 4)" e
-        entregar isso ao spoken_number faria o motor neural ler os parênteses
-        e a vírgula em voz alta.
-        """
-        if isinstance(result.value, tuple) and result.value_kind:
-            return spoken_pair(result.value, result.value_kind)
-        return spoken_number(result.display)
 
     def _recall_last_answer(self) -> None:
         """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
             self.result_var.set(format_result_for_display(result))
-            self.speech.interrupt_and_say(f"Última resposta: {self._spoken_result(result)}")
+            self.speech.interrupt_and_say(f"Última resposta: {spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)

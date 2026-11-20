@@ -16,7 +16,7 @@ from software.core import CalculatorState
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.keypad import spoken_token
-from software.ui.shared.speech_text import spoken_number
+from software.ui.shared.speech_text import spoken_result
 
 logger = logging.getLogger(__name__)
 
@@ -74,10 +74,11 @@ class AudioOnlyCalculator:
 
     def announce(self, result) -> None:
         if result.ok:
-            # Pronúncia do número com separador decimal falado ("ponto"); o texto
+            # Mesma leitura de resultado dos fronts visuais (spoken_result): par
+            # pela leitura de pares, escalar com a "vírgula" falada. O texto
             # impresso mantém o valor cru.
             print(f"Resultado {result.display}")
-            self.speech.interrupt_and_say(f"Resultado {spoken_number(result.display)}")
+            self.speech.interrupt_and_say(f"Resultado {spoken_result(result)}")
             return
 
         # Same code and priority prefix the visual fronts use (PRD §13).

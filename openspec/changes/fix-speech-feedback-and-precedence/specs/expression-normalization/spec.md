@@ -81,3 +81,27 @@ Um número seguido da letra `e` e de dígitos (`2e3`, `1e5`) SHALL ser lido como
 
 - **WHEN** `evaluate("2exp(3)")` é chamado
 - **THEN** o resultado é bem-sucedido com `display` igual a `"2000"`
+
+### Requirement: Ans é um operando único, com o sinal incluído
+
+O valor da resposta anterior SHALL entrar na expressão como **um operando**, avaliado como constante, e SHALL NOT ser colado no texto como dígitos. Colar o valor (`str(ans)`) separava o sinal do grupo, de modo que `Ans^2` com Ans = −3 virava `-3.0**2` = −9. Além disso, deixava um valor grande (`1e+20`) exposto à multiplicação implícita, que o leria como `1*e+20`. `Ans` colado a um número (`3Ans`) SHALL ser reconhecido.
+
+#### Scenario: Quadrado de uma resposta negativa
+
+- **WHEN** `evaluate("Ans^2", ans=-3)` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"9"`
+
+#### Scenario: Combinação com resposta negativa
+
+- **WHEN** `evaluate("Ans nCr 2", ans=-5)` é chamado
+- **THEN** o resultado é um erro com `code` igual a `"ERR-004"`, porque C(−5, 2) não existe
+
+#### Scenario: Resposta grande não é re-tokenizada
+
+- **WHEN** `evaluate("Ans*2", ans=1e20)` é chamado
+- **THEN** o valor é `2e20`
+
+#### Scenario: Resposta colada a um número
+
+- **WHEN** `evaluate("3Ans", ans=4)` é chamado
+- **THEN** o resultado é bem-sucedido com `display` igual a `"12"`

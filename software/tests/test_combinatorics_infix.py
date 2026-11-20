@@ -41,10 +41,17 @@ class InfixCombinatoricsTests(unittest.TestCase):
     def test_previous_answer_as_operand(self) -> None:
         self.assertEqual(self.engine.evaluate("Ans nCr 2", 5).display, "10")
 
-    def test_negative_previous_answer_keeps_unary_minus_outside(self) -> None:
-        """O sinal fica FORA do átomo: "-5 nCr 2" é -(5 nCr 2), consistente
-        com a precedência do menos unário no resto do motor."""
-        self.assertEqual(self.engine.evaluate("Ans nCr 2", -5).display, "-10")
+    def test_negative_previous_answer_is_an_invalid_combination(self) -> None:
+        """Ans é UM operando, com o sinal incluído: Ans = -5 dá C(-5, 2), que
+        não existe (ERR-004), como numa calculadora comercial.
+
+        Antes dava -10, por acidente: o valor era colado no texto ("-5.0 nCr 2")
+        e o menos ficava fora do átomo. Era o mesmo defeito que fazia Ans^2 com
+        Ans = -3 dar -9. O Ans passou a ser lido como constante protegida."""
+        self.assertEqual(self.engine.evaluate("Ans nCr 2", -5).code, "ERR-004")
+
+    def test_negative_previous_answer_squared(self) -> None:
+        self.assertEqual(self.engine.evaluate("Ans^2", -3).display, "9")
 
 
 class InfixCombinatoricsLimitsTests(unittest.TestCase):

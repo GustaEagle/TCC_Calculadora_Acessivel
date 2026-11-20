@@ -97,6 +97,17 @@ Antes da inserção da multiplicação implícita, um número imediatamente segu
 
 O motivo de tratar `e` como constante e nunca como expoente: no teclado, a constante de Euler é uma **tecla**, e a potência de dez tem a sua tecla própria (`EXP`). Nada na interface produz notação científica do Python de propósito, então todo `NeM` que chega ao motor é a constante.
 
+### 6b. Ans entra como constante protegida (decidido na implementação)
+
+A multiplicação implícita expôs um defeito antigo: o valor de `Ans` era **colado no texto** (`str(ans)`).
+
+- Um Ans grande (`1e+20`) seria re-tokenizado como `1*e+20`.
+- O sinal saía do grupo, e por isso `Ans^2` com Ans = −3 já dava −9.
+
+`Ans` passa a ser o nome protegido `__ans`, avaliado como constante. O `_` garante que o utilizador não o escreve.
+
+Consequência registrada: `Ans nCr 2` com Ans = −5 passa de −10 a `ERR-004`, que é o comportamento de uma calculadora comercial (não existe combinação de número negativo). O −10 era um artefato do mesmo defeito.
+
 ### 7. T08: aritmética complexa fica fora
 
 A avaliação pedida na T08 conclui que o PRD §5 lista apenas **conversões de coordenadas**, já entregues. Os candidatos restantes são funções novas do catálogo: o literal `i`, soma e produto de complexos, módulo, argumento e conjugado. Sem a forma `a+bi` não há como representar o resultado na interface atual, cujo display de par já ocupa duas linhas. Recomendação registrada: só abrir uma change de aritmética complexa se o TCC rever o §5.

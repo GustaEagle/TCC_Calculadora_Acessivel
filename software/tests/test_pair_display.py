@@ -83,11 +83,11 @@ class PairDisplayTests(unittest.TestCase):
         result = self.engine.evaluate("polar(3, 4)")
         text = format_result_for_display(result)
         spoken = spoken_pair(result.value, result.value_kind)
-        # "53.13010235" na tela e "53 ponto 1 3 0 1 0 2 3 5" na voz: os mesmos
+        # "53.13010235" na tela e "53 vírgula 1 3 0 1 0 2 3 5" na voz: os mesmos
         # dígitos. A parte INTEIRA é falada junta (o motor de voz já a lê como
         # cardinal); só a fracionária é lida dígito a dígito.
         self.assertIn("53.13010235", text)
-        self.assertIn("53 ponto 1 3 0 1 0 2 3 5", spoken)
+        self.assertIn("53 vírgula 1 3 0 1 0 2 3 5", spoken)
 
 
 class ClipDisplayLineTests(unittest.TestCase):

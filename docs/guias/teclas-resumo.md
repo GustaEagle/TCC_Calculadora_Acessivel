@@ -87,6 +87,16 @@ começa uma expressão nova, limpando a anterior.
 
 ---
 
+## Como os números são falados
+
+Decimais com **vírgula** («1 vírgula 2»), com a parte fracionária lida dígito a
+dígito. O separador de argumentos é falado **ponto e vírgula**, e toda função
+anuncia «abre parênteses». Um número colado a `(`, a uma função, a `π`, a `e` ou
+ao `Ans` multiplica: `2(3)` = 6. Detalhes em
+[teclado-matriz.md](teclado-matriz.md).
+
+---
+
 ## Funções binárias precisam da vírgula
 
 As conversões de coordenadas levam dois argumentos, e aí entra o `Shift` na tecla
