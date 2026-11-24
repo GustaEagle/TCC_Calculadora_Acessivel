@@ -22,6 +22,9 @@ from software.accessibility.speech import (
     _RawPlaybackProcess,
     _silence,
     _trim_trailing_silence,
+    alert_tone,
+    split_tone,
+    tone_prefix,
 )
 
 RATE = 22050
@@ -146,8 +149,95 @@ class SegmentationTests(unittest.TestCase):
         self.assertEqual(chunks, [(b"\x01\x00", RATE)])
 
 
+def _count_beeps(pcm: bytes) -> int:
+    """Bipes = trechos com som separados por pausas de pelo menos 5 ms."""
+    import array
+
+    samples = array.array("h")
+    samples.frombytes(pcm)
+    pause = int(RATE * 0.005)
+    beeps, zeros, sounding = 0, pause, False
+    for sample in samples:
+        if sample == 0:
+            zeros += 1
+            if zeros >= pause:
+                sounding = False
+        else:
+            if not sounding and zeros >= pause:
+                beeps += 1
+            sounding, zeros = True, 0
+    return beeps
+
+
+class AlertToneTests(unittest.TestCase):
+    """Bipes gerados na hora, antes da frase do alerta."""
+
+    def test_prefix_roundtrip(self) -> None:
+        self.assertEqual(split_tone(tone_prefix(3) + "Bateria"), (3, "Bateria"))
+        self.assertEqual(split_tone("Bateria"), (0, "Bateria"))
+        self.assertEqual(tone_prefix(0), "")
+
+    def test_tone_is_audible_and_not_clipped(self) -> None:
+        import array
+
+        samples = array.array("h")
+        samples.frombytes(alert_tone(2, RATE))
+        self.assertGreater(max(abs(s) for s in samples), 5000, "bipe inaudível")
+        self.assertLess(max(abs(s) for s in samples), 32767 * 0.5, "bipe alto demais")
+        self.assertEqual(samples[0], 0, "o bipe começa sem rampa e estala")
+
+    def test_urgent_tone_has_more_beeps(self) -> None:
+        self.assertEqual(alert_tone(0, RATE), b"")
+        self.assertEqual(_count_beeps(alert_tone(2, RATE)), 2)
+        self.assertEqual(_count_beeps(alert_tone(3, RATE)), 3)
+
+    def test_tone_comes_before_the_phrase(self) -> None:
+        engine = FakeEngine({"Bateria": 1000})
+        service = _service(engine, ["Bateria"])
+        chunks = list(service._produce_chunks(tone_prefix(2) + "Bateria"))
+        self.assertEqual(chunks[0], (alert_tone(2, RATE), RATE))
+        self.assertEqual(chunks[1], (_tone(1000), RATE))
+        self.assertEqual(engine.calls, [], "o prefixo do bipe não pode ir à síntese")
+
+    def test_tone_also_when_the_engine_is_not_ready(self) -> None:
+        engine = FakeEngine({})
+        engine.is_ready = False
+        service = _service(engine, [])
+        with mock.patch.object(speech, "_espeak_pcm", return_value=(b"\x01\x00", RATE)) as espeak:
+            chunks = list(service._produce_chunks(tone_prefix(3) + "Bateria no fim"))
+        self.assertEqual(chunks[0][0], alert_tone(3, RATE))
+        espeak.assert_called_once_with("Bateria no fim")
+
+    def test_alert_puts_the_beeps_in_the_same_message(self) -> None:
+        """Bipes e frase são UMA mensagem: um corte leva os dois."""
+        spoken: list[str] = []
+        service = SpeechService(process_factory=lambda text: spoken.append(text) or _Done())
+        service.alert("Bateria baixa", beeps=2)
+        self.assertTrue(_wait_until(lambda: spoken))
+        service.stop()
+        self.assertEqual(spoken, [tone_prefix(2) + "Bateria baixa"])
+
+
+class _Done:
+    """Processo de fala falso que termina na hora."""
+
+    def start(self) -> None:
+        pass
+
+    def join(self, timeout=None) -> None:
+        pass
+
+    def is_alive(self) -> bool:
+        return False
+
+    def terminate(self) -> None:
+        pass
+
+
 def _write_fake_aplay(path: Path, body: str) -> None:
-    path.write_text(f"#!{sys.executable}\n{body}")
+    # "/usr/bin/env python3", e não sys.executable: o kernel corta a linha #! no
+    # primeiro espaço, e o .venv do projeto fica em ".../Área de trabalho/...".
+    path.write_text("#!/usr/bin/env python3\n" + body)
     path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
 

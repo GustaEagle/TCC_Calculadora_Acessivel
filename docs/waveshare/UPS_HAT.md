@@ -104,9 +104,58 @@ O nível da bateria é lido em `software/hw_platform/ups.py` (`UpsMonitor`):
 - Sem I2C/`i2cget` (fora do Pi) a leitura **não é inventada**: o status volta com
   `available=False` e o monitor de bateria simplesmente não alerta.
 
-O aviso por voz de bateria baixa fica em `software/accessibility/battery_alert.py`
-(`BatteryMonitor`): limite padrão **20 %** (`CALC_UPS_LOW_PERCENT`), com alerta
-crítico que precede qualquer outro áudio e anti-repetição configurável.
+### Aviso de bateria (WRN-020)
+
+O aviso fica em `software/accessibility/battery_alert.py` (`BatteryMonitor`), e
+tem **dois níveis**, ambos com o código **WRN-020** do PRD §13 (no log e no
+catálogo; a voz não diz o número do aviso):
+
+| Nível | Limite | Som | Voz | Tela |
+| --- | --- | --- | --- | --- |
+| Bateria baixa | **20 %** (`CALC_UPS_LOW_PERCENT`) | 2 bipes | «Bateria baixa, 18 por cento. Conecte o carregador.» | `BATERIA BAIXA 18%` em laranja |
+| Bateria no fim | **10 %** (`CALC_UPS_CRITICAL_PERCENT`) | 3 bipes, mais agudos e rápidos | «Bateria no fim, 7 por cento. A calculadora vai desligar. Conecte o carregador agora.» | `BATERIA NO FIM 7%` em vermelho |
+
+- Os bipes e a frase são **uma** mensagem, com prioridade crítica: cortam e
+  precedem qualquer outro áudio, e nada os corta, a não ser outro alerta.
+- O indicador aparece à direita da barra de indicadores, nos dois fronts, e
+  fica **vazio** com a bateria normal ou sem UPS.
+- Anti-repetição:
+  - repete se a carga cair mais **5 pontos** (`CALC_UPS_RENOTIFY_DROP`);
+  - repete se passarem **5 min** no nível baixo (`CALC_UPS_RENOTIFY_INTERVAL_S`)
+    ou **1 min** no nível no fim (`CALC_UPS_CRITICAL_RENOTIFY_INTERVAL_S`);
+  - avisa **na hora** ao passar de baixa para no fim;
+  - rearma quando a carga volta a subir com folga (3 pontos acima do limite).
+- Leitura a cada **30 s** (`CALC_UPS_POLL_INTERVAL_S`).
+
+**Requisito na imagem do Pi:** o módulo `i2c-dev` tem de ser carregado no
+arranque. No kernel `linux-rpi` ele é **módulo**, e o `dtparam=i2c_arm=on` só
+liga o controlador: sem `i2c-dev` o `/dev/i2c-1` nunca aparece, e o monitor
+conclui que não há UPS, sem avisar. O `build-alpine-img.sh` acrescenta
+`i2c-dev` ao `/etc/modules` (em `apply_overlay_and_app`, que corre também com
+`CONTINUE=1`).
+
+### Testar o aviso
+
+**No PC** (sem UPS), com bateria simulada que desce 1 ponto a cada 2 s:
+
+```
+python -m software.app --force-mode lcd --simulate-battery 15 --keypad-matrix off
+```
+
+Em 2 s aparece o aviso de bateria baixa, e em cerca de 12 s o de bateria no fim.
+A variável `CALC_SIMULATE_BATTERY=15` faz o mesmo que a opção.
+
+**No Pi**, com o UPS de verdade:
+
+1. `ls /dev/i2c-1` e `i2cdetect -y 1`: o barramento existe e o chip responde em `42`.
+2. Leitura que a calculadora faz:
+   `python3 -c "from software.hw_platform.ups import UpsMonitor; print(UpsMonitor().read_status())"`
+   (a partir de `/opt/calculadora`).
+3. Para ouvir e ver o aviso sem esperar a bateria descarregar, suba o limite
+   acima da carga atual: `CALC_UPS_LOW_PERCENT=101 CALC_UPS_POLL_INTERVAL_S=5`
+   antes de iniciar a calculadora. O aviso sai da leitura **real** do I2C.
+4. Para testar só o som e a tela, a simulação também funciona no Pi
+   (`--simulate-battery 15`).
 
 ## Endereço I2C
 

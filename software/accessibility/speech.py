@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import io
 import itertools
+import math
 import json
 import logging
 import os
@@ -84,6 +85,50 @@ _TRIM_THRESHOLD = 300  # amplitude S16 abaixo da qual a amostra conta como silê
 _MAX_CACHED_WORDS = 4
 
 
+# Sinal sonoro antes de um alerta (bipes), para chamar a atenção antes da frase.
+# Viaja no próprio texto da mensagem como um prefixo de caracteres BEL ("\a"),
+# um por bipe: assim a fila, a prioridade e a interrupção (RF-08) continuam
+# exatamente as mesmas - quem toca é que reconhece o prefixo e gera o tom.
+TONE_MARK = "\a"
+_TONE_AMPLITUDE = 0.35   # fração do volume máximo: audível sem assustar
+_TONE_FADE_MS = 6        # rampa nas pontas, para o bipe não estalar
+
+
+def tone_prefix(beeps: int) -> str:
+    """Prefixo que pede `beeps` bipes antes da frase (0 = nenhum)."""
+    return TONE_MARK * max(0, int(beeps))
+
+
+def split_tone(text: str) -> tuple[int, str]:
+    """(número de bipes pedidos, texto sem o prefixo)."""
+    stripped = text.lstrip(TONE_MARK)
+    return len(text) - len(stripped), stripped
+
+
+def alert_tone(beeps: int, sample_rate: int) -> bytes:
+    """PCM S16LE mono com `beeps` bipes curtos.
+
+    Dois bipes graves para "bateria baixa"; três ou mais ficam mais agudos e
+    mais rápidos, para "bateria no fim" soar mais urgente. Gerado na hora, sem
+    arquivo de áudio: funciona igual no PC e no Pi.
+    """
+    if beeps <= 0:
+        return b""
+    urgent = beeps >= 3
+    frequency = 1175.0 if urgent else 880.0        # Ré6 / Lá5
+    beep_ms = 110 if urgent else 160
+    gap_ms = 70 if urgent else 110
+    beep_len = int(sample_rate * beep_ms / 1000)
+    fade = max(1, int(sample_rate * _TONE_FADE_MS / 1000))
+    peak = _TONE_AMPLITUDE * 32767
+    beep = array.array("h")
+    for i in range(beep_len):
+        envelope = min(1.0, i / fade, (beep_len - 1 - i) / fade)
+        beep.append(int(peak * envelope * math.sin(2 * math.pi * frequency * i / sample_rate)))
+    gap = b"\x00\x00" * int(sample_rate * gap_ms / 1000)
+    return gap.join([beep.tobytes()] * beeps) + gap
+
+
 def _silence(ms: int, sample_rate: int) -> bytes:
     """PCM S16LE mono nulo com a duração pedida."""
     return b"\x00\x00" * int(sample_rate * ms / 1000)
@@ -136,10 +181,22 @@ class SpeakProcess(Protocol):
     def terminate(self) -> None: ...
 
 
+# Valores de CALC_PIPER_VOICE que DESLIGAM a voz neural (fica o espeak-ng).
+# Os testes usam isto para nunca carregarem a voz instalada na máquina: com a
+# cadu em ~/.local/share/piper/voices, cada SpeechService dos testes carregava o
+# modelo de 60 MB e sintetizava o cache inteiro, e a suíte passava de 4 s a 5 min.
+_VOICE_OFF_VALUES = frozenset({"off", "none", "0", "false"})
+
+
 def _resolve_voice_path() -> Path | None:
-    """Primeiro `.onnx` da cadu encontrado (env tem prioridade), ou None."""
+    """Primeiro `.onnx` da cadu encontrado (env tem prioridade), ou None.
+
+    `CALC_PIPER_VOICE=off` desliga a voz neural de propósito.
+    """
     candidates: list[Path] = []
     env = os.environ.get("CALC_PIPER_VOICE")
+    if env and env.strip().lower() in _VOICE_OFF_VALUES:
+        return None
     if env:
         candidates.append(Path(env))
     candidates.extend(Path(d) / DEFAULT_VOICE_NAME for d in _VOICE_SEARCH_DIRS)
@@ -626,7 +683,15 @@ class SpeechService:
         fracionária, lida dígito a dígito) e só o resto vai ao Piper - assim a
         fala começa antes de a síntese do número terminar.
         """
+        beeps, text = split_tone(text)
         engine = self._engine
+        if beeps:
+            # O tom sai PRIMEIRO, na taxa da fala que vem a seguir; o processo
+            # de reprodução reamostra se a fala acabar noutra taxa (fallback).
+            rate = engine.sample_rate if engine is not None and engine.is_ready else _CADU_SAMPLE_RATE
+            yield alert_tone(beeps, rate), rate
+            if not text:
+                return
         if engine is None or not engine.is_ready or text in self._cache:
             yield self._produce(text)
             return
@@ -726,9 +791,14 @@ class SpeechService:
             priority,
         )
 
-    def alert(self, text: str) -> None:
-        """Áudio crítico (bateria baixa): corta e precede qualquer outro som."""
-        self.interrupt_and_say(text, priority=PRIORITY_CRITICAL)
+    def alert(self, text: str, beeps: int = 0) -> None:
+        """Áudio crítico (bateria baixa): corta e precede qualquer outro som.
+
+        `beeps` toca esse número de bipes antes da frase (sinal sonoro de
+        atenção). Bipes e frase são UMA mensagem: um novo alerta ou o fim do
+        programa cortam os dois juntos.
+        """
+        self.interrupt_and_say(tone_prefix(beeps) + text, priority=PRIORITY_CRITICAL)
 
     def stop(self) -> None:
         with self._process_lock:

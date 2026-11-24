@@ -64,6 +64,29 @@ class UpsStatus:
     available: bool = False
 
 
+class SimulatedUps:
+    """UPS falso para testar o aviso de bateria FORA do Pi (PC, CI).
+
+    Começa em `start_percent` e desce `step` pontos a cada leitura, até
+    `floor`. Ligado só por pedido explícito (`--simulate-battery`); o produto
+    nunca inventa leituras sozinho - sem hardware, o monitor real fica
+    desligado.
+    """
+
+    def __init__(self, start_percent: float = 25.0, step: float = 1.0, floor: float = 0.0) -> None:
+        self._percent = _clamp_percent(float(start_percent))
+        self._step = float(step)
+        self._floor = _clamp_percent(float(floor))
+
+    def available(self) -> bool:
+        return True
+
+    def read_status(self) -> UpsStatus:
+        percent = self._percent
+        self._percent = max(self._floor, percent - self._step)
+        return UpsStatus(label="simulado", battery_percent=percent, available=True)
+
+
 class UpsMonitor:
     """Lê o nível da bateria do Waveshare UPS HAT pelo INA219 (I2C)."""
 

@@ -17,6 +17,10 @@ ERROR_MESSAGES: dict[str, str] = {
     "ERR-008": "Expressão incompleta.",
     "ERR-009": "Dados insuficientes ou inválidos para a conversão.",
     "WRN-010": "Não há resposta anterior.",
+    # Bateria do UPS HAT (accessibility/battery_alert.py). A voz acrescenta a
+    # carga ("Bateria baixa, 18 por cento") e tem um nível mais urgente, "no
+    # fim", com o MESMO código: mesmo código, mesmo significado (RF-07).
+    "WRN-020": "Bateria baixa. Conecte o carregador.",
 }
 
 

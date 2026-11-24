@@ -88,6 +88,7 @@ from software.ui.shared.video_blackout import (
     relight_on_ac,
     toggle,
 )
+from software.ui.shared.battery_indicator import BatteryIndicatorWatch
 from software.ui.shared.matrix_input import MatrixInputPump
 from software.ui.shared.video_watch import VideoOutputWatch
 
@@ -130,6 +131,7 @@ class CalculatorApp:
         apply_video: VideoApplier | None = None,
         keypad_matrix: MatrixKeyboard | None = None,
         volume: VolumeController | None = None,
+        battery=None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -204,6 +206,8 @@ class CalculatorApp:
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
         self.help_var = ttk.StringVar(value="")
+        # Aviso de bateria (WRN-020): vazio com a bateria normal ou sem UPS.
+        self.battery_var = ttk.StringVar(value="")
         # Teclado na tela começa VISÍVEL onde couber (faixas média/completa):
         # a entrada real é o teclado físico (RF-05), mas mostrar as teclas ajuda
         # quem enxerga parcialmente a localizar a operação. O botão do rodapé
@@ -226,6 +230,9 @@ class CalculatorApp:
         # RF-05: the physical keypad. The scanner belongs to the entry point
         # (one GPIO request per run, kept across front swaps); this front only
         # plugs its token handler in while its window exists.
+        # Aviso de bateria na tela: a voz sai do BatteryMonitor (app.py), que
+        # vive numa thread; aqui só se consulta a última leitura no laço do Tk.
+        self.battery_watch = BatteryIndicatorWatch(self.root, battery, self._show_battery)
         self.matrix_input: MatrixInputPump | None = None
         if keypad_matrix is not None:
             self.matrix_input = MatrixInputPump(
@@ -357,11 +364,13 @@ class CalculatorApp:
         """
         self.speech.say("Calculadora pronta. Saida no monitor.")
         self.video_watch.start()
+        self.battery_watch.start()
         if self.matrix_input is not None:
             self.matrix_input.start()
         try:
             self.root.mainloop()
         finally:
+            self.battery_watch.stop()
             if self.matrix_input is not None:
                 self.matrix_input.stop()
 
@@ -383,6 +392,12 @@ class CalculatorApp:
         ttk.Label(top_bar, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=6)
         ttk.Label(top_bar, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=6)
         ttk.Label(top_bar, textvariable=self.help_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=6)
+        # À DIREITA, separado dos modificadores: é um aviso do aparelho, não um
+        # estado da digitação.
+        self.battery_label = ttk.Label(
+            top_bar, textvariable=self.battery_var, bootstyle="warning", style="Indicator.TLabel",
+        )
+        self.battery_label.pack(side=RIGHT, padx=6)
 
         # Main area: calculator on the left, persistent history on the right.
         # Weights (not pixel widths) are what make this track the window size.
@@ -816,6 +831,11 @@ class CalculatorApp:
                     new_style = "info"
 
                 button.configure(text=new_text, bootstyle=new_style)
+
+    def _show_battery(self, text: str, style: str) -> None:
+        """Mostra (ou esconde, com texto vazio) o aviso de bateria na barra."""
+        self.battery_var.set(text)
+        self.battery_label.configure(bootstyle=style)
 
     def _change_volume(self, up: bool) -> None:
         """Ajusta o volume do sistema e anuncia o novo nível (prioridade CONFIG).

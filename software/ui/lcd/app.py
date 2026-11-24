@@ -15,7 +15,7 @@ import logging
 
 try:
     import ttkbootstrap as ttk
-    from ttkbootstrap.constants import BOTH, E, EW, LEFT, NSEW, W
+    from ttkbootstrap.constants import BOTH, E, EW, LEFT, NSEW, RIGHT, W
 except ImportError as exc:  # pragma: no cover - user-facing startup guard
     raise SystemExit(
         "Instale as dependencias com: python -m pip install -r software/requirements.txt"
@@ -62,6 +62,7 @@ from software.ui.shared.video_blackout import (
     relight_on_ac,
     toggle,
 )
+from software.ui.shared.battery_indicator import BatteryIndicatorWatch
 from software.ui.shared.matrix_input import MatrixInputPump
 from software.ui.shared.video_watch import VideoOutputWatch
 
@@ -100,6 +101,7 @@ class CalculatorApp:
         apply_video: VideoApplier | None = None,
         keypad_matrix: MatrixKeyboard | None = None,
         volume: VolumeController | None = None,
+        battery=None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -142,6 +144,8 @@ class CalculatorApp:
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
         self.help_var = ttk.StringVar(value="")
+        # Aviso de bateria (WRN-020): vazio com a bateria normal ou sem UPS.
+        self.battery_var = ttk.StringVar(value="")
 
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
@@ -158,6 +162,9 @@ class CalculatorApp:
         # RF-05: the physical keypad. The scanner belongs to the entry point
         # (one GPIO request per run, kept across front swaps); this front only
         # plugs its token handler in while its window exists.
+        # Aviso de bateria na tela: a voz sai do BatteryMonitor (app.py), que
+        # vive numa thread; aqui só se consulta a última leitura no laço do Tk.
+        self.battery_watch = BatteryIndicatorWatch(self.root, battery, self._show_battery)
         self.matrix_input: MatrixInputPump | None = None
         if keypad_matrix is not None:
             self.matrix_input = MatrixInputPump(
@@ -196,11 +203,13 @@ class CalculatorApp:
         """
         self.speech.say("Calculadora pronta")
         self.video_watch.start()
+        self.battery_watch.start()
         if self.matrix_input is not None:
             self.matrix_input.start()
         try:
             self.root.mainloop()
         finally:
+            self.battery_watch.stop()
             if self.matrix_input is not None:
                 self.matrix_input.stop()
 
@@ -225,6 +234,12 @@ class CalculatorApp:
         ttk.Label(indicators, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.help_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        # À DIREITA, separado dos modificadores: é um aviso do aparelho, não um
+        # estado da digitação.
+        self.battery_label = ttk.Label(
+            indicators, textvariable=self.battery_var, bootstyle="warning", style="Indicator.TLabel",
+        )
+        self.battery_label.pack(side=RIGHT, padx=5)
 
         # Display e histórico ocupam a MESMA célula; o histórico é levantado por
         # cima quando aberto (Ctrl + Ans) e baixado ao fechar.
@@ -510,6 +525,11 @@ class CalculatorApp:
             self.result_var.set(f"{result.code}: {friendly_msg}")
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
+
+    def _show_battery(self, text: str, style: str) -> None:
+        """Mostra (ou esconde, com texto vazio) o aviso de bateria na barra."""
+        self.battery_var.set(text)
+        self.battery_label.configure(bootstyle=style)
 
     def _change_volume(self, up: bool) -> None:
         """Ajusta o volume do sistema e anuncia o novo nível (prioridade CONFIG).

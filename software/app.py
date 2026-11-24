@@ -22,7 +22,7 @@ if __package__ in {None, ""}:
 from software.accessibility.battery_alert import BatteryMonitor
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
-from software.hw_platform.ups import UpsMonitor
+from software.hw_platform.ups import SimulatedUps, UpsMonitor
 from software.hw_platform import video_output
 from software.hw_platform.display import (
     DEFAULT_LCD_CONNECTOR,
@@ -180,6 +180,7 @@ def start_front(
     blackout: VideoBlackout | None = None,
     selector: DisplaySelector | None = None,
     keypad_matrix: MatrixKeyboard | None = None,
+    battery: BatteryMonitor | None = None,
 ) -> DisplayMode | None:
     """Run the single front matching `mode`; returns the mode taking over.
 
@@ -195,6 +196,7 @@ def start_front(
             state, speech, blackout=blackout,
             apply_video=make_video_applier(mode, blackout, selector),
             keypad_matrix=keypad_matrix,
+            battery=battery,
         ).run()
 
     if mode == DisplayMode.LCD:
@@ -204,6 +206,7 @@ def start_front(
             state, speech, blackout=blackout,
             apply_video=make_video_applier(mode, blackout, selector),
             keypad_matrix=keypad_matrix,
+            battery=battery,
         ).run()
 
     # Audio-only has no screen to switch off: the blackout does not reach it.
@@ -223,6 +226,7 @@ def run_mode(
     speech: SpeechService | None = None,
     selector: DisplaySelector | None = None,
     keypad_matrix: str = "off",
+    simulate_battery: float | None = None,
 ) -> int:
     """Run fronts until the user quits, swapping when the video output changes.
 
@@ -247,14 +251,16 @@ def run_mode(
     # Monitor de bateria do UPS HAT (RF-06/RF-14): uma thread por execução, presa
     # à MESMA voz de todos os fronts, para o alerta crítico cortar qualquer áudio.
     # Só arranca com hardware real (I2C + i2c-tools); fora do Pi não lê nada.
-    battery = start_battery_monitor(speech)
+    battery = start_battery_monitor(speech, simulate_battery)
 
     matrix = open_keypad_matrix(keypad_matrix)
     try:
         next_mode: DisplayMode | None = mode
         while next_mode is not None:
             point_x_at(next_mode, blackout)
-            next_mode = start_front(next_mode, state, speech, blackout, selector, matrix)
+            next_mode = start_front(
+                next_mode, state, speech, blackout, selector, matrix, battery=battery,
+            )
     finally:
         # Todas as 13 GPIOs de volta a entrada sem bias, também em exceção,
         # Ctrl+C ou SIGTERM/SIGHUP (install_exit_signals).
@@ -266,14 +272,31 @@ def run_mode(
     return 0
 
 
-def start_battery_monitor(speech: SpeechService) -> BatteryMonitor | None:
+def start_battery_monitor(
+    speech: SpeechService, simulate: float | None = None,
+) -> BatteryMonitor | None:
     """Liga a vigilância da bateria quando há UPS HAT para ler, senão None.
 
     Fora do Raspberry Pi (sem barramento I2C ou sem `i2cget`) não há o que
     monitorar: devolve None e o resto do app corre igual. O limite de bateria
     baixa e os intervalos vêm de `accessibility/battery_alert.py` (constantes +
     variáveis de ambiente), fáceis de ajustar depois.
+
+    `simulate` (percentagem inicial, de --simulate-battery) troca o UPS real por
+    um falso que descarrega a cada leitura, para testar o aviso no PC. A leitura
+    fica mais frequente (CALC_UPS_SIM_INTERVAL_S, 2 s por padrão) para o aviso
+    chegar em segundos, e não em minutos.
     """
+    if simulate is not None:
+        step = float(os.environ.get("CALC_UPS_SIM_STEP", "1"))
+        interval = float(os.environ.get("CALC_UPS_SIM_INTERVAL_S", "2"))
+        monitor = BatteryMonitor(speech, SimulatedUps(simulate, step=step), interval=interval)
+        monitor.start()
+        logger.warning(
+            "Bateria SIMULADA: começa em %.0f%% e desce %.0f ponto(s) a cada %.0f s.",
+            simulate, step, interval,
+        )
+        return monitor
     ups = UpsMonitor(low_percent=None)
     if not ups.available():
         logger.info("UPS HAT não detectado (sem I2C/i2cget); monitor de bateria desligado.")
@@ -308,6 +331,18 @@ def install_exit_signals() -> None:
         sig = getattr(signal, name, None)
         if sig is not None:
             signal.signal(sig, _exit)
+
+
+def _env_float(name: str) -> float | None:
+    """Valor numérico de uma variável de ambiente, ou None se ausente/ilegível."""
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning("%s=%r não é um número; ignorado.", name, raw)
+        return None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -345,6 +380,17 @@ def build_parser() -> argparse.ArgumentParser:
             "Teclado fisico (matriz 6x7 por GPIO): auto = usa quando o "
             "gpiochip0 do Raspberry Pi 4 estiver disponivel, off = nunca "
             "toca em GPIO. Padrao: auto."
+        ),
+    )
+    parser.add_argument(
+        "--simulate-battery",
+        type=float,
+        metavar="PERCENT",
+        default=_env_float("CALC_SIMULATE_BATTERY"),
+        help=(
+            "Simula a bateria do UPS HAT (sem hardware), comecando em PERCENT e "
+            "descendo 1 ponto a cada 2 s, para testar o aviso de bateria baixa "
+            "(20%%) e no fim (10%%) fora do Raspberry Pi. Ex.: --simulate-battery 23."
         ),
     )
     parser.add_argument(
@@ -440,7 +486,12 @@ def main(argv: list[str] | None = None) -> int:
     # Relighting after a blackout re-runs detection, unless the mode was forced.
     relight_selector = None if args.force_mode else (selector or DisplaySelector())
     install_exit_signals()
-    return run_mode(mode, selector=relight_selector, keypad_matrix=args.keypad_matrix)
+    return run_mode(
+        mode,
+        selector=relight_selector,
+        keypad_matrix=args.keypad_matrix,
+        simulate_battery=args.simulate_battery,
+    )
 
 
 if __name__ == "__main__":
