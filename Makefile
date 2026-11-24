@@ -26,7 +26,7 @@
 #   make rpi-img CONTINUE=1   # reaproveita o rootfs de .work/ e refaz só o .img
 #   make rpi-img-continue     # atalho para o comando acima
 #   make rpi-img-clean        # apaga só .work/ (preserva o .img)
-#   make rpi-img-distclean    # apaga .work/ E o .img gerado
+#   make rpi-img-distclean    # apaga .work/ E o .img gerado, e limpa caches do sistema
 #   make rpi-vm-remove        # (Windows) apaga a VM de build e libera o disco
 #
 # A voz neural (Piper) precisa de um wheel musl/aarch64 (não existe no PyPI —
@@ -170,12 +170,25 @@ else
 	@ls -lh $(RPI_IMG_DIR)/*.img 2>/dev/null || echo "  (nenhum .img nesta pasta)"
 endif
 
-rpi-img-distclean: ## Apaga .work/ E o .img gerado (perde a imagem — use com cuidado)
+rpi-img-distclean: ## Apaga .work/ E o .img gerado (perde a imagem — use com cuidado) e limpa caches do sistema
 ifeq ($(OS),Windows_NT)
 	$(RPI_IMG_PS) -Action distclean
 else
 	sudo rm -rf $(RPI_IMG_DIR)/.work
 	rm -f $(RPI_IMG_DIR)/*.img $(RPI_IMG_DIR)/build.log
+	@# Limpeza do SISTEMA (não só do projeto): o volume / da máquina de build
+	@# encheu durante um build. Remove só o que se recupera sozinho: o cache de
+	@# pacotes do apt, logs antigos do journal e as revisões DESATIVADAS dos
+	@# snaps (a revisão em uso fica). Cada passo só roda se a ferramenta existir,
+	@# e uma falha não interrompe os outros.
+	@echo "==> Limpando caches do sistema (apt, journal, revisões antigas de snaps)"
+	@if command -v apt-get >/dev/null 2>&1; then sudo apt-get clean || true; fi
+	@if command -v journalctl >/dev/null 2>&1; then sudo journalctl --vacuum-size=100M || true; fi
+	@if command -v snap >/dev/null 2>&1; then \
+		sudo snap list --all | awk '/disabled/{print $$1, $$3}' | \
+		while read n r; do sudo snap remove "$$n" --revision="$$r" || true; done; \
+	fi
+	@df -h / | tail -1
 endif
 
 rpi-vm-remove: ## (Windows) Apaga a VM VirtualBox de build e libera o disco
