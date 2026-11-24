@@ -22,16 +22,26 @@ set -euo pipefail
 
 VOICE_NAME="pt_BR-cadu-medium"
 # rhasspy/piper-voices (HuggingFace): pt / pt_BR / cadu / medium.
-BASE_URL="${PIPER_VOICE_BASE_URL:-https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium}"
+#
+# Baixa de uma REVISÃO FIXA, e não de `main`. O `main` é móvel: em 2026-11-09 a
+# origem retreinou a cadu ("Retrain voices from the rdh and hifi_tts_92 bases")
+# e em 2026-11-17 mudou a config ("Add phoneme_counts to 47 retrained voice
+# configs"). Com `main`, os hashes fixados abaixo deixaram de conferir e o build
+# STRICT=1 da imagem quebrou, sem a voz estar corrompida. Fixar a revisão faz o
+# download e o hash andarem juntos: um retreino futuro na origem não muda nada
+# aqui até alguém atualizar os dois de propósito.
+CADU_REVISION="${CADU_REVISION:-0ca208afc2a2ee102b1e961e72e0a7e4907be3d0}"
+BASE_URL="${PIPER_VOICE_BASE_URL:-https://huggingface.co/rhasspy/piper-voices/resolve/${CADU_REVISION}/pt/pt_BR/cadu/medium}"
 
-# sha256 fixo da voz. Obtidos do rhasspy/piper-voices (HuggingFace) em
-# 2026-09-30, baixando os dois arquivos e conferindo o hash; é o que torna o
-# build reprodutível e o que STRICT=1 (imagem) exige. Env tem prioridade, para
-# quem precise apontar para outra cópia da voz.
-#   pt_BR-cadu-medium.onnx       61 MB
-#   pt_BR-cadu-medium.onnx.json   5 KB
-CADU_ONNX_SHA256="${CADU_ONNX_SHA256:-765f0809a6ea9035d4a6d0d008dbf8876e68b2dd32029312672fa8f405bdb535}"
-CADU_JSON_SHA256="${CADU_JSON_SHA256:-5fe03aa3d4901880554905b12075713cd552598c8a350455a1ec73f8b4e6be19}"
+# sha256 fixo da voz NA REVISÃO ACIMA, conferidos em 2026-11-24 contra o hash
+# LFS publicado pela origem e baixando os arquivos. É o que torna o build
+# reprodutível e o que STRICT=1 (imagem) exige. Env tem prioridade, para quem
+# precise apontar para outra cópia da voz.
+#   pt_BR-cadu-medium.onnx       63 221 984 bytes (retreino de 2026-11-09)
+#   pt_BR-cadu-medium.onnx.json   6 256 bytes
+# Para atualizar a voz: trocar CADU_REVISION e os DOIS hashes juntos.
+CADU_ONNX_SHA256="${CADU_ONNX_SHA256:-d5a662e3f606d5a49dd29ba9ce90c304ae45dd9543f8b0c773bcb0de282499de}"
+CADU_JSON_SHA256="${CADU_JSON_SHA256:-28c27ae86debf5e304176c5be533bbb3a483e456f42272eeb7dbfede48dae741}"
 
 DEST_DIR="${1:-/opt/piper/voices}"
 STRICT="${STRICT:-0}"
