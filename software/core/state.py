@@ -26,10 +26,12 @@ class CalculatorState:
             return None
         if token == "DEL":
             # List of function identifiers that should be deleted as a single block
-            # They all end with '(' as per the button definitions in app.py
+            # Function tokens end with '(' as per the button definitions in app.py;
+            # nCr/nPr são INFIXOS (" nCr ", sem parênteses) e também têm de sair
+            # de uma vez - apagar só o "r" deixaria " nC " na expressão.
             prefixes = [
                 "polar(", "rect(", "sen(", "asin(", "cos(", "acos(", "tan(", "atan(",
-                "log(", "ln(", "logbase(", "inv(", "sqrt(", "ncr(", "npr(", "exp(", "nCr(", "nPr("
+                "log(", "ln(", "logbase(", "inv(", "sqrt(", "exp(", " nCr ", " nPr "
             ]
             for p in prefixes:
                 if self.expression.endswith(p):

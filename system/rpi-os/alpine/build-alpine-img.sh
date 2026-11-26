@@ -451,6 +451,16 @@ apply_overlay_and_app() {
     # Copia tudo de overlay/ preservando a árvore (home/, etc/, boot/).
     cp -a "${OVERLAY_DIR}/." "${ROOTFS}/"
 
+    # i2c-dev no arranque (UPS HAT, aviso de bateria WRN-020). No kernel do
+    # linux-rpi o i2c-dev é MÓDULO, e o dtparam=i2c_arm=on só liga o
+    # controlador: sem o módulo, /dev/i2c-1 nunca é criado, o i2cget não tem
+    # por onde ler e o monitor de bateria conclui que não há UPS - em silêncio.
+    # O serviço `modules` (runlevel boot) carrega o que estiver em /etc/modules.
+    # Fica AQUI, e não em configure_system, porque este passo corre também no
+    # REUSE_ROOTFS=1 (CONTINUE=1): um rootfs antigo também recebe a correção.
+    grep -qx 'i2c-dev' "${ROOTFS}/etc/modules" 2>/dev/null \
+        || echo 'i2c-dev' >> "${ROOTFS}/etc/modules"
+
     # Dono do home do kiosk e permissão de execução do .xinitrc.
     in_chroot "chown -R ${KIOSK_USER}:${KIOSK_USER} /home/${KIOSK_USER}"
     chmod 0755 "${ROOTFS}/home/${KIOSK_USER}/.xinitrc"

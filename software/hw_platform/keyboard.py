@@ -18,6 +18,10 @@ class KeyboardAdapter:
         # (atalho do histórico).
         "a": "Ans",
         "A": "Ans",
+        # A "?" existe na matriz 6x7 (SW25) e é a tecla de ajuda; no PC ela
+        # fica no mesmo caractere, para a ajuda ser exercitável em
+        # desenvolvimento como o "a" já faz pelo Ans.
+        "?": "HELP",
         ",": ",",
         "x": "*",
         "X": "*",

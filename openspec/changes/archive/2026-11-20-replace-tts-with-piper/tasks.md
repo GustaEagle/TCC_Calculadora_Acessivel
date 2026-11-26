@@ -42,3 +42,7 @@
 - [x] 6.3 Atualizar PRD §12, `software/README.md`, `docs/guias/build-img-linux.md` e `openspec/config.yaml`: TTS passa a "Piper (voz cadu), espeak-ng como fonemizador/fallback"; remover as afirmações de que a voz é pyttsx3/espeak. Verificar: `grep -rn pyttsx3 software docs openspec` só aparece em contexto histórico/arquivado.
 - [x] 6.4 Rodar a suíte completa e revisar o diff. Verificar: `python -m unittest discover -s software/tests -v` verde; nenhum consumidor de voz (`app.py`, fronts, `audio_only.py`, `video_watch.py`) alterado.
 - [x] 6.5 Decidir (fora desta mudança) se o apk `espeak-ng` do sistema é removido depois da validação. Verificar: decisão registrada; se mantido, justificativa do fallback anotada.
+
+---
+
+> **Arquivada com 9 tarefas por executar.** As tarefas deixadas sem marca acima são verificações manuais no hardware (Raspberry Pi), e **não foram executadas** antes do arquivamento, a pedido da equipe. Não foram marcadas como feitas para o registo não afirmar o que ninguém mediu. Se alguma falhar quando for testada, reabra uma change nova em vez de editar esta.

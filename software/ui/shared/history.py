@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from software.ui.shared.speech_text import spoken_expression, spoken_number
+
 
 def recent_entries(history: Sequence, limit: int) -> list:
     """Últimos cálculos BEM-SUCEDIDOS, do mais recente para o mais antigo."""
@@ -19,8 +21,16 @@ def recent_entries(history: Sequence, limit: int) -> list:
 
 
 def spoken_history(entries: Sequence) -> str:
-    """Frase única anunciada por voz para as entradas já selecionadas."""
+    """Frase única anunciada por voz para as entradas já selecionadas.
+
+    Expressão e valor passam pela mesma conversão falada dos fronts, para os
+    decimais serem lidos com "ponto" aqui também (§2) - sem isto o histórico
+    diria "um dois igual a zero cinco" em vez de "um ponto dois...".
+    """
     if not entries:
         return "Histórico vazio. Nenhuma operação realizada."
-    itens = ". ".join(f"{entry.expression} igual a {entry.display}" for entry in entries)
+    itens = ". ".join(
+        f"{spoken_expression(entry.expression)} igual a {spoken_number(entry.display)}"
+        for entry in entries
+    )
     return f"Histórico. {len(entries)} operações. {itens}"

@@ -106,7 +106,24 @@ build_chroot() {
     fi
 
     install -Dm755 "$(qemu_static_path)" "${rootfs}/usr/bin/qemu-aarch64-static"
-    cp -f /etc/resolv.conf "${rootfs}/etc/resolv.conf"
+    # DNS no chroot: o /etc/resolv.conf do host costuma ser o stub do
+    # systemd-resolved (nameserver 127.0.0.53), instável aqui dentro — o clone do
+    # git do Piper cai com "Could not resolve host / Timeout while contacting DNS
+    # servers". Preferimos os servidores REAIS do systemd (em
+    # /run/systemd/resolve/resolv.conf) e garantimos resolvers públicos como
+    # fallback. Sobrescreva com DNS_SERVERS="1.1.1.1 8.8.8.8".
+    {
+        if [ -n "${DNS_SERVERS:-}" ]; then
+            for ns in ${DNS_SERVERS}; do printf 'nameserver %s\n' "${ns}"; done
+        elif [ -r /run/systemd/resolve/resolv.conf ]; then
+            grep -E '^nameserver' /run/systemd/resolve/resolv.conf
+        else
+            grep -E '^nameserver' /etc/resolv.conf 2>/dev/null | grep -v '127.0.0.53' || true
+        fi
+        # fallback público (resolv.conf usa só os 3 primeiros), para um stub ou
+        # servidor flaky não ser a única opção dentro do chroot.
+        printf 'nameserver 1.1.1.1\nnameserver 8.8.8.8\n'
+    } > "${rootfs}/etc/resolv.conf"
     printf '%s/%s/main\n%s/%s/community\n' "${MIRROR}" "${ALPINE_BRANCH}" "${MIRROR}" "${ALPINE_BRANCH}" \
         > "${rootfs}/etc/apk/repositories"
 

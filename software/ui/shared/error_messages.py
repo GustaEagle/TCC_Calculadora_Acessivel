@@ -17,12 +17,25 @@ ERROR_MESSAGES: dict[str, str] = {
     "ERR-008": "Expressão incompleta.",
     "ERR-009": "Dados insuficientes ou inválidos para a conversão.",
     "WRN-010": "Não há resposta anterior.",
+    # Bateria do UPS HAT (accessibility/battery_alert.py). A voz acrescenta a
+    # carga ("Bateria baixa, 18 por cento") e tem um nível mais urgente, "no
+    # fim", com o MESMO código: mesmo código, mesmo significado (RF-07).
+    "WRN-020": "Bateria baixa. Conecte o carregador.",
 }
 
 
+# Códigos ERR-xxx que o §13 classifica como P2. O prefixo do código NÃO decide
+# a prioridade sozinho: o ERR-008 (entrada incompleta) é ERR-xxx mas P2, e a
+# tabela do §13 manda falá-lo como «Aviso 008. Expressão incompleta.» - dizer
+# "Erro" ali exageraria a gravidade para quem só tem o áudio (RF-04/RF-07).
+_P2_ERROR_CODES = frozenset({"ERR-008"})
+
+
 def spoken_priority_prefix(code: str) -> str:
-    """PRD §13: ERR-xxx codes are P1 ("Erro"), WRN-xxx codes are P2 ("Aviso")."""
-    return "Erro" if code.startswith("ERR") else "Aviso"
+    """PRD §13: "Erro" para os códigos P1, "Aviso" para os P2."""
+    if code in _P2_ERROR_CODES or not code.startswith("ERR"):
+        return "Aviso"
+    return "Erro"
 
 
 def friendly_message(code: str, fallback: str) -> str:

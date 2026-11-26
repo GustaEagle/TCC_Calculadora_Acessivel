@@ -16,6 +16,7 @@ from software.core import CalculatorState
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
 from software.ui.shared.keypad import spoken_token
+from software.ui.shared.speech_text import spoken_result
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +74,11 @@ class AudioOnlyCalculator:
 
     def announce(self, result) -> None:
         if result.ok:
-            message = f"Resultado {result.display}"
-            print(message)
-            self.speech.interrupt_and_say(message)
+            # Mesma leitura de resultado dos fronts visuais (spoken_result): par
+            # pela leitura de pares, escalar com a "vírgula" falada. O texto
+            # impresso mantém o valor cru.
+            print(f"Resultado {result.display}")
+            self.speech.interrupt_and_say(f"Resultado {spoken_result(result)}")
             return
 
         # Same code and priority prefix the visual fronts use (PRD §13).
@@ -87,8 +90,12 @@ class AudioOnlyCalculator:
         )
 
     def announce_token(self, token: str) -> None:
-        """Announce a single key press (used when driven key-by-key)."""
-        self.speech.say(spoken_token(token))
+        """Announce a single key press (used when driven key-by-key).
+
+        Usa interrupt_and_say: cada nova tecla corta a fala da anterior e anuncia
+        só a si mesma, sem fila acumulada (RF-08) - o mesmo contrato dos fronts.
+        """
+        self.speech.interrupt_and_say(spoken_token(token))
 
 
 def main() -> None:

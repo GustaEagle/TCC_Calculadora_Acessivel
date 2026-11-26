@@ -16,6 +16,8 @@ Ver `openspec/changes/replace-tts-with-piper/design.md` (D1–D9).
 from __future__ import annotations
 
 import io
+import itertools
+import math
 import json
 import logging
 import os
@@ -26,9 +28,24 @@ import threading
 import wave
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Protocol
+import array
+from typing import Callable, Iterable, Iterator, Protocol
 
 logger = logging.getLogger(__name__)
+
+# Níveis de prioridade do áudio (menor número = mais importante). A ordem segue
+# o PRD/pedido: alerta crítico de bateria > feedback de volume/configuração >
+# feedback de comandos e leitura de resultados (estes dois partilham o nível
+# "normal", onde o contrato temporal de interrupção já existente - um resultado
+# substitui a leitura de teclas ainda na fila - decide a ordem). Um nível mais
+# importante nunca é interrompido nem escondido por um menos importante.
+PRIORITY_CRITICAL = 0  # alerta de bateria baixa
+PRIORITY_CONFIG = 1    # volume / configuração
+PRIORITY_NORMAL = 2    # comandos, resultados e demais mensagens
+_NUM_PRIORITY_TIERS = 3
+
+# Prioridade do sentinela de parada: abaixo de tudo, para o worker encerrar já.
+_PRIORITY_STOP = -1
 
 # Nome do arquivo da voz cadu; o `.onnx.json` é o irmão de mesmo nome. A voz é
 # embutida na imagem (offline) ou baixada no Docker/host (download-voice.sh).
@@ -49,6 +66,100 @@ DEFAULT_ONNX_THREADS = int(os.environ.get("CALC_PIPER_THREADS", "2"))
 
 # Binários do sistema (sobrescritíveis para teste — ver `tts-fake-aplay-testing`).
 _APLAY = os.environ.get("CALC_APLAY", "aplay")
+
+# Silêncio no início de TODA frase (T01). O dispositivo de saída é aberto a frio
+# a cada frase, e saídas HDMI descartam os primeiros milissegundos de um fluxo:
+# o "limpar tudo" chegava como "impa tudo", sem o primeiro fonema, com o texto
+# certo. 120 ms é o valor de partida; o definitivo sai da medição no Pi. Zero
+# desliga.
+LEADING_SILENCE_MS = 120
+
+# Aparar o silêncio que o Piper deixa no FIM de cada frase do cache, para os
+# pedaços concatenados de um resultado ("Resultado", "vírgula", dígitos) não
+# ficarem separados por pausas longas. Mantém uma cauda curta.
+_TRIM_KEEP_MS = 40
+_TRIM_THRESHOLD = 300  # amplitude S16 abaixo da qual a amostra conta como silêncio
+
+# Maior sequência de palavras procurada no cache ao dividir uma frase
+# ("e y igual a" tem 4).
+_MAX_CACHED_WORDS = 4
+
+
+# Sinal sonoro antes de um alerta (bipes), para chamar a atenção antes da frase.
+# Viaja no próprio texto da mensagem como um prefixo de caracteres BEL ("\a"),
+# um por bipe: assim a fila, a prioridade e a interrupção (RF-08) continuam
+# exatamente as mesmas - quem toca é que reconhece o prefixo e gera o tom.
+TONE_MARK = "\a"
+_TONE_AMPLITUDE = 0.35   # fração do volume máximo: audível sem assustar
+_TONE_FADE_MS = 6        # rampa nas pontas, para o bipe não estalar
+
+
+def tone_prefix(beeps: int) -> str:
+    """Prefixo que pede `beeps` bipes antes da frase (0 = nenhum)."""
+    return TONE_MARK * max(0, int(beeps))
+
+
+def split_tone(text: str) -> tuple[int, str]:
+    """(número de bipes pedidos, texto sem o prefixo)."""
+    stripped = text.lstrip(TONE_MARK)
+    return len(text) - len(stripped), stripped
+
+
+def alert_tone(beeps: int, sample_rate: int) -> bytes:
+    """PCM S16LE mono com `beeps` bipes curtos.
+
+    Dois bipes graves para "bateria baixa"; três ou mais ficam mais agudos e
+    mais rápidos, para "bateria no fim" soar mais urgente. Gerado na hora, sem
+    arquivo de áudio: funciona igual no PC e no Pi.
+    """
+    if beeps <= 0:
+        return b""
+    urgent = beeps >= 3
+    frequency = 1175.0 if urgent else 880.0        # Ré6 / Lá5
+    beep_ms = 110 if urgent else 160
+    gap_ms = 70 if urgent else 110
+    beep_len = int(sample_rate * beep_ms / 1000)
+    fade = max(1, int(sample_rate * _TONE_FADE_MS / 1000))
+    peak = _TONE_AMPLITUDE * 32767
+    beep = array.array("h")
+    for i in range(beep_len):
+        envelope = min(1.0, i / fade, (beep_len - 1 - i) / fade)
+        beep.append(int(peak * envelope * math.sin(2 * math.pi * frequency * i / sample_rate)))
+    gap = b"\x00\x00" * int(sample_rate * gap_ms / 1000)
+    return gap.join([beep.tobytes()] * beeps) + gap
+
+
+def _silence(ms: int, sample_rate: int) -> bytes:
+    """PCM S16LE mono nulo com a duração pedida."""
+    return b"\x00\x00" * int(sample_rate * ms / 1000)
+
+
+def _trim_trailing_silence(pcm: bytes, sample_rate: int) -> bytes:
+    """Remove o silêncio do fim do PCM, deixando _TRIM_KEEP_MS de cauda."""
+    samples = array.array("h")
+    samples.frombytes(pcm[: len(pcm) // 2 * 2])
+    end = len(samples)
+    while end > 0 and abs(samples[end - 1]) < _TRIM_THRESHOLD:
+        end -= 1
+    if end == 0:
+        return pcm  # tudo silêncio: não é um caso a aparar
+    keep = min(len(samples), end + int(sample_rate * _TRIM_KEEP_MS / 1000))
+    return samples[:keep].tobytes()
+
+
+def _resample(pcm: bytes, source_rate: int, target_rate: int) -> bytes:
+    """Reamostragem simples (vizinho mais próximo) para um pedaço com outra taxa.
+
+    Só acontece quando um pedaço cai no fallback espeak-ng a meio de uma frase
+    tocada pelo Piper; um único aplay tem uma única taxa.
+    """
+    if source_rate == target_rate:
+        return pcm
+    samples = array.array("h")
+    samples.frombytes(pcm[: len(pcm) // 2 * 2])
+    count = int(len(samples) * target_rate / source_rate)
+    ratio = source_rate / target_rate
+    return array.array("h", (samples[int(i * ratio)] for i in range(count))).tobytes()
 _ESPEAK = os.environ.get("CALC_ESPEAK", "espeak-ng")
 _ESPEAK_VOICE = "pt-br"
 
@@ -58,6 +169,7 @@ class SpeechMessage:
     text: str
     interrupt: bool = False
     generation: int = 0
+    priority: int = PRIORITY_NORMAL
 
 
 class SpeakProcess(Protocol):
@@ -69,10 +181,22 @@ class SpeakProcess(Protocol):
     def terminate(self) -> None: ...
 
 
+# Valores de CALC_PIPER_VOICE que DESLIGAM a voz neural (fica o espeak-ng).
+# Os testes usam isto para nunca carregarem a voz instalada na máquina: com a
+# cadu em ~/.local/share/piper/voices, cada SpeechService dos testes carregava o
+# modelo de 60 MB e sintetizava o cache inteiro, e a suíte passava de 4 s a 5 min.
+_VOICE_OFF_VALUES = frozenset({"off", "none", "0", "false"})
+
+
 def _resolve_voice_path() -> Path | None:
-    """Primeiro `.onnx` da cadu encontrado (env tem prioridade), ou None."""
+    """Primeiro `.onnx` da cadu encontrado (env tem prioridade), ou None.
+
+    `CALC_PIPER_VOICE=off` desliga a voz neural de propósito.
+    """
     candidates: list[Path] = []
     env = os.environ.get("CALC_PIPER_VOICE")
+    if env and env.strip().lower() in _VOICE_OFF_VALUES:
+        return None
     if env:
         candidates.append(Path(env))
     candidates.extend(Path(d) / DEFAULT_VOICE_NAME for d in _VOICE_SEARCH_DIRS)
@@ -228,8 +352,12 @@ class _RawPlaybackProcess:
     começar, a reprodução é simplesmente descartada.
     """
 
-    def __init__(self, produce: Callable[[], tuple[bytes, int]]) -> None:
-        # produce() -> (pcm_bytes, sample_rate); roda na thread do start().
+    def __init__(
+        self,
+        produce: Callable[[], tuple[bytes, int] | Iterable[tuple[bytes, int]]],
+    ) -> None:
+        # produce() -> (pcm, sample_rate), ou um iterável de pedaços (pcm, rate)
+        # na ordem da frase. Roda fora da thread do chamador.
         self._produce = produce
         self._proc: subprocess.Popen | None = None
         self._thread: threading.Thread | None = None
@@ -241,33 +369,86 @@ class _RawPlaybackProcess:
         self._thread = threading.Thread(target=self._run, name="tts-play", daemon=True)
         self._thread.start()
 
+    def _chunks(self) -> Iterator[tuple[bytes, int]]:
+        """Pedaços da frase, na ordem. Um iterável é consumido numa thread à
+        parte, para a síntese dos pedaços seguintes correr ENQUANTO os primeiros
+        tocam (T04); uma tupla única é a frase inteira, como antes."""
+        result = self._produce()
+        if isinstance(result, tuple):
+            yield result
+            return
+        pieces: queue.Queue = queue.Queue()
+        done = object()
+
+        def pump() -> None:
+            try:
+                for piece in result:
+                    if self._terminated.is_set():
+                        break
+                    pieces.put(piece)
+            except Exception:
+                logger.exception("Falha ao produzir um pedaço da fala")
+            finally:
+                pieces.put(done)
+
+        threading.Thread(target=pump, name="tts-synth", daemon=True).start()
+        while True:
+            piece = pieces.get()
+            if piece is done:
+                return
+            yield piece
+
     def _run(self) -> None:
+        proc: subprocess.Popen | None = None
+        sample_rate = _CADU_SAMPLE_RATE
         try:
             if self._terminated.is_set():
                 return
-            pcm, sample_rate = self._produce()
-            if self._terminated.is_set() or not pcm:
-                return
-            cmd = [_APLAY, "-q", "-t", "raw", "-f", "S16_LE", "-c", "1",
-                   "-r", str(sample_rate), "-"]
-            kwargs = dict(
-                stdin=subprocess.PIPE,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            if hasattr(os, "setsid"):
-                kwargs["start_new_session"] = True  # grupo próprio: terminate() só mata o aplay
-            with self._lock:
+            for pcm, chunk_rate in self._chunks():
                 if self._terminated.is_set():
                     return
-                self._proc = subprocess.Popen(cmd, **kwargs)
-            try:
-                self._proc.communicate(pcm)
-            except (BrokenPipeError, OSError):
-                pass  # aplay morto (terminate) no meio da escrita
+                if not pcm:
+                    continue
+                if proc is None:
+                    # UM aplay por frase, aberto com o primeiro pedaço pronto:
+                    # reabrir o dispositivo a cada pedaço reintroduziria o
+                    # corte do início que o silêncio inicial evita.
+                    sample_rate = chunk_rate
+                    cmd = [_APLAY, "-q", "-t", "raw", "-f", "S16_LE", "-c", "1",
+                           "-r", str(sample_rate), "-"]
+                    kwargs = dict(
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    if hasattr(os, "setsid"):
+                        kwargs["start_new_session"] = True  # grupo próprio: terminate() só mata o aplay
+                    with self._lock:
+                        if self._terminated.is_set():
+                            return
+                        proc = subprocess.Popen(cmd, **kwargs)
+                        self._proc = proc
+                    # O silêncio entra UMA vez, no início da frase.
+                    pcm = _silence(LEADING_SILENCE_MS, sample_rate) + pcm
+                else:
+                    pcm = _resample(pcm, chunk_rate, sample_rate)
+                try:
+                    proc.stdin.write(pcm)
+                    proc.stdin.flush()
+                except (BrokenPipeError, OSError, ValueError):
+                    return  # aplay morto (terminate) no meio da escrita
         except Exception:
             logger.exception("Falha ao reproduzir áudio")
         finally:
+            if proc is not None:
+                try:
+                    proc.stdin.close()
+                except (BrokenPipeError, OSError, ValueError):
+                    pass
+                try:
+                    proc.wait()
+                except OSError:
+                    pass
             self._done.set()
 
     def join(self, timeout: float | None = None) -> None:
@@ -297,6 +478,21 @@ class _RawPlaybackProcess:
                 except OSError:
                     pass
         self._done.set()
+
+
+def _pronounced(text: str) -> str:
+    """Texto entregue ao motor, com o dicionário de pronúncia (T01) aplicado.
+
+    Um ponto ÚNICO, usado pela síntese na hora, pelo aquecimento do cache e pelo
+    fallback espeak-ng - assim a correção vale igual nos três. A chave do cache
+    continua a ser o texto original. Import tardio de `ui.shared`, como em
+    default_fixed_phrases: sem o catálogo, o texto segue inalterado.
+    """
+    try:
+        from software.ui.shared.keypad import tts_text
+    except Exception:
+        return text
+    return tts_text(text)
 
 
 def default_fixed_phrases() -> list[str]:
@@ -334,6 +530,12 @@ def default_fixed_phrases() -> list[str]:
         "Controle ativo", "Controle desativado",
         "Shift ativo", "Shift desativado",
         "Histórico fechado", "Substituindo",
+        "Expressão vazia",
+        # Pedaços dos resultados (T04): o prefixo e os rótulos dos pares saem do
+        # cache, e só os cardinais vão à síntese. Os dígitos, "vírgula",
+        # "ponto e vírgula" e "menos" já entram pelos nomes de tecla acima.
+        "Resultado", "Última resposta:",
+        "x igual a", "e y igual a", "real", "ângulo",
     ])
     seen: set[str] = set()
     unique: list[str] = []
@@ -376,8 +578,16 @@ class SpeechService:
     """Fila de TTS não-bloqueante, offline em pt-BR, com interrupção (RF-08).
 
     Por baixo usa um `PiperEngine` residente + cache de frases fixas + fallback
-    espeak-ng. A fila, o `_Generation` e a API pública são preservados.
+    espeak-ng. A fila, o `_Generation` e a API pública são preservados; o único
+    acréscimo é o parâmetro opcional `priority` em `say`/`interrupt_and_say` (e o
+    atalho `alert`), que faz um áudio importante ter precedência sobre um menos
+    importante sem nunca ser cortado por ele.
     """
+
+    # Reexpostos na classe para quem chama não precisar importar as constantes.
+    CRITICAL = PRIORITY_CRITICAL
+    CONFIG = PRIORITY_CONFIG
+    NORMAL = PRIORITY_NORMAL
 
     def __init__(
         self,
@@ -406,17 +616,90 @@ class SpeechService:
                 phrases = fixed_phrases if fixed_phrases is not None else default_fixed_phrases()
                 self._start_cache_warm(phrases)
 
-        self._queue: queue.Queue[SpeechMessage | None] = queue.Queue()
+        # Fila de PRIORIDADE: itens (priority, seq, message). O `seq` monotónico
+        # desempata dentro do mesmo nível (ordem de chegada) e evita comparar
+        # SpeechMessage. Uma mensagem crítica (bateria) é sempre servida antes de
+        # uma normal mesmo que tenha entrado depois.
+        self._queue: queue.PriorityQueue = queue.PriorityQueue()
+        self._seq = itertools.count()  # next() é atómico no CPython (GIL)
         self._current_process: SpeakProcess | None = None
+        # Prioridade do que está tocando agora (None quando ocioso): decide se um
+        # pedido de interrupção pode cortar a reprodução atual.
+        self._active_priority: int | None = None
         self._process_lock = threading.Lock()
-        self._generation = _Generation()
+        # Uma geração por nível: interromper um nível invalida só as mensagens
+        # pendentes daquele nível (e menos importantes), nunca as mais críticas.
+        self._generations = [_Generation() for _ in range(_NUM_PRIORITY_TIERS)]
         self._thread = threading.Thread(target=self._worker, daemon=True)
         self._thread.start()
 
     # --- motor + cache + fallback --------------------------------------------
 
     def _default_factory(self, text: str) -> SpeakProcess:
-        return _RawPlaybackProcess(lambda: self._produce(text))
+        return _RawPlaybackProcess(lambda: self._produce_chunks(text))
+
+    def _segments(self, text: str) -> list[tuple[bool, str]]:
+        """Divide a frase em (vem_do_cache, texto), na ordem.
+
+        Procura no cache a MAIOR sequência de palavras a partir de cada posição
+        ("e y igual a" antes de "e"); o que não está no cache é juntado em
+        trechos contíguos, sintetizados de uma vez para não estragar a prosódia
+        dos cardinais. Uma palavra com pontuação final ("5,") também casa sem
+        ela, para os rótulos e dígitos dos pares saírem do cache.
+        """
+        words = text.split()
+        segments: list[tuple[bool, str]] = []
+        pending: list[str] = []
+        index = 0
+        while index < len(words):
+            found = None
+            for size in range(min(_MAX_CACHED_WORDS, len(words) - index), 0, -1):
+                phrase = " ".join(words[index:index + size])
+                for candidate in (phrase, phrase.rstrip(",.:;")):
+                    if candidate and candidate in self._cache:
+                        found = (candidate, size)
+                        break
+                if found:
+                    break
+            if found is None:
+                pending.append(words[index])
+                index += 1
+                continue
+            if pending:
+                segments.append((False, " ".join(pending)))
+                pending = []
+            segments.append((True, found[0]))
+            index += found[1]
+        if pending:
+            segments.append((False, " ".join(pending)))
+        return segments
+
+    def _produce_chunks(self, text: str) -> Iterator[tuple[bytes, int]]:
+        """Pedaços (pcm, rate) da frase, gerados preguiçosamente (T04).
+
+        Frase inteira no cache, ou motor ainda não pronto: um pedaço só, pelo
+        caminho de sempre. Caso contrário, o que está no cache sai dele sem
+        síntese (o prefixo "Resultado", "vírgula" e os dígitos da parte
+        fracionária, lida dígito a dígito) e só o resto vai ao Piper - assim a
+        fala começa antes de a síntese do número terminar.
+        """
+        beeps, text = split_tone(text)
+        engine = self._engine
+        if beeps:
+            # O tom sai PRIMEIRO, na taxa da fala que vem a seguir; o processo
+            # de reprodução reamostra se a fala acabar noutra taxa (fallback).
+            rate = engine.sample_rate if engine is not None and engine.is_ready else _CADU_SAMPLE_RATE
+            yield alert_tone(beeps, rate), rate
+            if not text:
+                return
+        if engine is None or not engine.is_ready or text in self._cache:
+            yield self._produce(text)
+            return
+        for cached, piece in self._segments(text):
+            if cached:
+                yield self._cache[piece], self._cache_rate
+            else:
+                yield self._produce(piece)
 
     def _produce(self, text: str) -> tuple[bytes, int]:
         """(PCM, sample_rate) para a frase: cache, senão Piper, senão espeak-ng."""
@@ -426,7 +709,7 @@ class SpeechService:
             if cached is not None:
                 return cached, self._cache_rate
             try:
-                pcm = engine.synthesize(text)
+                pcm = engine.synthesize(_pronounced(text))
                 if pcm:
                     return pcm, engine.sample_rate
             except Exception:
@@ -435,7 +718,7 @@ class SpeechService:
             # Motor ausente ou com falha de carga: degradação real -> WRN-011.
             # (Enquanto o modelo ainda carrega é transitório e não avisa.)
             self._log_degraded_once()
-        return _espeak_pcm(text)
+        return _espeak_pcm(_pronounced(text))
 
     def _log_degraded_once(self) -> None:
         with self._degraded_lock:
@@ -465,61 +748,86 @@ class SpeechService:
             if not text or text in self._cache:
                 continue
             try:
-                pcm = engine.synthesize(text)
+                pcm = engine.synthesize(_pronounced(text))
                 if pcm:
-                    self._cache[text] = pcm
+                    self._cache[text] = _trim_trailing_silence(pcm, self._cache_rate)
             except Exception:
                 logger.exception("Falha ao pré-sintetizar '%s'", text)
         logger.info("Cache de voz aquecido: %d frases", len(self._cache))
 
     # --- API pública (inalterada) --------------------------------------------
 
-    def say(self, text: str) -> None:
+    def say(self, text: str, priority: int = PRIORITY_NORMAL) -> None:
+        """Enfileira uma fala, sem cortar nada (feedback incremental de teclas)."""
         if not text:
             return
-        self._queue.put(SpeechMessage(text=text, generation=self._generation.current()))
+        generation = self._generations[priority].current()
+        self._put(SpeechMessage(text=text, generation=generation, priority=priority), priority)
 
-    def interrupt_and_say(self, text: str) -> None:
+    def interrupt_and_say(self, text: str, priority: int = PRIORITY_NORMAL) -> None:
+        """Fala `text` já, descartando o que for de prioridade igual ou menor.
+
+        Invalida as mensagens pendentes dos níveis `priority` e menos importantes
+        (as mais importantes sobrevivem), e corta a reprodução atual só quando ela
+        não é mais importante do que este pedido. Assim um alerta crítico corta
+        tudo, mas um resultado nunca interrompe o alerta de bateria nem o volume.
+        """
         if not text:
             return
-        generation = self._generation.bump()
-        self._clear_queue()
         with self._process_lock:
-            if self._current_process is not None and self._current_process.is_alive():
+            # Invalida o nível pedido e todos os menos importantes (valor maior).
+            for tier in range(priority, _NUM_PRIORITY_TIERS):
+                self._generations[tier].bump()
+            generation = self._generations[priority].current()
+            if (
+                self._current_process is not None
+                and self._current_process.is_alive()
+                and self._active_priority is not None
+                and self._active_priority >= priority
+            ):
                 self._current_process.terminate()
-        self._queue.put(SpeechMessage(text=text, interrupt=True, generation=generation))
+        self._put(
+            SpeechMessage(text=text, interrupt=True, generation=generation, priority=priority),
+            priority,
+        )
+
+    def alert(self, text: str, beeps: int = 0) -> None:
+        """Áudio crítico (bateria baixa): corta e precede qualquer outro som.
+
+        `beeps` toca esse número de bipes antes da frase (sinal sonoro de
+        atenção). Bipes e frase são UMA mensagem: um novo alerta ou o fim do
+        programa cortam os dois juntos.
+        """
+        self.interrupt_and_say(tone_prefix(beeps) + text, priority=PRIORITY_CRITICAL)
 
     def stop(self) -> None:
         with self._process_lock:
             if self._current_process is not None and self._current_process.is_alive():
                 self._current_process.terminate()
-        self._queue.put(None)
+        self._queue.put((_PRIORITY_STOP, next(self._seq), None))
 
-    def _clear_queue(self) -> None:
-        while not self._queue.empty():
-            try:
-                self._queue.get_nowait()
-            except queue.Empty:
-                break
+    def _put(self, message: SpeechMessage, priority: int) -> None:
+        self._queue.put((priority, next(self._seq), message))
 
     def _worker(self) -> None:
         logger.debug("Speech worker thread started")
         while True:
-            message = self._queue.get()
+            _priority, _seq, message = self._queue.get()
             if message is None:
                 logger.debug("Received stop signal")
                 break
 
-            if self._generation.is_stale(message.generation):
-                logger.debug("Skipping stale message: '%s'", message.text)
-                continue
-
-            logger.debug("Processing message: '%s'", message.text)
-            process = self._process_factory(message.text)
             with self._process_lock:
+                if self._generations[message.priority].is_stale(message.generation):
+                    logger.debug("Skipping stale message: '%s'", message.text)
+                    continue
+                logger.debug("Processing message: '%s'", message.text)
+                process = self._process_factory(message.text)
                 self._current_process = process
+                self._active_priority = message.priority
             process.start()
             process.join()
             with self._process_lock:
                 self._current_process = None
+                self._active_priority = None
             logger.debug("Speech finished or terminated")

@@ -15,7 +15,7 @@ import logging
 
 try:
     import ttkbootstrap as ttk
-    from ttkbootstrap.constants import BOTH, E, EW, LEFT, NSEW, W
+    from ttkbootstrap.constants import BOTH, E, EW, LEFT, NSEW, RIGHT, W
 except ImportError as exc:  # pragma: no cover - user-facing startup guard
     raise SystemExit(
         "Instale as dependencias com: python -m pip install -r software/requirements.txt"
@@ -23,13 +23,35 @@ except ImportError as exc:  # pragma: no cover - user-facing startup guard
 
 from software.accessibility.speech import SpeechService
 from software.core import CalculatorState
+from software.core.models import CalculationResult
 from software.hw_platform.display import DisplayMode
 from software.hw_platform.keyboard import KeyboardAdapter
 from software.hw_platform.keypad_matrix import KeyEvent, MatrixKeyboard
 from software.ui.shared.error_messages import friendly_message, spoken_priority_prefix
-from software.ui.shared.formatting import format_expression_for_display
+from software.ui.shared.formatting import (
+    clip_display_line,
+    format_expression_for_display,
+    format_result_for_display,
+)
 from software.ui.shared.history import recent_entries, spoken_history
-from software.ui.shared.keypad import HISTORY_TOKEN, NO_FUNCTION_SPEECH, spoken_token
+from software.ui.shared.keypad import (
+    HELP_CANCELLED_SPEECH,
+    HELP_INDICATOR,
+    HELP_PROMPT_SPEECH,
+    HELP_TOKEN,
+    HISTORY_TOKEN,
+    NO_FUNCTION_SPEECH,
+    SPEAK_EXPRESSION_TOKEN,
+    VOLUME_DOWN_TOKEN,
+    VOLUME_UP_TOKEN,
+    key_description,
+    spoken_token,
+)
+from software.ui.shared.speech_text import (
+    spoken_expression,
+    spoken_result,
+)
+from software.hw_platform.volume import VolumeController
 from software.ui.shared.palette import DISPLAY_BACKGROUND, DISPLAY_FOREGROUND
 from software.ui.shared.tk_session import reset_ttkbootstrap_globals
 from software.ui.shared.video_blackout import (
@@ -40,6 +62,7 @@ from software.ui.shared.video_blackout import (
     relight_on_ac,
     toggle,
 )
+from software.ui.shared.battery_indicator import BatteryIndicatorWatch
 from software.ui.shared.matrix_input import MatrixInputPump
 from software.ui.shared.video_watch import VideoOutputWatch
 
@@ -52,6 +75,9 @@ WINDOW_HEIGHT = 480
 FONT_SIZES = {
     "expression": 44,
     "result": 96,
+    # Um par de coordenadas ocupa DUAS linhas; a 96pt elas não caberiam na
+    # altura reservada ao resultado, então o par usa um corpo menor.
+    "result_pair": 48,
     "indicator": 14,
     "history": 22,
 }
@@ -59,6 +85,7 @@ FONT_SIZES = {
 # Truncamento do display para as fontes acima nos 800x480.
 MAX_EXPRESSION_CHARS = 26
 MAX_RESULT_CHARS = 14
+MAX_PAIR_CHARS = 26
 
 _HISTORY_VISIBLE_ROWS = 6
 
@@ -73,6 +100,8 @@ class CalculatorApp:
         blackout: VideoBlackout | None = None,
         apply_video: VideoApplier | None = None,
         keypad_matrix: MatrixKeyboard | None = None,
+        volume: VolumeController | None = None,
+        battery=None,
     ) -> None:
         # Injected when the other front hands over (RF-09): reusing the same
         # state keeps the expression, history and angle mode across the swap,
@@ -80,6 +109,8 @@ class CalculatorApp:
         self.state = state or CalculatorState()
         self.speech = speech or SpeechService()
         self.keyboard = KeyboardAdapter()
+        # Mesmo gerenciador de áudio para a voz e para o volume (mixer ALSA).
+        self.volume = volume or VolumeController()
         # The blackout travels the same way, so a front built during it is born
         # dark; apply_video is the entry point's single place that touches X.
         self.blackout = blackout or VideoBlackout()
@@ -98,7 +129,13 @@ class CalculatorApp:
 
         self.ctrl_active = False
         self.shift_active = False
+        # Modo de consulta da tecla "?": a próxima tecla é descrita, não executada.
+        self.help_active = False
         self.history_open = False
+        # Coordena o feedback falado DENTRO de um único toque: a 1ª fala do toque
+        # corta a fala da tecla anterior; as demais do mesmo toque entram em fila
+        # atrás dela (ver _announce_key).
+        self._key_speech_cut = False
 
         self.expression_var = ttk.StringVar(value="")
         self.result_var = ttk.StringVar(value="Pronto")
@@ -106,6 +143,9 @@ class CalculatorApp:
         self.mode_var = ttk.StringVar(value="DEG")
         self.ctrl_var = ttk.StringVar(value="")
         self.shift_var = ttk.StringVar(value="")
+        self.help_var = ttk.StringVar(value="")
+        # Aviso de bateria (WRN-020): vazio com a bateria normal ou sem UPS.
+        self.battery_var = ttk.StringVar(value="")
 
         self.expression_disp_var = ttk.StringVar(value="")
         self.result_disp_var = ttk.StringVar(value="")
@@ -122,6 +162,9 @@ class CalculatorApp:
         # RF-05: the physical keypad. The scanner belongs to the entry point
         # (one GPIO request per run, kept across front swaps); this front only
         # plugs its token handler in while its window exists.
+        # Aviso de bateria na tela: a voz sai do BatteryMonitor (app.py), que
+        # vive numa thread; aqui só se consulta a última leitura no laço do Tk.
+        self.battery_watch = BatteryIndicatorWatch(self.root, battery, self._show_battery)
         self.matrix_input: MatrixInputPump | None = None
         if keypad_matrix is not None:
             self.matrix_input = MatrixInputPump(
@@ -137,6 +180,10 @@ class CalculatorApp:
         self.style.configure(
             "Display.TLabel", font=("Segoe UI", FONT_SIZES["expression"]), padding=8,
             foreground=DISPLAY_FOREGROUND, background=DISPLAY_BACKGROUND,
+        )
+        self.style.configure(
+            "ResultPair.TLabel", font=("Segoe UI", FONT_SIZES["result_pair"], "bold"), padding=8,
+            anchor="e", justify="right",
         )
         self.style.configure(
             "Result.TLabel", font=("Segoe UI", FONT_SIZES["result"], "bold"), padding=8,
@@ -156,11 +203,13 @@ class CalculatorApp:
         """
         self.speech.say("Calculadora pronta")
         self.video_watch.start()
+        self.battery_watch.start()
         if self.matrix_input is not None:
             self.matrix_input.start()
         try:
             self.root.mainloop()
         finally:
+            self.battery_watch.stop()
             if self.matrix_input is not None:
                 self.matrix_input.stop()
 
@@ -184,6 +233,13 @@ class CalculatorApp:
         ttk.Label(indicators, textvariable=self.mode_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.ctrl_var, bootstyle="warning", style="Indicator.TLabel").pack(side=LEFT, padx=5)
         ttk.Label(indicators, textvariable=self.shift_var, bootstyle="success", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        ttk.Label(indicators, textvariable=self.help_var, bootstyle="info", style="Indicator.TLabel").pack(side=LEFT, padx=5)
+        # À DIREITA, separado dos modificadores: é um aviso do aparelho, não um
+        # estado da digitação.
+        self.battery_label = ttk.Label(
+            indicators, textvariable=self.battery_var, bootstyle="warning", style="Indicator.TLabel",
+        )
+        self.battery_label.pack(side=RIGHT, padx=5)
 
         # Display e histórico ocupam a MESMA célula; o histórico é levantado por
         # cima quando aberto (Ctrl + Ans) e baixado ao fechar.
@@ -203,10 +259,11 @@ class CalculatorApp:
             style="Display.TLabel", bootstyle="inverse-secondary",
         ).grid(row=0, column=0, sticky=NSEW)
 
-        ttk.Label(
+        self.result_label = ttk.Label(
             self.display, textvariable=self.result_disp_var, anchor=E,
             style="Result.TLabel", bootstyle="inverse-secondary",
-        ).grid(row=1, column=0, sticky=NSEW)
+        )
+        self.result_label.grid(row=1, column=0, sticky=NSEW)
 
         self.history_view = ttk.Frame(self.stack, bootstyle="secondary", padding=12)
         self.history_view.grid(row=0, column=0, sticky=NSEW)
@@ -222,10 +279,16 @@ class CalculatorApp:
         else:
             self.expression_disp_var.set(expr)
 
-        if len(res) > MAX_RESULT_CHARS:
-            self.result_disp_var.set(".." + res[-(MAX_RESULT_CHARS - 2):])
-        else:
-            self.result_disp_var.set(res)
+        # Um par vem em duas linhas: cada uma é cortada por si, com o corpo
+        # menor e o limite próprio. Antes, o par era uma linha só de 16+
+        # caracteres e a truncagem cortava a cabeça, escondendo o primeiro
+        # valor - a voz anunciava x e y, a tela mostrava só o y.
+        pair = "\n" in res
+        limit = MAX_PAIR_CHARS if pair else MAX_RESULT_CHARS
+        self.result_label.configure(style="ResultPair.TLabel" if pair else "Result.TLabel")
+        self.result_disp_var.set(
+            "\n".join(clip_display_line(line, limit) for line in res.split("\n"))
+        )
 
     # ------------------------------------------------------------------
     # Histórico (só por teclado: Ctrl + Ans)
@@ -274,7 +337,7 @@ class CalculatorApp:
     def _close_history(self) -> None:
         self.display.tkraise()
         self.history_open = False
-        self.speech.say("Histórico fechado")
+        self._announce_key("Histórico fechado")
 
     # ------------------------------------------------------------------
     # Entrada (somente teclado físico - RF-05)
@@ -297,31 +360,74 @@ class CalculatorApp:
             logger.debug("key event: char=%r -> token=%r", char, token)
             self._handle_token(token, None, None)
 
+    def _announce_key(self, text: str) -> None:
+        """Feedback falado de uma tecla, com interrupção imediata (RF-08).
+
+        A PRIMEIRA fala de um toque corta o que a tecla anterior estava falando
+        (interrupt_and_say); as falas seguintes do MESMO toque entram em fila
+        atrás dela (say), para uma sequência de um só toque - "Histórico fechado"
+        + nome da tecla, "Substituindo" + operador - não se cortar a si mesma. O
+        próximo toque reinicia o ciclo e volta a cortar tudo. Em digitação rápida,
+        só o último toque sobrevive, sem fila acumulada nem áudios sobrepostos.
+        """
+        if self._key_speech_cut:
+            self.speech.say(text)
+        else:
+            self.speech.interrupt_and_say(text)
+            self._key_speech_cut = True
+
     def _on_unmapped_key(self, event: KeyEvent) -> None:
         # A "?" da matriz: lida, mas sem função no catálogo. Sem este anúncio,
         # quem não vê a tela acharia que a tecla está avariada.
         logger.info("tecla sem função: %s %s %r", event.switch, event.coord, event.keycap)
-        self.speech.say(NO_FUNCTION_SPEECH)
+        self._key_speech_cut = False
+        self._announce_key(NO_FUNCTION_SPEECH)
 
     def _handle_token(self, primary: str, secondary: str | None, shifted: str | None = None) -> None:
+        # Novo toque: a primeira fala deste toque corta a fala da tecla anterior.
+        self._key_speech_cut = False
         # A tecla Ans carrega o histórico como função de Ctrl (ver ui/shared/keypad.py),
         # então o atalho é o mesmo no PC e na matriz 6x7.
         if primary == "Ans" and secondary is None:
             secondary = HISTORY_TOKEN
+        # Vindo do teclado de PC também não há 'shifted'; sem isto o Shift + Ans
+        # (ler a expressão atual) só funcionaria pela matriz.
+        if primary == "Ans" and shifted is None:
+            shifted = SPEAK_EXPRESSION_TOKEN
         # Idem para o AC: Ctrl + AC (Ctrl e depois Esc no PC) apaga/religa as telas.
         if primary == "AC" and secondary is None:
             secondary = BLACKOUT_TOKEN
 
+        # Tecla "?": modificador de consulta. Liga o modo e a PRÓXIMA tecla é
+        # descrita em vez de executada. Pressionar "?" outra vez cancela.
+        if primary == HELP_TOKEN:
+            self.help_active = not self.help_active
+            self.help_var.set(HELP_INDICATOR if self.help_active else "")
+            self._announce_key(
+                HELP_PROMPT_SPEECH if self.help_active else HELP_CANCELLED_SPEECH
+            )
+            return
+
+        # Modo de consulta ativo: descreve esta tecla e NÃO a executa - nada
+        # entra na expressão. Vem antes de tudo (até dos modificadores) para
+        # que "?" seguido de Ctrl ou Shift também seja descrito, e não ligue o
+        # modificador por acidente.
+        if self.help_active:
+            self.help_active = False
+            self.help_var.set("")
+            self._announce_key(key_description(primary, secondary, shifted))
+            return
+
         if primary == "Ctrl":
             self.ctrl_active = not self.ctrl_active
             self.ctrl_var.set("CTRL" if self.ctrl_active else "")
-            self.speech.say("Controle ativo" if self.ctrl_active else "Controle desativado")
+            self._announce_key("Controle ativo" if self.ctrl_active else "Controle desativado")
             return
 
         if primary == "Shift":
             self.shift_active = not self.shift_active
             self.shift_var.set("SHIFT" if self.shift_active else "")
-            self.speech.say("Shift ativo" if self.shift_active else "Shift desativado")
+            self._announce_key("Shift ativo" if self.shift_active else "Shift desativado")
             return
 
         token = primary
@@ -334,15 +440,27 @@ class CalculatorApp:
             self.ctrl_active = False
             self.ctrl_var.set("")
 
+        # Volume (Ctrl + "+"/"-"): ação de configuração, acima do feedback normal
+        # e abaixo do alerta de bateria. O "+"/"-" sozinho segue como operador.
+        if token in {VOLUME_UP_TOKEN, VOLUME_DOWN_TOKEN}:
+            self._change_volume(token == VOLUME_UP_TOKEN)
+            return
+
         # Depois dos modificadores: na matriz e na tela o RAD/DEG é o Shift + /.
         if token == "RAD/DEG":
             self.state.press("RAD/DEG")
             self.mode_var.set(self.state.angle_mode.upper())
-            self.speech.say(f"Modo {self.state.angle_mode}")
+            self._announce_key(f"Modo {self.state.angle_mode}")
             return
 
         if token == HISTORY_TOKEN:
             self._toggle_history()
+            return
+
+        # Shift + Ans: lê a expressão atual. Leitura pura - não avalia, não
+        # altera a linha de cálculo e não recorre ao histórico (ver o método).
+        if token == SPEAK_EXPRESSION_TOKEN:
+            self._speak_current_expression()
             return
 
         # Função secundária: substitui o AC (não limpa a expressão) e já
@@ -382,19 +500,23 @@ class CalculatorApp:
 
         if token in operators and self.state.expression:
             if self.state.expression[-1] in operators:
-                self.speech.say("Substituindo")
+                # "Substituindo" é a 1ª fala do toque (corta a tecla anterior); o
+                # nome do operador vem logo atrás, na mesma fila (_announce_key).
+                self._announce_key("Substituindo")
                 self.state.press("DEL")
 
         result = self.state.press(token)
         self.expression_var.set(self.state.expression)
 
         if result is None:
-            self.speech.say(spoken_token(token))
+            # Feedback da tecla: corta a fala da tecla anterior e anuncia só a si
+            # mesma (ou entra em fila atrás do "Substituindo" deste mesmo toque).
+            self._announce_key(spoken_token(token))
             return
 
         if result.ok:
-            self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Resultado {result.display}")
+            self.result_var.set(format_result_for_display(result))
+            self.speech.interrupt_and_say(f"Resultado {spoken_result(result)}")
         else:
             # Same friendly text on screen and in speech, with the PRD §13
             # priority prefix (P1 -> "Erro", P2 -> "Aviso").
@@ -403,16 +525,48 @@ class CalculatorApp:
             self.result_var.set(f"{result.code}: {friendly_msg}")
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
 
+
+    def _show_battery(self, text: str, style: str) -> None:
+        """Mostra (ou esconde, com texto vazio) o aviso de bateria na barra."""
+        self.battery_var.set(text)
+        self.battery_label.configure(bootstyle=style)
+
+    def _change_volume(self, up: bool) -> None:
+        """Ajusta o volume do sistema e anuncia o novo nível (prioridade CONFIG).
+
+        Usa interrupt_and_say com prioridade de configuração: o anúncio do volume
+        corta o feedback de teclas/resultados, mas nunca o alerta de bateria.
+        """
+        level = self.volume.increase() if up else self.volume.decrease()
+        if level is None:
+            self.speech.interrupt_and_say("Volume indisponível", priority=SpeechService.CONFIG)
+        else:
+            self.speech.interrupt_and_say(f"Volume {level} por cento", priority=SpeechService.CONFIG)
+
     def _recall_last_answer(self) -> None:
         """Re-announce/redisplay the last full result without recalculating."""
         result = self.state.recall_last_answer()
         if result.ok:
-            self.result_var.set(result.display)
-            self.speech.interrupt_and_say(f"Última resposta: {result.display}")
+            self.result_var.set(format_result_for_display(result))
+            self.speech.interrupt_and_say(f"Última resposta: {spoken_result(result)}")
         else:
             friendly_msg = friendly_message(result.code, result.message)
             prefix = spoken_priority_prefix(result.code)
             self.speech.interrupt_and_say(f"{prefix} {result.code.split('-')[-1]}. {friendly_msg}")
+
+    def _speak_current_expression(self) -> None:
+        """Shift + Ans: lê em voz alta a expressão que está na linha de cálculo.
+
+        A fonte é SÓ self.state.expression (nunca o histórico). Não avalia, não
+        altera a expressão e não toca no resultado - apenas fala. Linha vazia é
+        anunciada com segurança. Reaproveita a conversão compartilhada
+        (speech_text), a mesma que corrige a pronúncia dos decimais.
+        """
+        expression = self.state.expression
+        if not expression.strip():
+            self.speech.interrupt_and_say("Expressão vazia")
+            return
+        self.speech.interrupt_and_say(spoken_expression(expression))
 
 
 def main() -> None:

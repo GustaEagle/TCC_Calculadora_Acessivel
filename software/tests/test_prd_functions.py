@@ -45,19 +45,24 @@ class PRDFunctionsTest(unittest.TestCase):
         self.assertAlmostEqual(self.engine.evaluate("x^-1", ans=2).value, 0.5)
 
     def test_combinatorics(self) -> None:
+        # Notação INFIXA: a tecla nCr fica ENTRE os operandos (BREAKING).
         # nCr
-        self.assertEqual(self.engine.evaluate("nCr(10, 3)").value, 120)
+        self.assertEqual(self.engine.evaluate("10 nCr 3").value, 120)
         # nPr
-        self.assertEqual(self.engine.evaluate("nPr(10, 3)").value, 720)
+        self.assertEqual(self.engine.evaluate("10 nPr 3").value, 720)
 
     def test_conversions(self) -> None:
-        # Polar -> Rect (x component)
-        # polar(radius, angle) -> returns x
-        self.assertAlmostEqual(self.engine.evaluate("polar(10, 60)").value, 5.0)
-        
-        # Rect -> Polar (radius)
-        # rect(x, y) -> returns radius
-        self.assertAlmostEqual(self.engine.evaluate("rect(3, 4)").value, 5.0)
+        # Convenção Casio: o token diz o DESTINO. As duas devolvem AS DUAS
+        # componentes - antes só devolviam uma, e no sentido trocado.
+        # Pol(x, y) -> (r, ângulo)
+        radius, angle = self.engine.evaluate("polar(3, 4)").value
+        self.assertAlmostEqual(radius, 5.0)
+        self.assertAlmostEqual(angle, 53.13010235415598)
+
+        # Rec(r, ângulo) -> (x, y)
+        x_value, y_value = self.engine.evaluate("rect(10, 60)").value
+        self.assertAlmostEqual(x_value, 5.0)
+        self.assertAlmostEqual(y_value, 8.660254037844387)
 
     def test_domain_errors(self) -> None:
         # Div by zero

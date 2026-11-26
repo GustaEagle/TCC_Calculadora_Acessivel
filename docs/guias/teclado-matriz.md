@@ -63,13 +63,13 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 
 | Tecla | Sozinha | Com `Ctrl` | Com `Shift` | Posição | Switch |
 | ----- | ------- | ---------- | ----------- | ------- | ------ |
-| `Pol` | `polar(` | `rect(` | — | `C0L0` | SW0 |
+| `Pol` | `Pol(` → **para polar** | `Rec(` → **para retangular** | — | `C0L0` | SW0 |
 | `x!` | `!` | — | — | `C1L0` | SW1 |
 | `Pi` | `π` | `e` | — | `C2L0` | SW2 |
 | `(` | `(` | — | — | `C3L0` | SW3 |
 | `)` | `)` | — | — | `C4L0` | SW4 |
 | `%` | `%` | — | — | `C5L0` | SW5 |
-| `e` | `e` | — | — | `C6L0` | SW6 |
+| `e` | `e` (Euler) | **`EXP`** (×10ˣ) | — | `C6L0` | SW6 |
 | `sen` | `sen(` | `asin(` | — | `C0L1` | SW7 |
 | `cos` | `cos(` | `acos(` | — | `C1L1` | SW8 |
 | `7` | `7` | — | — | `C3L1` | SW9 |
@@ -87,32 +87,122 @@ Diferente do teclado de PC, na matriz **toda** tecla traz as suas funções secu
 | `1` | `1` | — | — | `C3L3` | SW21 |
 | `2` | `2` | — | — | `C4L3` | SW22 |
 | `3` | `3` | — | — | `C5L3` | SW23 |
-| `-` | `-` | — | — | `C6L3` | SW24 |
-| `?` | **sem função** | — | — | `C0L4` | SW25 |
-| `nCr` | `nCr(` | `nPr(` | — | `C1L4` | SW26 |
+| `-` | `-` | **Volume −** | — | `C6L3` | SW24 |
+| `?` | **consulta de tecla** | — | — | `C0L4` | SW25 |
+| `nCr` | `nCr` (infixo) | `nPr` (infixo) | — | `C1L4` | SW26 |
 | `√` | `sqrt(` | — | — | `C2L4` | SW27 |
 | `0` | `0` | — | — | `C3L4` | SW28 |
 | `,` | `.` (ponto decimal) | — | `,` (separador de argumentos) | `C5L4` | SW29 |
-| `+` | `+` | — | — | `C6L4` | SW30 |
+| `+` | `+` | **Volume +** | — | `C6L4` | SW30 |
 | `Ctrl` | liga/desliga `CTRL` | — | — | `C0L5` | SW31 |
-| `exp` | `exp(` | — | — | `C1L5` | SW32 |
-| `Shift` | liga/desliga `SHIFT` | — | — | `C2L5` | SW33 |
-| `Ans` | resposta anterior | **Histórico** | — | `C3L5` | SW34 |
+| `exp` | liga/desliga `SHIFT` | — | — | `C1L5` | SW32 |
+| `Shift` | **RAD/DEG** (alterna graus/radianos) | — | — | `C2L5` | SW33 |
+| `Ans` | resposta anterior | **Histórico** | **Ler a expressão** | `C3L5` | SW34 |
 | `=` | calcula | **Última resposta** | **Última resposta** | `C4L5` | SW35 |
 | `AC` | limpa tudo | **Apaga/religa as telas** | — | `C5L5` | SW36 |
 | `Del` | apaga o último item | — | — | `C6L5` | SW37 |
 
-**Sem função secundária:** `x!`, `x⁻¹`, `^`, `√`, `exp`, `%`, `e`, `(`, `)`, `Del`, os dígitos e `+ - *`.
+**Sem função secundária:** `x!`, `x⁻¹`, `^`, `√`, `%`, `(`, `)`, `Del`, os dígitos e `*`.
+
+> **Keycaps desalinhados na linha L5.** A tecla `EXP` passou a ser a função de `Ctrl` da tecla `e` (Euler). Isso libertou a tecla impressa `exp`, que assumiu o **`Shift`**, e empurrou a tecla impressa `Shift` para o **RAD/DEG**. Os keycaps impressos precisam de ser **trocados de posição** no hotswap (e reetiquetados em Braille). A ordem resultante — `Ctrl`, `Shift`, RAD/DEG — é a mesma dos botões na tela, que antes não coincidia.
 
 ### A tecla `,` e o ponto decimal
 
-A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos: `nCr(5,2)` digita-se `nCr` `5` `Shift` `,` `2` `)`.
+A tecla impressa `,` produz **`.`** (ponto decimal) quando pressionada sozinha, e **`,`** (vírgula) com `Shift`. O motor usa ponto para decimais e vírgula para separar argumentos das funções **binárias** — hoje as conversões de coordenadas: `Pol(3,4)` digita-se `Pol` `3` `Shift` `,` `4` `)`.
+
+### Conversões de coordenadas: `Pol` e `Rec`
+
+Convenção das calculadoras científicas — o nome diz o **destino** da conversão:
+
+| Quero | Pressiono | Resultado na tela |
+| --- | --- | --- |
+| retangular → polar | `Pol` `3` `Shift` `,` `4` `)` `=` | `r = 5` / `θ = 53.13010235` |
+| polar → retangular | `Ctrl` `Pol` `5` `Shift` `,` `53.13` `)` `=` | `x = 3` / `y = 4` |
+
+As duas devolvem **os dois valores**, exibidos em **duas linhas** (antes o par ia numa linha só, estourava o limite do display e o primeiro valor era cortado). O ângulo respeita o modo `DEG`/`RAD` ativo. A voz anuncia «real 5, ângulo 53 vírgula 1 3 …» e «x igual a 3 e y igual a 4».
+
+### A tecla `EXP` (`Ctrl` + `e`) é expoente de base dez
+
+`EXP` é a entrada de **notação científica**, como em qualquer teclado de calculadora — não a exponencial de base *e*:
+
+| Digito | Significa | Resultado |
+| --- | --- | --- |
+| `3` `Ctrl` `e` `8` | 3 × 10⁸ | `300000000` |
+| `2` `×` `Ctrl` `e` `2` | 2 × 10² | `200` |
+
+A exponencial de Euler continua acessível pela **primária** da mesma tecla com o operador de potência: `e` `^` `2`.
+
+### Combinação e permutação (`nCr` / `nPr`) são **infixas**
+
+A tecla `nCr` fica **entre** os operandos, como numa calculadora científica:
+
+| Quero | Pressiono | Fica na tela | Resultado |
+| --- | --- | --- | --- |
+| combinação de 5, 2 a 2 | `5` `nCr` `2` `=` | `5 nCr 2` | `10` |
+| permutação de 5, 2 a 2 | `5` `Ctrl` `nCr` `2` `=` | `5 nPr 2` | `20` |
+
+Não é preciso vírgula nem fechar parênteses. A forma funcional `nCr(5,2)` **não é aceita** e devolve `ERR-007`.
 
 ### A tecla `?`
 
-A `?` (SW25, `C0L4`) **existe na placa** mas não tem função no catálogo do PRD §5. Ao ser pressionada, a voz diz «Tecla sem função» e nada entra na expressão — sem esse retorno, quem não vê a tela concluiria que a tecla está avariada. Na tela, a posição correspondente fica vazia.
+A `?` (SW25, `C0L4`) é a tecla de **consulta**: responde «o que faz esta tecla?».
+
+1. Pressione `?` — a voz diz «Ajuda. Pressione uma tecla.» e o indicador `AJUDA` acende.
+2. Pressione **qualquer** tecla — a voz descreve as **três** funções dela, e a tecla **não é executada**.
+3. O modo desliga-se sozinho. Pressionar `?` outra vez antes disso **cancela**.
+
+> `?` depois `log` → «Função logaritmo decimal. Com Controle ativo, função logaritmo natural. Com Shift ativo, função logaritmo na base x.»
+
+É um **toggle de um só uso**, como o `Ctrl` e o `Shift` — e não "segurar `?` e pressionar": o scanner varre a matriz coluna a coluna e não identifica duas teclas pressionadas ao mesmo tempo (ver §6).
+
+Descrever tecla a tecla é a forma de **descobrir os atalhos sem ver a tela**, e cobre-os melhor do que a lista fixa que esta tecla lia antes: `?` depois `Ans` diz que o `Ctrl` abre o histórico e o `Shift` lê a expressão, e o mesmo vale para todas as outras teclas.
+
+A consulta:
+
+- **não altera nada** — expressão, resultado, `Ans`, modo angular, volume e telas ficam como estavam;
+- descreve também os **modificadores**: `?` depois `Ctrl` descreve o `Ctrl` em vez de o ligar;
+- é igual nos **dois fronts** e em **modo somente áudio** (RF-04/RF-10);
+- **não tem botão na tela**: é função exclusiva do teclado físico, e a posição correspondente continua vazia.
+
+No PC (desenvolvimento), a consulta sai na própria tecla `?`. No front HDMI, o antigo `Ctrl` + `Shift` juntos continua a fazer o mesmo.
+
+Os nomes que a consulta anuncia saem do mesmo catálogo falado (`SPOKEN_TOKEN_NAMES`) que a tecla usa quando é acionada a sério, então a descrição não pode divergir do comportamento real.
+
+Teclas genuinamente desconhecidas (keycap fora do mapa, defeito de hardware) continuam a anunciar «Tecla sem função»: sem esse retorno, quem não vê a tela concluiria que a tecla está avariada.
 
 ---
+
+### O que a voz diz
+
+| Na tela | A voz diz | Por quê |
+| --- | --- | --- |
+| `1.2` | «1 **vírgula** 2» | Convenção pt-BR. A tela continua a mostrar o ponto |
+| `0.05` | «0 vírgula 0 5» | A parte fracionária é lida **dígito a dígito**, para não perder zeros |
+| `-3.5` | «menos 3 vírgula 5» | |
+| `Pol(3,4)` | «converter para polar, abre parênteses 3 **ponto e vírgula** 4 fecha parênteses» | O separador de argumentos é «ponto e vírgula», senão «3 vírgula 4» seria o decimal 3,4 |
+| tecla `√` | «raiz quadrada, **abre parênteses**» | Toda função com parênteses anuncia a abertura, que depois é fechada por «fecha parênteses» |
+| tecla `.` | «vírgula» | É o que ela insere: o separador decimal |
+
+Toda frase começa por um silêncio curto (`LEADING_SILENCE_MS`, em `accessibility/speech.py`). A saída de áudio é aberta a frio a cada frase e cortava o primeiro fonema: «limpar tudo» chegava como «**impa** tudo». Se alguma palavra ainda soar mal com o início preservado, a correção vai para o dicionário `TTS_PRONUNCIATION` (`ui/shared/keypad.py`), que muda só o que vai à voz e não o que aparece na tela.
+
+O resultado do `=` começa a soar antes de a frase inteira estar sintetizada. O prefixo «Resultado», a «vírgula» e os dígitos da parte fracionária saem de um cache pronto no arranque, e só a parte inteira é sintetizada na hora.
+
+### Multiplicação implícita
+
+Um número colado a um parêntese, a uma função, a uma constante ou ao `Ans` multiplica, como numa calculadora comercial:
+
+| Digito | Resultado |
+| --- | --- |
+| `2(3)` | 6 |
+| `2√(9)` | 6 |
+| `(2)(3)` | 6 |
+| `2π` | 6,283… |
+| `3Ans` (Ans = 4) | 12 |
+| `2` `e` `3` | 16,309… (2 × *e* × 3) |
+
+O último caso dava **2000** antes, sem aviso, porque era lido como notação científica. Para uma potência de dez use a tecla `EXP` (`Ctrl` + `e`).
+
+Duas coisas ainda dependem do modelo de calculadora que a equipe vai usar como referência, e por isso estão em aberto: a porcentagem depois de uma soma (`50+10%`, que hoje dá 50,1) e a prioridade da multiplicação implícita contra a divisão (`1÷2(3)`, que hoje dá 1,5, da esquerda para a direita).
 
 ## 4. Comandos que não inserem símbolo
 
@@ -120,10 +210,12 @@ A `?` (SW25, `C0L4`) **existe na placa** mas não tem função no catálogo do P
 | ------- | ------ | --------- |
 | **Histórico** | `Ctrl` → `Ans` | Últimos cálculos **bem-sucedidos** (10 no HDMI, 6 no LCD), do mais recente ao mais antigo. No LCD abre um painel; qualquer outra tecla o fecha |
 | **Última resposta** | `Ctrl` → `=` ou `Shift` → `=` | Reanuncia o último resultado **completo** (sem o truncamento do display), **sem recalcular** e **sem tocar** na expressão em curso |
-| **Graus ↔ radianos** | `Shift` → `/` | Alterna RAD/DEG; a voz confirma o modo novo |
+| **Graus ↔ radianos** | tecla `Shift` (keycap), ou `Shift` → `/` | Alterna RAD/DEG; a voz confirma o modo novo. Tem agora tecla **dedicada** (a impressa `Shift`); o `Shift` → `/` continua a funcionar |
 | **Apagar/religar telas** | `Ctrl` → `AC` | Desliga **todas** as saídas de vídeo (ver §5). Não limpa a expressão |
 | **Limpar tudo** | `AC` | Limpa expressão e último resultado. Com as telas apagadas, **religa-as** antes de limpar |
-| **Apagar um item** | `Del` | Remove o último caractere — funções (`sen(`, `log(`, `nCr(`, …) saem como **bloco único**, não letra a letra |
+| **Volume** | `Ctrl` → `+` ou `Ctrl` → `-` | Aumenta / diminui o volume da voz |
+| **Ler a expressão** | `Shift` → `Ans` | Reanuncia a expressão em curso, sem calcular nem alterá-la |
+| **Apagar um item** | `Del` | Remove o último caractere — funções (`sen(`, `log(`, …) e os operadores infixos (` nCr `, ` nPr `) saem como **bloco único**, não letra a letra |
 
 **Não existe tecla dedicada de histórico.** O atalho `Ctrl` + `Ans` foi escolhido por usar só teclas que já existem na matriz, de modo que o comando seja idêntico no hardware e no PC.
 
